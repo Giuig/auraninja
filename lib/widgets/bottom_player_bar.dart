@@ -652,7 +652,7 @@ class _ActiveSoundTile extends StatelessWidget {
                       child: Slider(
                         value: controller.volume,
                         onChanged: (v) => controller.setVolume(v),
-                        min: 0,
+                        min: 0.1,
                         max: 1,
                       ),
                     ),
