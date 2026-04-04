@@ -8,6 +8,8 @@ import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/ninja_sound.dart';
+import 'package:auraninja/model/mix.dart';
+import 'package:auraninja/services/mixes_service.dart';
 
 class BottomPlayerBar extends StatefulWidget {
   const BottomPlayerBar({super.key});
@@ -154,6 +156,35 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
   void _stopAll() {
     _audioHandler.stopAll();
     _startMarqueeInitialDelay(resetMarqueeVisibility: true);
+  }
+
+  Future<void> _saveCurrentMix(
+      BuildContext context, List<SoundController> controllers) async {
+    final existingMixes = await MixesService.load();
+    final mixName = 'Mix ${existingMixes.length + 1}';
+
+    final mix = Mix(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: mixName,
+      sounds: controllers
+          .map((c) => MixSound(
+                path: c.sound.path,
+                volume: c.volume,
+              ))
+          .toList(),
+    );
+
+    await MixesService.add(mix);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)?.mixSaved ?? 'Mix saved'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      Navigator.of(context).pop();
+    }
   }
 
   void _cancelSleepTimer() {
@@ -561,6 +592,17 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                             },
                           );
                         },
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: FilledButton.icon(
+                        onPressed: () =>
+                            _saveCurrentMix(context, activeControllers),
+                        icon: const Icon(Icons.save_outlined),
+                        label: Text(AppLocalizations.of(context)?.saveMix ??
+                            'Save Mix'),
                       ),
                     ),
                   ],
