@@ -410,7 +410,7 @@ class _SoundsPageState extends State<SoundsPage> {
                                         int cols =
                                             (maxWidth / (minCardWidth + 16))
                                                 .floor();
-                                        cols = cols > 0 ? cols : 1;
+                                        cols = cols < 2 ? 2 : cols;
                                         final cardWidth =
                                             (maxWidth - (cols - 1) * 16) / cols;
 
