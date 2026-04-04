@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auraninja/model/mix.dart';
 
 class MixesService {
   static const _key = 'mixes';
+  static final ValueNotifier<List<Mix>> mixesNotifier = ValueNotifier([]);
 
   static Future<List<Mix>> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -18,6 +20,7 @@ class MixesService {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = mixes.map((m) => jsonEncode(m.toJson())).toList();
     await prefs.setStringList(_key, jsonList);
+    mixesNotifier.value = List.from(mixes);
   }
 
   static Future<void> add(Mix mix) async {

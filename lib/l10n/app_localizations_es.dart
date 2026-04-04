@@ -24,6 +24,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveMix => 'Guardar Mezcla';
 
   @override
+  String get mixSaved => 'Mezcla guardada';
+
+  @override
   String get activeSounds => 'Sonidos Activos';
 
   @override

@@ -136,6 +136,12 @@ abstract class AppLocalizations {
   /// **'Save Mix'**
   String get saveMix;
 
+  /// No description provided for @mixSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix saved'**
+  String get mixSaved;
+
   /// No description provided for @activeSounds.
   ///
   /// In en, this message translates to:

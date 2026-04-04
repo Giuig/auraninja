@@ -18,6 +18,21 @@ class _MixesPageState extends State<MixesPage> {
   void initState() {
     super.initState();
     _loadMixes();
+    MixesService.mixesNotifier.addListener(_onMixesChanged);
+  }
+
+  @override
+  void dispose() {
+    MixesService.mixesNotifier.removeListener(_onMixesChanged);
+    super.dispose();
+  }
+
+  void _onMixesChanged() {
+    if (mounted) {
+      setState(() {
+        _mixes = List.from(MixesService.mixesNotifier.value);
+      });
+    }
   }
 
   Future<void> _loadMixes() async {

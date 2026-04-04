@@ -4,6 +4,7 @@
     "noMixes": "Aucun mix enregistré",
     "noMixesHint": "Jouez des sons et enregistrez-les comme mix",
     "saveMix": "Enregistrer le Mix",
+    "mixSaved": "Mix enregistré",
     "activeSounds": "Sons Actifs",
     "weather": "Météo",
     "nature": "Nature",
