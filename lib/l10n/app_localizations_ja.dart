@@ -21,6 +21,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noMixesHint => 'サウンドを再生してミックスとして保存';
 
   @override
+  String get saveMix => 'ミックスを保存';
+
+  @override
+  String get activeSounds => '再生中のサウンド';
+
+  @override
   String get weather => '天気';
 
   @override

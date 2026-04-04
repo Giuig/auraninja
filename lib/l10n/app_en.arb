@@ -4,6 +4,8 @@
     "mixes": "Mixes",
     "noMixes": "No mixes saved",
     "noMixesHint": "Play sounds and save as a mix",
+    "saveMix": "Save Mix",
+    "activeSounds": "Active Sounds",
     "weather": "Weather",
     "nature": "Nature",
     "rain": "Rain",

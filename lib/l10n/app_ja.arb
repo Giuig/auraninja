@@ -3,6 +3,8 @@
     "mixes": "ミックス",
     "noMixes": "保存されたミックスはありません",
     "noMixesHint": "サウンドを再生してミックスとして保存",
+    "saveMix": "ミックスを保存",
+    "activeSounds": "再生中のサウンド",
     "weather": "天気",
     "nature": "自然",
     "rain": "雨",

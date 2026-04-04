@@ -3,6 +3,8 @@
     "mixes": "Mischungen",
     "noMixes": "Keine Mischungen gespeichert",
     "noMixesHint": "Spiele Klänge ab und speichere als Mischung",
+    "saveMix": "Mischung Speichern",
+    "activeSounds": "Aktive Klänge",
     "weather": "Wetter",
     "nature": "Natur",
     "rain": "Regen",

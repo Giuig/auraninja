@@ -130,6 +130,18 @@ abstract class AppLocalizations {
   /// **'Play sounds and save as a mix'**
   String get noMixesHint;
 
+  /// No description provided for @saveMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Mix'**
+  String get saveMix;
+
+  /// No description provided for @activeSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Sounds'**
+  String get activeSounds;
+
   /// No description provided for @weather.
   ///
   /// In en, this message translates to:

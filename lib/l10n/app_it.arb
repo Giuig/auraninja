@@ -3,6 +3,8 @@
     "mixes": "Mix",
     "noMixes": "Nessun mix salvato",
     "noMixesHint": "Riproduci suoni e salva come mix",
+    "saveMix": "Salva Mix",
+    "activeSounds": "Suoni Attivi",
     "weather": "Meteo",
     "nature": "Natura",
     "rain": "Pioggia",

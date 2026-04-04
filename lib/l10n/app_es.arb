@@ -3,6 +3,8 @@
     "mixes": "Mezclas",
     "noMixes": "Sin mezclas guardadas",
     "noMixesHint": "Reproduce sonidos y guárdalos como mezcla",
+    "saveMix": "Guardar Mezcla",
+    "activeSounds": "Sonidos Activos",
     "weather": "Clima",
     "nature": "Naturaleza",
     "rain": "Lluvia",

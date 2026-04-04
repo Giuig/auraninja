@@ -253,8 +253,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
 
     // Fixed subtitle height — same as one line of bodySmall — keeps the bar
     // the same height regardless of whether a subtitle is shown.
-    final subtitleH =
-        Theme.of(context).textTheme.bodySmall!.fontSize! * 1.6;
+    final subtitleH = Theme.of(context).textTheme.bodySmall!.fontSize! * 1.6;
     final subtitleStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
           fontStyle: FontStyle.italic,
           color: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -339,8 +338,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                                     valueListenable:
                                         _audioHandler.metadataNotifier,
                                     builder: (context, metaMap, _) {
-                                      final metadata =
-                                          _audioHandler.getMetadata(networkSound);
+                                      final metadata = _audioHandler
+                                          .getMetadata(networkSound);
                                       if (metadata.isEmpty) {
                                         return const SizedBox.shrink();
                                       }
@@ -359,7 +358,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                                                     style: subtitleStyle,
                                                     scrollAxis: Axis.horizontal,
                                                     crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     blankSpace: 20.0,
                                                     velocity: 50.0,
                                                     pauseAfterRound:
@@ -465,6 +465,21 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                   );
                 },
               ),
+            // Active sounds button with badge
+            ListenableBuilder(
+              listenable: _audioHandler,
+              builder: (context, _) {
+                final activeCount = _audioHandler.activeControllers.length;
+                return Badge(
+                  label: Text('$activeCount'),
+                  child: IconButton(
+                    icon: const Icon(Icons.graphic_eq_outlined),
+                    tooltip: localizations?.activeSounds ?? 'Active Sounds',
+                    onPressed: () => _showActiveSoundsSheet(context),
+                  ),
+                );
+              },
+            ),
             IconButton(
               icon: Icon(Icons.timer_outlined,
                   color: Theme.of(context).colorScheme.primary),
@@ -480,6 +495,178 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showActiveSoundsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return ListenableBuilder(
+          listenable: _audioHandler,
+          builder: (context, _) {
+            final activeControllers = _audioHandler.activeControllers;
+
+            // Close the sheet when no active sounds remain
+            if (activeControllers.isEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.of(ctx).canPop()) {
+                  Navigator.of(ctx).pop();
+                }
+              });
+              return const SizedBox.shrink();
+            }
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.4,
+              minChildSize: 0.2,
+              maxChildSize: 0.7,
+              expand: false,
+              builder: (ctx, scrollController) {
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)?.activeSounds ??
+                                'Active Sounds',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          TextButton(
+                            onPressed: _stopAll,
+                            child: Text(
+                              AppLocalizations.of(context)?.stopAll ??
+                                  'Stop All',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        itemCount: activeControllers.length,
+                        itemBuilder: (context, index) {
+                          final controller = activeControllers[index];
+                          return _ActiveSoundTile(
+                            controller: controller,
+                            onStop: () {
+                              controller.stop();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ActiveSoundTile extends StatelessWidget {
+  final SoundController controller;
+  final VoidCallback onStop;
+
+  const _ActiveSoundTile({
+    required this.controller,
+    required this.onStop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final icon = controller.sound.icon;
+    final isStream = controller.sound.isStream;
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Icon
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Center(
+                        child: icon is String
+                            ? Text(icon, style: const TextStyle(fontSize: 20))
+                            : Icon(icon as IconData, size: 20),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Name
+                    Expanded(
+                      child: Text(
+                        controller.sound.name,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Status indicator
+                    if (controller.status == PlaybackStatus.loading)
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    // Stop button
+                    IconButton(
+                      icon: Icon(Icons.close, size: 20),
+                      onPressed: onStop,
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
+                      tooltip: 'Stop',
+                    ),
+                  ],
+                ),
+                // Volume slider
+                Row(
+                  children: [
+                    Icon(Icons.volume_down,
+                        size: 16, color: colorScheme.outline),
+                    Expanded(
+                      child: Slider(
+                        value: controller.volume,
+                        onChanged: (v) => controller.setVolume(v),
+                        min: 0,
+                        max: 1,
+                      ),
+                    ),
+                    Text(
+                      '${(controller.volume * 100).round()}%',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

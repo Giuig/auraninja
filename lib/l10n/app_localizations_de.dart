@@ -21,6 +21,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noMixesHint => 'Spiele Klänge ab und speichere als Mischung';
 
   @override
+  String get saveMix => 'Mischung Speichern';
+
+  @override
+  String get activeSounds => 'Aktive Klänge';
+
+  @override
   String get weather => 'Wetter';
 
   @override
