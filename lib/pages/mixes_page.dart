@@ -5,6 +5,7 @@ import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
+import 'package:auraninja/services/volume_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -56,13 +57,16 @@ class _MixesPageState extends State<MixesPage> {
     // Stop all currently playing sounds
     await handler.stopAll();
 
+    // Load saved volumes
+    final savedVolumes = await VolumeStorage.load();
+
     // Get all available sounds (hardcoded + user-added radio stations)
     final hardcoded = buildLocalizedSounds(context);
     final userStations = await UserStationsService.load();
     final allSounds = [...hardcoded, ...userStations];
     final soundMap = {for (final s in allSounds) s.path: s};
 
-    // Play each sound in the mix (volume uses default 0.5)
+    // Play each sound in the mix with last used volume
     for (final mixSound in mix.sounds) {
       NinjaSound? sound = soundMap[mixSound.path];
 
@@ -80,6 +84,9 @@ class _MixesPageState extends State<MixesPage> {
       if (sound != null) {
         handler.registerSounds([sound]);
         await handler.ninjaPlay(mixSound.path);
+        // Restore last used volume for this sound
+        final volume = savedVolumes[mixSound.path] ?? 0.5;
+        handler.setVolume(mixSound.path, volume);
       }
     }
   }
