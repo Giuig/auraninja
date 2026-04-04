@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 AUDIO_EXTENSIONS = {".ogg", ".mp3", ".wav", ".flac", ".m4a", ".aac"}
-FFMPEG = r"C:\yt-dlp\ffmpeg.exe"
+FFMPEG = r"C:\Users\giuli\AppData\Local\Microsoft\WinGet\Links\ffmpeg.exe"
 
 BINAURAL_DIR = "assets/sounds/binaural"
 BINAURAL_DURATION = 10  # seconds
@@ -35,6 +35,7 @@ def convert_ambient(audio_path):
     if temp_path.exists() and temp_path.stat().st_size > 0:
         os.replace(temp_path, audio_path)
         return True
+    print(result.stderr.decode() if result.stderr else "")
     return False
 
 def convert_binaural(audio_path):
@@ -54,6 +55,7 @@ def convert_binaural(audio_path):
     if temp_path.exists() and temp_path.stat().st_size > 0:
         os.replace(temp_path, audio_path)
         return True
+    print(result.stderr.decode() if result.stderr else "")
     return False
 
 def find_audio_files(path, exclude_dirs=None):
