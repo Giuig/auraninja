@@ -2,7 +2,9 @@ import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/mix.dart';
+import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/mixes_service.dart';
+import 'package:auraninja/services/user_stations_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -54,13 +56,27 @@ class _MixesPageState extends State<MixesPage> {
     // Stop all currently playing sounds
     await handler.stopAll();
 
-    // Get all available sounds
-    final allSounds = buildLocalizedSounds(context);
+    // Get all available sounds (hardcoded + user-added radio stations)
+    final hardcoded = buildLocalizedSounds(context);
+    final userStations = await UserStationsService.load();
+    final allSounds = [...hardcoded, ...userStations];
     final soundMap = {for (final s in allSounds) s.path: s};
 
     // Play each sound in the mix with saved volume
     for (final mixSound in mix.sounds) {
-      final sound = soundMap[mixSound.path];
+      NinjaSound? sound = soundMap[mixSound.path];
+
+      // If not found and path is a URL, create a new NinjaSound for radio
+      if (sound == null && mixSound.path.startsWith('http')) {
+        sound = NinjaSound(
+          name: 'Radio',
+          category: '@internetRadio',
+          icon: '📻',
+          path: mixSound.path,
+          isUserAdded: true,
+        );
+      }
+
       if (sound != null) {
         handler.registerSounds([sound]);
         await handler.ninjaPlay(mixSound.path);
