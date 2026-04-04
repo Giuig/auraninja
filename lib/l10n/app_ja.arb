@@ -1,5 +1,8 @@
 {
     "sounds": "サウンド",
+    "mixes": "ミックス",
+    "noMixes": "保存されたミックスはありません",
+    "noMixesHint": "サウンドを再生してミックスとして保存",
     "weather": "天気",
     "nature": "自然",
     "rain": "雨",

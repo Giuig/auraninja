@@ -1,0 +1,43 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:auraninja/model/mix.dart';
+
+class MixesService {
+  static const _key = 'mixes';
+
+  static Future<List<Mix>> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = prefs.getStringList(_key);
+    if (jsonList == null) return [];
+    return jsonList
+        .map((json) => Mix.fromJson(jsonDecode(json) as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<void> save(List<Mix> mixes) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = mixes.map((m) => jsonEncode(m.toJson())).toList();
+    await prefs.setStringList(_key, jsonList);
+  }
+
+  static Future<void> add(Mix mix) async {
+    final mixes = await load();
+    mixes.add(mix);
+    await save(mixes);
+  }
+
+  static Future<void> remove(String id) async {
+    final mixes = await load();
+    mixes.removeWhere((m) => m.id == id);
+    await save(mixes);
+  }
+
+  static Future<void> update(Mix mix) async {
+    final mixes = await load();
+    final index = mixes.indexWhere((m) => m.id == mix.id);
+    if (index != -1) {
+      mixes[index] = mix;
+      await save(mixes);
+    }
+  }
+}

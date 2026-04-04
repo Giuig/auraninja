@@ -1,5 +1,8 @@
 {
     "sounds": "Suoni",
+    "mixes": "Mix",
+    "noMixes": "Nessun mix salvato",
+    "noMixesHint": "Riproduci suoni e salva come mix",
     "weather": "Meteo",
     "nature": "Natura",
     "rain": "Pioggia",

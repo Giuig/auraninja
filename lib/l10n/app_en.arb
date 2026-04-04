@@ -1,6 +1,9 @@
 {
     "@@locale": "en",
     "sounds": "Sounds",
+    "mixes": "Mixes",
+    "noMixes": "No mixes saved",
+    "noMixesHint": "Play sounds and save as a mix",
     "weather": "Weather",
     "nature": "Nature",
     "rain": "Rain",

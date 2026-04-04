@@ -1,5 +1,8 @@
 {
     "sounds": "Sons",
+    "mixes": "Mix",
+    "noMixes": "Aucun mix enregistré",
+    "noMixesHint": "Jouez des sons et enregistrez-les comme mix",
     "weather": "Météo",
     "nature": "Nature",
     "rain": "Pluie",

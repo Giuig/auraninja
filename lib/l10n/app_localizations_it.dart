@@ -12,6 +12,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sounds => 'Suoni';
 
   @override
+  String get mixes => 'Mix';
+
+  @override
+  String get noMixes => 'Nessun mix salvato';
+
+  @override
+  String get noMixesHint => 'Riproduci suoni e salva come mix';
+
+  @override
   String get weather => 'Meteo';
 
   @override

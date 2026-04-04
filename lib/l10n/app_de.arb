@@ -1,5 +1,8 @@
 {
     "sounds": "Klänge",
+    "mixes": "Mischungen",
+    "noMixes": "Keine Mischungen gespeichert",
+    "noMixesHint": "Spiele Klänge ab und speichere als Mischung",
     "weather": "Wetter",
     "nature": "Natur",
     "rain": "Regen",

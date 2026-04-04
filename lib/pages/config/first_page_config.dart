@@ -1,4 +1,5 @@
 import 'package:auraninja/l10n/app_localizations.dart';
+import 'package:auraninja/pages/mixes_page.dart';
 import 'package:auraninja/pages/sounds_page.dart';
 import 'package:auraninja/pages/visualizer_page.dart';
 import 'package:auraninja/widgets/bottom_player_bar.dart';
@@ -12,12 +13,18 @@ final FirstPageConfig appFirstPageConfig = FirstPageConfig(
 );
 
 final appPages = [
+  MixesPage(),
   SoundsPage(),
   VisualizerPage(),
 ];
 
 List<NavigationDestination> appDestinationsBuilder(BuildContext context) {
   return [
+    NavigationDestination(
+      selectedIcon: Icon(Icons.library_music),
+      icon: Icon(Icons.library_music_outlined),
+      label: AppLocalizations.of(context)!.mixes,
+    ),
     NavigationDestination(
       selectedIcon: Icon(Icons.music_note),
       icon: Icon(Icons.music_note_outlined),

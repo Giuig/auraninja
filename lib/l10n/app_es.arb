@@ -1,5 +1,8 @@
 {
     "sounds": "Sonidos",
+    "mixes": "Mezclas",
+    "noMixes": "Sin mezclas guardadas",
+    "noMixesHint": "Reproduce sonidos y guárdalos como mezcla",
     "weather": "Clima",
     "nature": "Naturaleza",
     "rain": "Lluvia",
