@@ -629,7 +629,9 @@ class _ActiveSoundTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final icon = controller.sound.icon;
-    final isStream = controller.sound.isStream;
+    // For radio streams, just show the radio emoji
+    final displayIcon =
+        (icon is String && icon.startsWith('http')) ? '📻' : icon;
 
     return ListenableBuilder(
       listenable: controller,
@@ -648,9 +650,10 @@ class _ActiveSoundTile extends StatelessWidget {
                       width: 32,
                       height: 32,
                       child: Center(
-                        child: icon is String
-                            ? Text(icon, style: const TextStyle(fontSize: 20))
-                            : Icon(icon as IconData, size: 20),
+                        child: displayIcon is String
+                            ? Text(displayIcon,
+                                style: const TextStyle(fontSize: 20))
+                            : Icon(displayIcon as IconData, size: 20),
                       ),
                     ),
                     const SizedBox(width: 8),

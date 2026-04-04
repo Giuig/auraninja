@@ -23,7 +23,9 @@ Widget _buildSoundIcon(dynamic icon, double size, Color color) {
       ),
     );
   }
-  return Text(str, style: TextStyle(fontSize: size * 0.7, color: color));
+  return Center(
+    child: Text(str, style: TextStyle(fontSize: size * 0.7, color: color)),
+  );
 }
 
 class SoundCard extends StatelessWidget {
