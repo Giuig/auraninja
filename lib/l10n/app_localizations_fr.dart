@@ -12,6 +12,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sounds => 'Sons';
 
   @override
+  String get weather => 'Météo';
+
+  @override
   String get nature => 'Nature';
 
   @override

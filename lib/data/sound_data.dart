@@ -10,47 +10,77 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       hasContext ? AppLocalizations.of(context) : null;
 
   final sounds = <NinjaSound>[
-    // Nature
+    // Weather
+    NinjaSound(
+      name: hasContext ? projLocalization!.lightRain : 'Light Rain',
+      category: '@weather',
+      icon: '🌦️',
+      path: 'assets/sounds/rain/light-rain.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
+      name: hasContext ? projLocalization!.heavyRain : 'Heavy Rain',
+      category: '@weather',
+      icon: '🌧️',
+      path: 'assets/sounds/rain/heavy-rain.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
+      name: hasContext ? projLocalization!.rainOnWindow : 'Rain on Window',
+      category: '@weather',
+      icon: '🪟',
+      path: 'assets/sounds/rain/rain-on-window.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
+      name: hasContext ? projLocalization!.rainOnCarRoof : 'Rain on Car Roof',
+      category: '@weather',
+      icon: '🚗',
+      path: 'assets/sounds/rain/rain-on-car-roof.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
+      name: hasContext ? projLocalization!.rainOnUmbrella : 'Rain on Umbrella',
+      category: '@weather',
+      icon: '☂️',
+      path: 'assets/sounds/rain/rain-on-umbrella.ogg',
+      attribution: '@',
+    ),
     NinjaSound(
       name: hasContext ? projLocalization!.thunder : 'Thunder',
-      category: '@nature',
+      category: '@weather',
       icon: '⚡',
       path: 'assets/sounds/nature/thunder.ogg',
       attribution: '@',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.wind : 'Wind',
-      category: '@nature',
+      category: '@weather',
       icon: '🌬️',
       path: 'assets/sounds/nature/wind.ogg',
       attribution: '@',
     ),
     NinjaSound(
+      name: hasContext ? projLocalization!.howlingWind : 'Howling Wind',
+      category: '@weather',
+      icon: '💨',
+      path: 'assets/sounds/nature/howling-wind.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
+      name: hasContext ? projLocalization!.windInTrees : 'Wind in Trees',
+      category: '@weather',
+      icon: '🌳',
+      path: 'assets/sounds/nature/wind-in-trees.ogg',
+      attribution: '@',
+    ),
+
+    // Nature - Water
+    NinjaSound(
       name: hasContext ? projLocalization!.waves : 'Waves',
       category: '@nature',
       icon: '🌊',
       path: 'assets/sounds/nature/waves.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.fire : 'Fire',
-      category: '@nature',
-      icon: '🔥',
-      path: 'assets/sounds/nature/fire.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.birds : 'Birds',
-      category: '@nature',
-      icon: '🐦',
-      path: 'assets/sounds/nature/birds.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.cat : 'Cat',
-      category: '@nature',
-      icon: '🐱',
-      path: 'assets/sounds/nature/cat.ogg',
       attribution: '@',
     ),
     NinjaSound(
@@ -68,6 +98,22 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       attribution: '@',
     ),
     NinjaSound(
+      name: hasContext ? projLocalization!.droplets : 'Droplets',
+      category: '@nature',
+      icon: '💦',
+      path: 'assets/sounds/nature/droplets.ogg',
+      attribution: '@',
+    ),
+
+    // Nature - Forest & Ambient
+    NinjaSound(
+      name: hasContext ? projLocalization!.fire : 'Fire',
+      category: '@nature',
+      icon: '🔥',
+      path: 'assets/sounds/nature/fire.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
       name: hasContext ? projLocalization!.walkInSnow : 'Walk in Snow',
       category: '@nature',
       icon: '❄️',
@@ -82,31 +128,19 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       attribution: '@',
     ),
     NinjaSound(
-      name: hasContext ? projLocalization!.droplets : 'Droplets',
-      category: '@nature',
-      icon: '💦',
-      path: 'assets/sounds/nature/droplets.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
       name: hasContext ? projLocalization!.jungle : 'Jungle',
       category: '@nature',
       icon: '🌴',
       path: 'assets/sounds/nature/jungle.ogg',
       attribution: '@',
     ),
+
+    // Nature - Animals
     NinjaSound(
-      name: hasContext ? projLocalization!.howlingWind : 'Howling Wind',
+      name: hasContext ? projLocalization!.birds : 'Birds',
       category: '@nature',
-      icon: '💨',
-      path: 'assets/sounds/nature/howling-wind.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.windInTrees : 'Wind in Trees',
-      category: '@nature',
-      icon: '🌳',
-      path: 'assets/sounds/nature/wind-in-trees.ogg',
+      icon: '🐦',
+      path: 'assets/sounds/nature/birds.ogg',
       attribution: '@',
     ),
     NinjaSound(
@@ -135,6 +169,13 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       category: '@nature',
       icon: '🐋',
       path: 'assets/sounds/nature/whale.ogg',
+      attribution: '@',
+    ),
+    NinjaSound(
+      name: hasContext ? projLocalization!.cat : 'Cat',
+      category: '@nature',
+      icon: '🐱',
+      path: 'assets/sounds/nature/cat.ogg',
       attribution: '@',
     ),
 
@@ -240,44 +281,6 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       attribution: '@',
     ),
 
-    // Rain
-    NinjaSound(
-      name: hasContext ? projLocalization!.lightRain : 'Light Rain',
-      category: '@rain',
-      icon: '🌦️',
-      path: 'assets/sounds/rain/light-rain.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.heavyRain : 'Heavy Rain',
-      category: '@rain',
-      icon: '🌧️',
-      path: 'assets/sounds/rain/heavy-rain.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.rainOnWindow : 'Rain on Window',
-      category: '@rain',
-      icon: '🪟',
-      path: 'assets/sounds/rain/rain-on-window.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.rainOnCarRoof : 'Rain on Car Roof',
-      category: '@rain',
-      icon: '🚗',
-      path: 'assets/sounds/rain/rain-on-car-roof.ogg',
-      attribution: '@',
-    ),
-    NinjaSound(
-      name: hasContext ? projLocalization!.rainOnUmbrella : 'Rain on Umbrella',
-      category: '@rain',
-      icon: '☂️',
-      path: 'assets/sounds/rain/rain-on-umbrella.ogg',
-      attribution: '@',
-    ),
-
-    // Binaural
     NinjaSound(
       name: hasContext ? projLocalization!.laserFocus : 'Laser Focus',
       category: '@binaural',

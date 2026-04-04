@@ -43,14 +43,14 @@ class _SoundsPageState extends State<SoundsPage> {
     final key = categoryKey.substring(1); // Remove '@'
     final l10n = AppLocalizations.of(context);
     switch (key) {
+      case 'weather':
+        return l10n?.weather ?? 'Weather';
       case 'nature':
         return l10n?.nature ?? 'Nature';
       case 'objects':
         return l10n?.objects ?? 'Objects';
       case 'places':
         return l10n?.places ?? 'Places';
-      case 'rain':
-        return l10n?.rain ?? 'Rain';
       case 'binaural':
         return l10n?.binaural ?? 'Binaural';
       case 'noise':
@@ -208,14 +208,14 @@ class _SoundsPageState extends State<SoundsPage> {
     }
 
     // Add other categories (excluding favorited sounds from them)
-    // Define category order: regular categories first, then Binaural, Noise, Internet Radio last
+    //Define category order: regular categories first, then Binaural, Internet Radio last
     const categoryOrder = [
+      '@weather',
       '@nature',
+      '@noise',
       '@objects',
       '@places',
-      '@rain',
       '@binaural',
-      '@noise',
       '@internetRadio',
     ];
 

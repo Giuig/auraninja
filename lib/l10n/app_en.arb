@@ -1,6 +1,7 @@
 {
     "@@locale": "en",
     "sounds": "Sounds",
+    "weather": "Weather",
     "nature": "Nature",
     "rain": "Rain",
     "wind": "Wind",

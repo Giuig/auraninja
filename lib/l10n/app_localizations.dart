@@ -112,6 +112,12 @@ abstract class AppLocalizations {
   /// **'Sounds'**
   String get sounds;
 
+  /// No description provided for @weather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get weather;
+
   /// No description provided for @nature.
   ///
   /// In en, this message translates to:
