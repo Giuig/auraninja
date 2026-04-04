@@ -60,6 +60,27 @@ def get_size_mb(path):
     return os.path.getsize(path) / (1024 * 1024)
 
 
+def is_optimized(audio_path, ffmpeg, is_binaural):
+    """Check if file already meets target specs."""
+    try:
+        cmd = [ffmpeg, "-i", str(audio_path), "-hide_banner"]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        
+        output = result.stderr
+        
+        sample_rate = BINAURAL_SAMPLE_RATE if is_binaural else AMBIENT_SAMPLE_RATE
+        
+        if sample_rate not in output:
+            return False
+        
+        if "64k" not in output.lower() and "64 kb" not in output.lower():
+            return False
+            
+        return True
+    except Exception:
+        return False
+
+
 def normalize_audio(audio_path, ffmpeg):
     suffix = audio_path.suffix
     temp_path = audio_path.with_suffix(f".temp{suffix}")
@@ -151,6 +172,17 @@ def main():
         action="store_true",
         help="Preview without making changes"
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Limit number of files to process (0 = all)"
+    )
+    parser.add_argument(
+        "--skip-processed",
+        action="store_true",
+        help="Skip files already optimized to target specs"
+    )
     args = parser.parse_args()
 
     ffmpeg = find_ffmpeg()
@@ -180,16 +212,29 @@ def main():
     print(mode_name)
     print("=" * 60)
 
-    for audio_path in ambient_files:
+    all_files = ambient_files + binaural_files
+    
+    if args.limit > 0:
+        all_files = all_files[:args.limit]
+        
+    processed_count = 0
+    
+    for audio_path in all_files:
         rel_path = audio_path.relative_to(base_path)
+        is_binaural = audio_path.parent.name == "binaural"
         size_before = get_size_mb(audio_path)
 
         if args.dry_run:
             print(f"[DRY RUN] {rel_path}")
             continue
 
+        if args.skip_processed:
+            if is_optimized(audio_path, ffmpeg, is_binaural):
+                print(f"Skipping (already optimized): {rel_path}")
+                continue
+
         print(f"Processing: {rel_path} ... ", end="", flush=True)
-        size, ok = process_file(audio_path, ffmpeg, args.mode, is_binaural=False)
+        size, ok = process_file(audio_path, ffmpeg, args.mode, is_binaural)
 
         if ok:
             print(f"{size_before:.2f} MB -> {size:.2f} MB")
@@ -201,28 +246,11 @@ def main():
             total_before += size_before
             total_after += size_before
             failed += 1
-
-    for audio_path in binaural_files:
-        rel_path = audio_path.relative_to(base_path)
-        size_before = get_size_mb(audio_path)
-
-        if args.dry_run:
-            print(f"[DRY RUN] {rel_path}")
-            continue
-
-        print(f"Processing: {rel_path} ... ", end="", flush=True)
-        size, ok = process_file(audio_path, ffmpeg, args.mode, is_binaural=True)
-
-        if ok:
-            print(f"{size_before:.2f} MB -> {size:.2f} MB")
-            total_before += size_before
-            total_after += size
-            success += 1
-        else:
-            print("FAILED")
-            total_before += size_before
-            total_after += size_before
-            failed += 1
+            
+        processed_count += 1
+        
+        if args.limit > 0 and processed_count >= args.limit:
+            break
 
     print()
     print("=" * 60)
