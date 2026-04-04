@@ -1,7 +1,10 @@
+import 'package:auraninja/audio/wrapper_audio_handler.dart';
+import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MixesPage extends StatefulWidget {
   const MixesPage({super.key});
@@ -42,6 +45,27 @@ class _MixesPageState extends State<MixesPage> {
         _mixes = mixes;
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _playMix(Mix mix) async {
+    final handler = Provider.of<WrapperAudioHandler>(context, listen: false);
+
+    // Stop all currently playing sounds
+    await handler.stopAll();
+
+    // Get all available sounds
+    final allSounds = buildLocalizedSounds(context);
+    final soundMap = {for (final s in allSounds) s.path: s};
+
+    // Play each sound in the mix with saved volume
+    for (final mixSound in mix.sounds) {
+      final sound = soundMap[mixSound.path];
+      if (sound != null) {
+        handler.registerSounds([sound]);
+        await handler.ninjaPlay(mixSound.path);
+        handler.setVolume(mixSound.path, mixSound.volume);
+      }
     }
   }
 
@@ -98,9 +122,7 @@ class _MixesPageState extends State<MixesPage> {
             subtitle: Text('${mix.sounds.length} sounds'),
             trailing: IconButton(
               icon: const Icon(Icons.play_arrow),
-              onPressed: () {
-                // TODO: Implement mix playback
-              },
+              onPressed: () => _playMix(mix),
             ),
           ),
         );
