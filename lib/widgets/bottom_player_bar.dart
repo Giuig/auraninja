@@ -519,9 +519,9 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
             }
 
             return DraggableScrollableSheet(
-              initialChildSize: 0.4,
-              minChildSize: 0.2,
-              maxChildSize: 0.7,
+              initialChildSize: 0.55,
+              minChildSize: 0.3,
+              maxChildSize: 0.8,
               expand: false,
               builder: (ctx, scrollController) {
                 return Column(
