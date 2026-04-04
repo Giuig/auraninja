@@ -166,12 +166,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
     final mix = Mix(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: mixName,
-      sounds: controllers
-          .map((c) => MixSound(
-                path: c.sound.path,
-                volume: c.volume,
-              ))
-          .toList(),
+      sounds: controllers.map((c) => MixSound(path: c.sound.path)).toList(),
     );
 
     await MixesService.add(mix);

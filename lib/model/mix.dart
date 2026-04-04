@@ -38,7 +38,7 @@ class MixSound {
   final String path;
   final double volume;
 
-  MixSound({required this.path, required this.volume});
+  MixSound({required this.path, this.volume = 0.5});
 
   Map<String, dynamic> toJson() => {
         'path': path,
@@ -47,6 +47,7 @@ class MixSound {
 
   factory MixSound.fromJson(Map<String, dynamic> json) => MixSound(
         path: json['path'] as String,
-        volume: (json['volume'] as num).toDouble(),
+        volume:
+            json['volume'] != null ? (json['volume'] as num).toDouble() : 0.5,
       );
 }

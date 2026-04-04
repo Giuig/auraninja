@@ -62,7 +62,7 @@ class _MixesPageState extends State<MixesPage> {
     final allSounds = [...hardcoded, ...userStations];
     final soundMap = {for (final s in allSounds) s.path: s};
 
-    // Play each sound in the mix with saved volume
+    // Play each sound in the mix (volume uses default 0.5)
     for (final mixSound in mix.sounds) {
       NinjaSound? sound = soundMap[mixSound.path];
 
@@ -80,7 +80,6 @@ class _MixesPageState extends State<MixesPage> {
       if (sound != null) {
         handler.registerSounds([sound]);
         await handler.ninjaPlay(mixSound.path);
-        handler.setVolume(mixSound.path, mixSound.volume);
       }
     }
   }
