@@ -1,0 +1,5 @@
+Double tap to enter/exit fullscreen on visualizer
+Show sound info in fullscreen mode (name, metadata, paused state)
+Center text vertically in sound cards
+Show paused indicator in bottom bar
+Package name changed to io.github.giuig.auraninja

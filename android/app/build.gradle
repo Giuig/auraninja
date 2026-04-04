@@ -1,0 +1,86 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+// Read version from pubspec.yaml
+def versionFile = new File(project.projectDir.parentFile.parentFile, "pubspec.yaml")
+def versionPattern = /version:\s*([^\s+]+)(\+(\d+))?/
+def versionMatch = versionFile.text =~ versionPattern
+def pubspecVersionName = versionMatch ? versionMatch[0][1] : "1.0.0"
+
+// Generate versionCode: for "1.0.3" -> 1003, for "1.0.3+58" -> 58
+def pubspecVersionCode
+if (versionMatch && versionMatch[0][3]) {
+    pubspecVersionCode = versionMatch[0][3].toInteger()
+} else {
+    // Semantic version: convert "1.0.3" to 1003
+    def versionParts = pubspecVersionName.split('\\.')
+    def major = versionParts.length > 0 ? versionParts[0].toInteger() : 0
+    def minor = versionParts.length > 1 ? versionParts[1].toInteger() : 0
+    def patch = versionParts.length > 2 ? versionParts[2].toInteger() : 0
+    pubspecVersionCode = major * 10000 + minor * 100 + patch
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace "io.github.giuig.auraninja"
+    compileSdk 36
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId "io.github.giuig.auraninja"
+        minSdk 26
+        targetSdk 35
+        versionCode pubspecVersionCode
+        versionName pubspecVersionName
+        multiDexEnabled true
+    }
+
+    // Required by IzzyOnDroid / F-Droid
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
+}

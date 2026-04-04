@@ -1,0 +1,17 @@
+name: Version Bump
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pubspec.yaml'
+
+permissions:
+  contents: write
+
+jobs:
+  version-bump:
+    uses: Giuig/ninja_material/.github/workflows/version-bump.yml@main
+    with:
+      app-name: auraninja
+      trigger-web: true

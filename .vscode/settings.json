@@ -1,0 +1,7 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "cSpell.words": [
+        "auraninja"
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

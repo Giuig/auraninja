@@ -1,0 +1,14 @@
+Auraninja is a minimalist ambient sound mixer and internet radio app built with Material You design.
+
+Features:
+
+- Mix multiple ambient sounds (rain, birds, fire, wind, waves, thunder, cat, binaural beats)
+- Internet radio support with Yumi Co. and Radio Browser
+- Beautiful animated visualizers (Liquid Ribbons, Breathing Orb, Radial Rings, Particle Drift, Rotating Mandala, Constellation, Morphing Polygon, Aurora, Ink Diffusion)
+- Binaural beats for focus, deep sleep, and relaxation
+- Brown, pink, white, and green noise generators
+- Sleep timer with countdown
+- Volume control per sound
+- Dark and light Material You themes
+- Fully localized (English, Italian, French, German, Spanish, Japanese)
+- No ads, no tracking, fully open source

@@ -1,0 +1,21 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-build]
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: Giuig/ninja_material/.github/workflows/build-app.yml@main
+    with:
+      app-name: auraninja
+      package-id: io.github.giuig.auraninja
+      version: ${{ github.event.client_payload.version || github.ref_name || 'v1.1.1' }}
+    secrets: inherit

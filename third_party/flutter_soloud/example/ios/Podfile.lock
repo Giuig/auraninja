@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_soloud (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_soloud (from `.symlinks/plugins/flutter_soloud/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_soloud:
+    :path: ".symlinks/plugins/flutter_soloud/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_soloud: 272cc604453b6ca135f274045fb259e7c6426122
+
+PODFILE CHECKSUM: 2c9265d0c975a4d2eb77a8fbb80da000589fe91a
+
+COCOAPODS: 1.16.2

@@ -1,0 +1,31 @@
+# Flutter/Dart
+*.dart text eol=lf
+*.arb text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.xml text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.swift text eol=lf
+*.cc text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.cmake text eol=lf
+*.kt text eol=lf
+*.java text eol=lf
+
+# Binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

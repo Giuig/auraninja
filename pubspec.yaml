@@ -1,0 +1,121 @@
+name: auraninja
+description: Ambient sounds, binaural beats, and internet radio for focus and relaxation
+
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+version: 1.6.1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  ninja_material:
+    git:
+      url: https://github.com/Giuig/ninja_material.git
+      ref: v1.4.3
+
+  flutter_localizations:
+    sdk: flutter
+
+  # Audio dependencies
+  just_audio: ^0.10.5
+  audio_service: ^0.18.18
+  audio_session: ^0.2.3
+  flutter_soloud:
+    path: third_party/flutter_soloud
+
+  # UI
+  marquee: ^2.3.0
+  wakelock_plus: ^1.1.4
+
+  # Web
+  web: ^1.0.0
+
+  # Links
+  url_launcher: ^6.3.2
+
+  # Image caching
+  cached_network_image: ^3.4.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.6
+  build_runner: ^2.5.4
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  fonts:
+  - family: The Hand
+    fonts:
+      - asset: assets/fonts/The Hand Regular.otf
+
+  assets:
+    # Audio - Binaural
+    - assets/sounds/binaural/alpha-8hz.ogg
+    - assets/sounds/binaural/delta-1hz.ogg
+    - assets/sounds/binaural/delta-2hz.ogg
+    - assets/sounds/binaural/focus-10hz.ogg
+    - assets/sounds/binaural/theta-4hz.ogg
+    - assets/sounds/binaural/theta-5hz.ogg
+    # Audio - Nature
+    - assets/sounds/nature/birds.ogg
+    - assets/sounds/nature/cat.ogg
+    - assets/sounds/nature/crickets.ogg
+    - assets/sounds/nature/droplets.ogg
+    - assets/sounds/nature/fire.ogg
+    - assets/sounds/nature/frog.ogg
+    - assets/sounds/nature/howling-wind.ogg
+    - assets/sounds/nature/jungle.ogg
+    - assets/sounds/nature/owl.ogg
+    - assets/sounds/nature/river.ogg
+    - assets/sounds/nature/thunder.ogg
+    - assets/sounds/nature/walk-in-snow.ogg
+    - assets/sounds/nature/walk-on-gravel.ogg
+    - assets/sounds/nature/walk-on-leaves.ogg
+    - assets/sounds/nature/waterfall.ogg
+    - assets/sounds/nature/waves.ogg
+    - assets/sounds/nature/whale.ogg
+    - assets/sounds/nature/wind-in-trees.ogg
+    - assets/sounds/nature/wind.ogg
+    # Audio - Rain
+    - assets/sounds/rain/heavy-rain.ogg
+    - assets/sounds/rain/light-rain.ogg
+    - assets/sounds/rain/rain-on-car-roof.ogg
+    - assets/sounds/rain/rain-on-umbrella.ogg
+    - assets/sounds/rain/rain-on-window.ogg
+    # Audio - Objects
+    - assets/sounds/things/boiling-water.ogg
+    - assets/sounds/things/bubbles.ogg
+    - assets/sounds/things/ceiling-fan.ogg
+    - assets/sounds/things/clock.ogg
+    - assets/sounds/things/keyboard.ogg
+    - assets/sounds/things/singing-bowl.ogg
+    - assets/sounds/things/typewriter.ogg
+    - assets/sounds/things/wind-chimes.ogg
+    # Audio - Places
+    - assets/sounds/places/cafe.ogg
+    - assets/sounds/places/library.ogg
+    - assets/sounds/places/office.ogg
+    - assets/sounds/places/plane.ogg
+    - assets/sounds/places/train.ogg
+    - assets/sounds/places/underwater.ogg
+    # Audio - Noise
+    - assets/sounds/noise/brown-noise.ogg
+    - assets/sounds/noise/green.ogg
+    - assets/sounds/noise/pink-noise.ogg
+    - assets/sounds/noise/white-noise.ogg
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: assets/icons/auraninja_icon.png
+  adaptive_icon_background: "#3D7A3F"  # pale dark green - matches app theme
+  adaptive_icon_foreground: assets/icons/auraninja_icon.png

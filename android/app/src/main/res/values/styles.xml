@@ -1,0 +1,14 @@
+<resources>
+
+    <!-- Launch screen theme -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <!-- Show a solid background color or launch drawable -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <!-- Normal app theme after launch -->
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+</resources>

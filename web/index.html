@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF" />
+
+  <meta charset="UTF-8" />
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+  <meta name="description" content="A new Flutter project." />
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="auraninja" />
+  <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.ico" />
+
+  <title>auraninja</title>
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- ICY Metadata Parser - single persistent connection -->
+  <script>
+    // Keep track of active metadata connection (only one at a time)
+    window._icecastConnection = null;
+    
+    // Start a persistent connection to read metadata from stream
+    window.startIcecastMetadata = function(streamUrl, onUpdate) {
+      // Stop any existing connection first
+      window.stopIcecastMetadata();
+      
+      console.log('[Auraninja] Starting metadata stream for:', streamUrl);
+      
+      window._icecastConnection = {
+        streamUrl: streamUrl,
+        lastTitle: null,
+        icyName: null,
+        onUpdate: onUpdate,
+        abortController: new AbortController()
+      };
+      
+      const conn = window._icecastConnection;
+      
+      // Start reading the stream
+      const readStream = async () => {
+        try {
+          const response = await fetch(streamUrl, {
+            method: 'GET',
+            headers: {
+              'Icy-MetaData': '1'
+            },
+            signal: conn.abortController.signal
+          });
+          
+          // Get headers
+          conn.icyName = response.headers.get('Icy-Name');
+          const metaint = parseInt(response.headers.get('Icy-MetaInt') || '0', 10);
+          
+          console.log('[Auraninja] Connected. Icy-MetaInt:', metaint, 'Icy-Name:', conn.icyName);
+          
+          if (!metaint) {
+            console.log('[Auraninja] No Icy-MetaInt, using Icy-Name only');
+            if (conn.icyName) {
+              conn.lastTitle = conn.icyName;
+              if (conn.onUpdate) conn.onUpdate(conn.icyName);
+            }
+            return;
+          }
+          
+          // Read stream and parse metadata
+          const reader = response.body.getReader();
+          let buffer = new Uint8Array(0);
+          let bytesUntilMeta = metaint;
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            // Append to buffer
+            const newBuffer = new Uint8Array(buffer.length + value.length);
+            newBuffer.set(buffer);
+            newBuffer.set(value, buffer.length);
+            buffer = newBuffer;
+            
+            // Process buffer to extract metadata
+            while (buffer.length > bytesUntilMeta + 1) {
+              // Skip audio data
+              if (bytesUntilMeta > 0) {
+                buffer = buffer.slice(bytesUntilMeta);
+                bytesUntilMeta = 0;
+              }
+              
+              // Read metadata length
+              const metaLength = buffer[0] * 16;
+              
+              if (metaLength === 0) {
+                // No metadata, skip to next block
+                buffer = buffer.slice(1);
+                bytesUntilMeta = metaint;
+                continue;
+              }
+              
+              // Check if we have full metadata
+              if (buffer.length < 1 + metaLength) {
+                break; // Wait for more data
+              }
+              
+              // Extract metadata
+              const metaBytes = buffer.slice(1, 1 + metaLength);
+              const metaString = new TextDecoder().decode(metaBytes).replace(/\0/g, '');
+              
+              // Parse StreamTitle
+              const match = metaString.match(/StreamTitle='([^']*)'/);
+              if (match && match[1] && match[1].trim()) {
+                const title = match[1].trim();
+                if (title !== conn.lastTitle) {
+                  conn.lastTitle = title;
+                  console.log('[Auraninja] StreamTitle:', title);
+                  if (conn.onUpdate) {
+                    conn.onUpdate(title);
+                  }
+                }
+              }
+              
+              // Move past metadata and set up for next block
+              buffer = buffer.slice(1 + metaLength);
+              bytesUntilMeta = metaint;
+            }
+            
+            // Keep buffer small
+            if (buffer.length > metaint * 2) {
+              buffer = buffer.slice(-metaint);
+            }
+          }
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            console.error('[Auraninja] Stream error:', e);
+          }
+        }
+      };
+      
+      // Start reading in background
+      readStream();
+    };
+    
+    // Get cached metadata (instant, no new requests)
+    window.fetchIcecastMetadata = function(streamUrl) {
+      const conn = window._icecastConnection;
+      
+      // Return cached value if connection exists and matches
+      if (conn && conn.streamUrl === streamUrl && conn.lastTitle) {
+        return conn.lastTitle;
+      }
+      
+      // Return icy name if available but no stream title yet
+      if (conn && conn.streamUrl === streamUrl && conn.icyName) {
+        return conn.icyName;
+      }
+      
+      // No connection yet - start one and return icy name as fallback
+      if (!conn || conn.streamUrl !== streamUrl) {
+        window.startIcecastMetadata(streamUrl, () => {
+          // Callback will be called when metadata updates
+        });
+      }
+      
+      return null;
+    };
+    
+    // Stop metadata connection
+    window.stopIcecastMetadata = function() {
+      if (window._icecastConnection) {
+        window._icecastConnection.abortController.abort();
+        window._icecastConnection = null;
+      }
+    };
+  </script>
+
+</head>
+
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+slug: auraninja
+name: auraninja
+github: https://github.com/Giuig/auraninja
+description: >
+  Ambient sound and focus app built with Flutter. Mix nature sounds, binaural beats, white noise, and internet radio stations to create your perfect sound environment.
+web_url: https://giuig.github.io/auraninja/
+build_commands: |
+  flutter pub get
+  flutter build apk --release --split-per-abi --no-tree-shake-icons --split-debug-info=build/debug-info
+  flutter build web --base-href=/auraninja/ --release
+features:
+  - "**Nature Sounds** — rain, forest, fire, ocean, and more, mixable simultaneously"
+  - "**Binaural Beats** — focus, relaxation, and sleep frequencies"
+  - "**White / Brown / Pink Noise** — classic noise profiles for concentration"
+  - "**Internet Radio** — search and add any station via the Radio Browser directory"
+  - "**Custom Stations** — add radio streams by URL or search by name"
+  - "**Station Logos** — automatic artwork fetched from Radio Browser"
+  - "**Volume Per Sound** — independent volume slider on every card"
+  - "**Playback-aware Visualizer** — animated ribbons that react to what is playing"
+  - "**Lock Screen Controls** — media notification with track metadata"
+  - "**Material You** — dynamic color theming, light and dark mode"
+  - "**Google-Free** — no Google Play Services required, fully FOSS"
+kofi_url: https://ko-fi.com/giuig
+kofi_description: "I make FOSS apps in my free time, a coffee would help me keep them going!"
+izzyondroid: true
