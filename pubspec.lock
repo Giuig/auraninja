@@ -575,10 +575,12 @@ packages:
   ninja_material:
     dependency: "direct main"
     description:
-      path: "../ninja_material"
-      relative: true
-    source: path
-    version: "1.4.3"
+      path: "."
+      ref: "v1.5.0"
+      resolved-ref: "4d85ae211189bf9b5b1bbd2cfab32ed15c90e569"
+      url: "https://github.com/Giuig/ninja_material.git"
+    source: git
+    version: "1.5.0"
   objective_c:
     dependency: transitive
     description:

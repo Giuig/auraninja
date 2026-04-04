@@ -77,15 +77,15 @@ class _AddStationPageState extends State<AddStationPage>
     try {
       final uri =
           Uri.https('de1.api.radio-browser.info', '/json/stations/search', {
-            'name': query,
-            'limit': '40',
-            'hidebroken': 'true',
-            'order': 'votes',
-            'reverse': 'true',
-          });
-      final resp = await http
-          .get(uri, headers: {'User-Agent': 'Auraninja/1.0'})
-          .timeout(const Duration(seconds: 10));
+        'name': query,
+        'limit': '40',
+        'hidebroken': 'true',
+        'order': 'votes',
+        'reverse': 'true',
+      });
+      final resp = await http.get(uri, headers: {
+        'User-Agent': 'Auraninja/1.0'
+      }).timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final list = jsonDecode(resp.body) as List;
         setState(() {
@@ -103,8 +103,7 @@ class _AddStationPageState extends State<AddStationPage>
 
   Future<void> _addFromSearch(Map<String, dynamic> station) async {
     final favicon = (station['favicon'] as String?) ?? '';
-    final url =
-        (station['url_resolved'] as String?) ??
+    final url = (station['url_resolved'] as String?) ??
         (station['url'] as String?) ??
         '';
     if (url.isEmpty) return;
@@ -114,7 +113,6 @@ class _AddStationPageState extends State<AddStationPage>
       category: widget.categoryKey,
       icon: favicon.isNotEmpty ? favicon : '📻',
       path: url,
-      attribution: (station['homepage'] as String?) ?? '',
       isUserAdded: true,
     );
 
@@ -133,7 +131,6 @@ class _AddStationPageState extends State<AddStationPage>
       category: widget.categoryKey,
       icon: '📻',
       path: url,
-      attribution: '',
       isUserAdded: true,
     );
 
@@ -175,7 +172,8 @@ class _AddStationPageState extends State<AddStationPage>
                 padding: const EdgeInsets.all(16),
                 child: SearchBar(
                   controller: _searchCtrl,
-                  hintText: l10n?.searchStationsHint ?? 'Search stations by name…',
+                  hintText:
+                      l10n?.searchStationsHint ?? 'Search stations by name…',
                   onChanged: _onSearchChanged,
                   trailing: [
                     _searching
@@ -218,50 +216,51 @@ class _AddStationPageState extends State<AddStationPage>
                   ),
                 )
               else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, i) {
-                    final s = _searchResults[i];
-                    final favicon = (s['favicon'] as String?) ?? '';
-                    final name = (s['name'] as String?) ?? '';
-                    final country = (s['country'] as String?) ?? '';
-                    final tags = (s['tags'] as String?) ?? '';
-                    final subtitle = [
-                      if (country.isNotEmpty) country,
-                      if (tags.isNotEmpty) tags,
-                    ].join(' · ');
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _searchResults.length,
+                    itemBuilder: (context, i) {
+                      final s = _searchResults[i];
+                      final favicon = (s['favicon'] as String?) ?? '';
+                      final name = (s['name'] as String?) ?? '';
+                      final country = (s['country'] as String?) ?? '';
+                      final tags = (s['tags'] as String?) ?? '';
+                      final subtitle = [
+                        if (country.isNotEmpty) country,
+                        if (tags.isNotEmpty) tags,
+                      ].join(' · ');
 
-                    return ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          color: colorScheme.surfaceContainerHighest,
-                          alignment: Alignment.center,
-                          child: const Text('📻', style: TextStyle(fontSize: 22)),
+                      return ListTile(
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            color: colorScheme.surfaceContainerHighest,
+                            alignment: Alignment.center,
+                            child: const Text('📻',
+                                style: TextStyle(fontSize: 22)),
+                          ),
                         ),
-                      ),
-                      title: Text(name),
-                      subtitle: subtitle.isNotEmpty
-                          ? Text(
-                              subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          : null,
-                      trailing: IconButton(
-                        icon: Icon(
-                          Icons.add_circle_outline,
-                          color: colorScheme.primary,
+                        title: Text(name),
+                        subtitle: subtitle.isNotEmpty
+                            ? Text(
+                                subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : null,
+                        trailing: IconButton(
+                          icon: Icon(
+                            Icons.add_circle_outline,
+                            color: colorScheme.primary,
+                          ),
+                          onPressed: () => _addFromSearch(s),
                         ),
-                        onPressed: () => _addFromSearch(s),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
 
@@ -286,7 +285,8 @@ class _AddStationPageState extends State<AddStationPage>
                 TextField(
                   controller: _nameCtrl,
                   decoration: InputDecoration(
-                    labelText: l10n?.stationNameOptional ?? 'Station name (optional)',
+                    labelText:
+                        l10n?.stationNameOptional ?? 'Station name (optional)',
                     prefixIcon: const Icon(Icons.label_outline),
                     border: const OutlineInputBorder(),
                   ),

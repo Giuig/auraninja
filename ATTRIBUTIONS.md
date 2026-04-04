@@ -2,18 +2,14 @@
 
 ## Sound Assets
 
+### Ambient Sounds
+All ambient sounds are sourced from [Pixabay](https://pixabay.com) under the Pixabay Content License (free for personal and commercial use, no attribution required).
+
 ### Binaural Beats
-- Binaural beat sounds are licensed from [Binauro](https://binauro.com/downloads)
+Binaural beat sounds are licensed from [Binauro](https://binauro.com/downloads).
 
-### Internet Radio Stations
-- Yumi Co. Radio — https://yumicoradio.net
-
-### Ambient Sounds (Pixabay)
-Most ambient sounds are sourced from [Pixabay](https://pixabay.com) under the Pixabay Content License:
-- Free for personal and commercial use
-- No attribution required
-
-This includes: nature sounds, rain variants, things sounds, and noise generators.
+### Internet Radio
+Radio stations use the [Radio Browser API](https://www.radio-browser.info) for station search and metadata.
 
 ## Software
 
@@ -24,3 +20,4 @@ This project uses the following open-source packages:
 - provider
 - shared_preferences
 - cached_network_image
+- linkify

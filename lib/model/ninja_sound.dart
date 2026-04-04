@@ -3,7 +3,6 @@ class NinjaSound {
   final String category;
   final dynamic icon; // IconData | String (emoji or http URL)
   final String path;
-  final String attribution;
   final bool isUserAdded;
 
   NinjaSound({
@@ -11,19 +10,17 @@ class NinjaSound {
     required this.category,
     required this.icon,
     required this.path,
-    required this.attribution,
     this.isUserAdded = false,
   });
 
   static NinjaSound empty =
-      NinjaSound(path: '', name: '', category: '', icon: '', attribution: '');
+      NinjaSound(path: '', name: '', category: '', icon: '');
 
   Map<String, dynamic> toJson() => {
         'name': name,
         'category': category,
         'icon': icon is String ? icon as String : '',
         'path': path,
-        'attribution': attribution,
         'isUserAdded': isUserAdded,
       };
 
@@ -32,7 +29,6 @@ class NinjaSound {
         category: json['category'] as String? ?? '',
         icon: json['icon'] as String? ?? '📻',
         path: json['path'] as String? ?? '',
-        attribution: json['attribution'] as String? ?? '',
         isUserAdded: json['isUserAdded'] as bool? ?? true,
       );
 }
