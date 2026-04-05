@@ -141,6 +141,7 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       category: '@nature',
       icon: '🦉',
       path: 'assets/sounds/nature/owl.ogg',
+      volumeMultiplier: 1.5,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.whale : 'Whale',
@@ -179,6 +180,7 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       category: '@objects',
       icon: '🎐',
       path: 'assets/sounds/things/wind-chimes.ogg',
+      volumeMultiplier: 1.3,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.singingBowl : 'Singing Bowl',
@@ -249,24 +251,28 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       category: '@binaural',
       icon: '🎯',
       path: 'assets/sounds/binaural/focus-10hz.ogg',
+      volumeMultiplier: 2.5,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.creativeFlow : 'Creative Flow',
       category: '@binaural',
       icon: '🎨',
       path: 'assets/sounds/binaural/alpha-8hz.ogg',
+      volumeMultiplier: 2.5,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.zenCalm : 'Zen Calm',
       category: '@binaural',
       icon: '🧘',
       path: 'assets/sounds/binaural/theta-5hz.ogg',
+      volumeMultiplier: 2.5,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.deepCalm : 'Deep Calm',
       category: '@binaural',
       icon: '🌙',
       path: 'assets/sounds/binaural/theta-4hz.ogg',
+      volumeMultiplier: 2.5,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.deepSleep : 'Deep Sleep',
@@ -288,24 +294,28 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       category: '@noise',
       icon: '🟤',
       path: 'assets/sounds/noise/brown-noise.ogg',
+      volumeMultiplier: 1.2,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.green : 'Green Noise',
       category: '@noise',
       icon: '🟢',
       path: 'assets/sounds/noise/green.ogg',
+      volumeMultiplier: 1.2,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.pink : 'Pink Noise',
       category: '@noise',
       icon: '🌸',
       path: 'assets/sounds/noise/pink-noise.ogg',
+      volumeMultiplier: 1.2,
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.white : 'White Noise',
       category: '@noise',
       icon: '⚪',
       path: 'assets/sounds/noise/white-noise.ogg',
+      volumeMultiplier: 1.2,
     ),
   ];
 

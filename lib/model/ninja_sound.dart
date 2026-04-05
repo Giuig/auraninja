@@ -4,6 +4,8 @@ class NinjaSound {
   final dynamic icon; // IconData | String (emoji or http URL)
   final String path;
   final bool isUserAdded;
+  final double
+      volumeMultiplier; // Volume adjustment (1.0 = normal, >1.0 = louder)
 
   NinjaSound({
     required this.name,
@@ -11,6 +13,7 @@ class NinjaSound {
     required this.icon,
     required this.path,
     this.isUserAdded = false,
+    this.volumeMultiplier = 1.0,
   });
 
   static NinjaSound empty =
@@ -22,6 +25,7 @@ class NinjaSound {
         'icon': icon is String ? icon as String : '',
         'path': path,
         'isUserAdded': isUserAdded,
+        'volumeMultiplier': volumeMultiplier,
       };
 
   factory NinjaSound.fromJson(Map<String, dynamic> json) => NinjaSound(
@@ -30,6 +34,7 @@ class NinjaSound {
         icon: json['icon'] as String? ?? '📻',
         path: json['path'] as String? ?? '',
         isUserAdded: json['isUserAdded'] as bool? ?? true,
+        volumeMultiplier: (json['volumeMultiplier'] as num?)?.toDouble() ?? 1.0,
       );
 }
 
