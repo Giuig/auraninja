@@ -250,7 +250,7 @@ class SoundController with ChangeNotifier {
         _soloudHandle = await SoLoud.instance.play(
           _soloudSource!,
           looping: true,
-          volume: _volume * sound.volumeMultiplier,
+          volume: _volume,
         );
         _status = PlaybackStatus.playing;
         notifyListeners();
