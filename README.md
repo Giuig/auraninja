@@ -62,6 +62,7 @@ flutter build web --base-href=/auraninja/ --release
 
 | App | Description |
 |---|---|
+| [tvninja](https://github.com/Giuig/tvninja) | IPTV / M3U8 player |
 | [decisioninja](https://github.com/Giuig/decisioninja) | Decision-making app - dice, coin flip, spinner |
 | [ninja_material](https://github.com/Giuig/ninja_material) | Shared Flutter library powering all ninja apps |
 
