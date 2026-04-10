@@ -58,6 +58,14 @@ flutter build apk --release --split-per-abi --no-tree-shake-icons --split-debug-
 flutter build web --base-href=/auraninja/ --release
 ```
 
+## Part of the ninja apps family
+
+| App | Description |
+|---|---|
+| [tvninja](https://github.com/Giuig/tvninja) | IPTV / M3U8 player |
+| [decisioninja](https://github.com/Giuig/decisioninja) | Decision-making app - dice, coin flip, spinner |
+| [ninja_material](https://github.com/Giuig/ninja_material) | Shared Flutter library powering all ninja apps |
+
 ## License
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)

@@ -2,14 +2,15 @@
 """Audio processing pipeline for Auraninja.
 
 Pipeline:
-  1. Normalize: Apply loudness normalization (-16 LUFS EBU R128)
-  2. Optimize: Compress to target specs
+  1. Optimize: Compress to target specs (64kbps, 22.05kHz)
+  
+NOTE: Normalization is NOT applied - use volumeMultiplier in app code instead.
 
 Usage:
-    python audio_pipeline.py                          # Full pipeline (normalize + optimize)
-    python audio_pipeline.py --mode normalize        # Only normalize
-    python audio_pipeline.py --mode optimize         # Only compress
+    python audio_pipeline.py                          # Optimize all sounds
     python audio_pipeline.py --dry-run               # Preview without making changes
+    python audio_pipeline.py --limit 10               # Limit number of files
+    python audio_pipeline.py --skip-processed         # Skip already optimized files
 """
 
 import subprocess
@@ -20,9 +21,6 @@ import argparse
 from pathlib import Path
 
 AUDIO_EXTENSIONS = {".ogg", ".mp3", ".wav", ".flac", ".m4a", ".aac"}
-
-NORMALIZE_TARGET = "-16"
-NORMALIZE_FILTER = f"loudnorm=I={NORMALIZE_TARGET}:TP=-1.5:LRA=11"
 
 BINAURAL_DIR = "assets/sounds/binaural"
 BINAURAL_DURATION = 10
@@ -162,12 +160,6 @@ def process_file(audio_path, ffmpeg, mode, is_binaural):
 def main():
     parser = argparse.ArgumentParser(description="Audio processing pipeline")
     parser.add_argument(
-        "--mode",
-        choices=["full", "normalize", "optimize"],
-        default="full",
-        help="Processing mode (default: full)"
-    )
-    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Preview without making changes"
@@ -202,14 +194,8 @@ def main():
     success = 0
     failed = 0
 
-    mode_name = {
-        "full": "FULL PIPELINE (normalize + optimize)",
-        "normalize": "NORMALIZE (loudness -16 LUFS)",
-        "optimize": "OPTIMIZE (compress)"
-    }[args.mode]
-
     print("=" * 60)
-    print(mode_name)
+    print("OPTIMIZE (compress to target specs)")
     print("=" * 60)
 
     all_files = ambient_files + binaural_files
@@ -234,7 +220,7 @@ def main():
                 continue
 
         print(f"Processing: {rel_path} ... ", end="", flush=True)
-        size, ok = process_file(audio_path, ffmpeg, args.mode, is_binaural)
+        size, ok = process_file(audio_path, ffmpeg, "optimize", is_binaural)
 
         if ok:
             print(f"{size_before:.2f} MB -> {size:.2f} MB")
