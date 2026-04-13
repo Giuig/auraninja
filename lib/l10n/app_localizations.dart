@@ -127,7 +127,7 @@ abstract class AppLocalizations {
   /// No description provided for @noMixesHint.
   ///
   /// In en, this message translates to:
-  /// **'Play sounds and save as a mix'**
+  /// **'Play sounds, then tap \'Save Mix\' in the player'**
   String get noMixesHint;
 
   /// No description provided for @saveMix.
@@ -699,6 +699,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search sounds...'**
   String get searchSounds;
+
+  /// No description provided for @nameMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Name your mix'**
+  String get nameMix;
+
+  /// No description provided for @mixNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix name'**
+  String get mixNameLabel;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @renameMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename mix'**
+  String get renameMix;
+
+  /// No description provided for @deleteMixTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete mix?'**
+  String get deleteMixTitle;
+
+  /// No description provided for @deleteMixContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This mix will be permanently removed.'**
+  String get deleteMixContent;
+
+  /// No description provided for @duplicateMixName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already in use'**
+  String get duplicateMixName;
+
+  /// No description provided for @updateMixSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Update sounds'**
+  String get updateMixSounds;
+
+  /// No description provided for @mixUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix updated'**
+  String get mixUpdated;
 }
 
 class _AppLocalizationsDelegate

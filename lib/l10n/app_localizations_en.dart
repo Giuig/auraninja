@@ -18,7 +18,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMixes => 'No mixes saved';
 
   @override
-  String get noMixesHint => 'Play sounds and save as a mix';
+  String get noMixesHint => 'Play sounds, then tap \'Save Mix\' in the player';
 
   @override
   String get saveMix => 'Save Mix';
@@ -308,4 +308,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchSounds => 'Search sounds...';
+
+  @override
+  String get nameMix => 'Name your mix';
+
+  @override
+  String get mixNameLabel => 'Mix name';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get renameMix => 'Rename mix';
+
+  @override
+  String get deleteMixTitle => 'Delete mix?';
+
+  @override
+  String get deleteMixContent => 'This mix will be permanently removed.';
+
+  @override
+  String get duplicateMixName => 'Name already in use';
+
+  @override
+  String get updateMixSounds => 'Update sounds';
+
+  @override
+  String get mixUpdated => 'Mix updated';
 }

@@ -245,7 +245,7 @@ class SoundCard extends StatelessWidget {
                       color: isFavorite
                           ? colorScheme.primary
                           : colorScheme.outlineVariant,
-                      width: 1,
+                      width: 2,
                     ),
                   ),
                   child: Icon(

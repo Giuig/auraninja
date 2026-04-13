@@ -18,7 +18,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noMixes => 'Aucun mix enregistré';
 
   @override
-  String get noMixesHint => 'Jouez des sons et enregistrez-les comme mix';
+  String get noMixesHint =>
+      'Jouez des sons, puis touchez \'Enregistrer le Mix\' dans le lecteur';
 
   @override
   String get saveMix => 'Enregistrer le Mix';
@@ -308,4 +309,34 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get searchSounds => 'Rechercher des sons...';
+
+  @override
+  String get nameMix => 'Nommer le mix';
+
+  @override
+  String get mixNameLabel => 'Nom du mix';
+
+  @override
+  String get cancel => 'Annuler';
+
+  @override
+  String get delete => 'Supprimer';
+
+  @override
+  String get renameMix => 'Renommer le mix';
+
+  @override
+  String get deleteMixTitle => 'Supprimer le mix ?';
+
+  @override
+  String get deleteMixContent => 'Ce mix sera définitivement supprimé.';
+
+  @override
+  String get duplicateMixName => 'Nom déjà utilisé';
+
+  @override
+  String get updateMixSounds => 'Mettre à jour les sons';
+
+  @override
+  String get mixUpdated => 'Mix mis à jour';
 }

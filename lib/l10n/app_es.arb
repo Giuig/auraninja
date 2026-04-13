@@ -2,7 +2,7 @@
     "sounds": "Sonidos",
     "mixes": "Mezclas",
     "noMixes": "Sin mezclas guardadas",
-    "noMixesHint": "Reproduce sonidos y guárdalos como mezcla",
+    "noMixesHint": "Reproduce sonidos y toca 'Guardar Mezcla' en el reproductor",
     "saveMix": "Guardar Mezcla",
     "mixSaved": "Mezcla guardada",
     "activeSounds": "Sonidos Activos",
@@ -119,5 +119,15 @@
     "train": "Tren",
     "airplane": "Avión",
     "underwater": "Bajo el agua",
-    "searchSounds": "Buscar sonidos..."
+    "searchSounds": "Buscar sonidos...",
+    "nameMix": "Nombrar mezcla",
+    "mixNameLabel": "Nombre de la mezcla",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "renameMix": "Renombrar mezcla",
+    "deleteMixTitle": "¿Eliminar mezcla?",
+    "deleteMixContent": "Esta mezcla se eliminará permanentemente.",
+    "duplicateMixName": "Nombre ya en uso",
+    "updateMixSounds": "Actualizar sonidos",
+    "mixUpdated": "Mezcla actualizada"
 }

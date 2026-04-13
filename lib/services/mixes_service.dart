@@ -8,18 +8,26 @@ class MixesService {
   static final ValueNotifier<List<Mix>> mixesNotifier = ValueNotifier([]);
 
   static Future<List<Mix>> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = prefs.getStringList(_key);
-    if (jsonList == null) return [];
-    return jsonList
-        .map((json) => Mix.fromJson(jsonDecode(json) as Map<String, dynamic>))
-        .toList();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = prefs.getStringList(_key);
+      if (jsonList == null) return [];
+      return jsonList
+          .map((json) => Mix.fromJson(jsonDecode(json) as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   static Future<void> save(List<Mix> mixes) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = mixes.map((m) => jsonEncode(m.toJson())).toList();
-    await prefs.setStringList(_key, jsonList);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = mixes.map((m) => jsonEncode(m.toJson())).toList();
+      await prefs.setStringList(_key, jsonList);
+    } catch (_) {
+      // Persistence failure — in-memory notifier still updated below
+    }
     mixesNotifier.value = List.from(mixes);
   }
 

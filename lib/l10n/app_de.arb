@@ -2,7 +2,7 @@
     "sounds": "Klänge",
     "mixes": "Mischungen",
     "noMixes": "Keine Mischungen gespeichert",
-    "noMixesHint": "Spiele Klänge ab und speichere als Mischung",
+    "noMixesHint": "Spiele Klänge ab, dann tippe 'Mischung Speichern' im Player",
     "saveMix": "Mischung Speichern",
     "mixSaved": "Mischung gespeichert",
     "activeSounds": "Aktive Klänge",
@@ -119,5 +119,15 @@
     "train": "Zug",
     "airplane": "Flugzeug",
     "underwater": "Unterwasser",
-    "searchSounds": "Klänge suchen..."
+    "searchSounds": "Klänge suchen...",
+    "nameMix": "Mix benennen",
+    "mixNameLabel": "Mix-Name",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "renameMix": "Mix umbenennen",
+    "deleteMixTitle": "Mix löschen?",
+    "deleteMixContent": "Dieser Mix wird dauerhaft gelöscht.",
+    "duplicateMixName": "Name bereits vergeben",
+    "updateMixSounds": "Klänge aktualisieren",
+    "mixUpdated": "Mischung aktualisiert"
 }

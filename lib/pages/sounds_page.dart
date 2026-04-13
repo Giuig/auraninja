@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/model/ninja_sound.dart';
+import 'package:auraninja/model/mix.dart';
+import 'package:auraninja/services/mixes_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SoundsPage extends StatefulWidget {
@@ -169,6 +171,19 @@ class _SoundsPageState extends State<SoundsPage> {
       await wrapper.unregisterSound(sound.path);
       await UserStationsService.remove(sound.path);
       await FavoritesService.save(_favorites);
+      // Remove deleted station from any saved mixes
+      final mixes = await MixesService.load();
+      final updatedMixes = mixes
+          .map((m) => Mix(
+                id: m.id,
+                name: m.name,
+                icon: m.icon,
+                createdAt: m.createdAt,
+                sounds:
+                    m.sounds.where((s) => s.path != sound.path).toList(),
+              ))
+          .toList();
+      await MixesService.save(updatedMixes);
     }
   }
 
@@ -464,7 +479,7 @@ class _SoundsPageState extends State<SoundsPage> {
                                                             border: Border.all(
                                                               color: colorScheme
                                                                   .error,
-                                                              width: 1,
+                                                              width: 2,
                                                             ),
                                                           ),
                                                           child: Icon(

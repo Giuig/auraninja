@@ -2,7 +2,7 @@
     "sounds": "Sons",
     "mixes": "Mix",
     "noMixes": "Aucun mix enregistré",
-    "noMixesHint": "Jouez des sons et enregistrez-les comme mix",
+    "noMixesHint": "Jouez des sons, puis touchez 'Enregistrer le Mix' dans le lecteur",
     "saveMix": "Enregistrer le Mix",
     "mixSaved": "Mix enregistré",
     "activeSounds": "Sons Actifs",
@@ -119,5 +119,15 @@
     "train": "Train",
     "airplane": "Avion",
     "underwater": "Sous l'eau",
-    "searchSounds": "Rechercher des sons..."
+    "searchSounds": "Rechercher des sons...",
+    "nameMix": "Nommer le mix",
+    "mixNameLabel": "Nom du mix",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "renameMix": "Renommer le mix",
+    "deleteMixTitle": "Supprimer le mix ?",
+    "deleteMixContent": "Ce mix sera définitivement supprimé.",
+    "duplicateMixName": "Nom déjà utilisé",
+    "updateMixSounds": "Mettre à jour les sons",
+    "mixUpdated": "Mix mis à jour"
 }

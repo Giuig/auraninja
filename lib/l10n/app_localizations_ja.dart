@@ -18,7 +18,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noMixes => '保存されたミックスはありません';
 
   @override
-  String get noMixesHint => 'サウンドを再生してミックスとして保存';
+  String get noMixesHint => 'サウンドを再生し、プレイヤーの「ミックスを保存」をタップ';
 
   @override
   String get saveMix => 'ミックスを保存';
@@ -308,4 +308,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get searchSounds => '音を検索...';
+
+  @override
+  String get nameMix => 'ミックスに名前をつける';
+
+  @override
+  String get mixNameLabel => 'ミックス名';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get delete => '削除';
+
+  @override
+  String get renameMix => 'ミックスをリネーム';
+
+  @override
+  String get deleteMixTitle => 'ミックスを削除?';
+
+  @override
+  String get deleteMixContent => 'このミックスは完全に削除されます。';
+
+  @override
+  String get duplicateMixName => 'この名前はすでに使用されています';
+
+  @override
+  String get updateMixSounds => 'サウンドを更新';
+
+  @override
+  String get mixUpdated => 'ミックスを更新しました';
 }

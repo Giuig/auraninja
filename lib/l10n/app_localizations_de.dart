@@ -18,7 +18,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noMixes => 'Keine Mischungen gespeichert';
 
   @override
-  String get noMixesHint => 'Spiele Klänge ab und speichere als Mischung';
+  String get noMixesHint =>
+      'Spiele Klänge ab, dann tippe \'Mischung Speichern\' im Player';
 
   @override
   String get saveMix => 'Mischung Speichern';
@@ -308,4 +309,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get searchSounds => 'Klänge suchen...';
+
+  @override
+  String get nameMix => 'Mix benennen';
+
+  @override
+  String get mixNameLabel => 'Mix-Name';
+
+  @override
+  String get cancel => 'Abbrechen';
+
+  @override
+  String get delete => 'Löschen';
+
+  @override
+  String get renameMix => 'Mix umbenennen';
+
+  @override
+  String get deleteMixTitle => 'Mix löschen?';
+
+  @override
+  String get deleteMixContent => 'Dieser Mix wird dauerhaft gelöscht.';
+
+  @override
+  String get duplicateMixName => 'Name bereits vergeben';
+
+  @override
+  String get updateMixSounds => 'Klänge aktualisieren';
+
+  @override
+  String get mixUpdated => 'Mischung aktualisiert';
 }

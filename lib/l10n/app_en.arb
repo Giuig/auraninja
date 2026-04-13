@@ -3,7 +3,7 @@
     "sounds": "Sounds",
     "mixes": "Mixes",
     "noMixes": "No mixes saved",
-    "noMixesHint": "Play sounds and save as a mix",
+    "noMixesHint": "Play sounds, then tap 'Save Mix' in the player",
     "saveMix": "Save Mix",
     "mixSaved": "Mix saved",
     "activeSounds": "Active Sounds",
@@ -120,5 +120,15 @@
     "train": "Train",
     "airplane": "Airplane",
     "underwater": "Underwater",
-    "searchSounds": "Search sounds..."
+    "searchSounds": "Search sounds...",
+    "nameMix": "Name your mix",
+    "mixNameLabel": "Mix name",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "renameMix": "Rename mix",
+    "deleteMixTitle": "Delete mix?",
+    "deleteMixContent": "This mix will be permanently removed.",
+    "duplicateMixName": "Name already in use",
+    "updateMixSounds": "Update sounds",
+    "mixUpdated": "Mix updated"
 }

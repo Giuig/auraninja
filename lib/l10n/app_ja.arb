@@ -2,7 +2,7 @@
     "sounds": "サウンド",
     "mixes": "ミックス",
     "noMixes": "保存されたミックスはありません",
-    "noMixesHint": "サウンドを再生してミックスとして保存",
+    "noMixesHint": "サウンドを再生し、プレイヤーの「ミックスを保存」をタップ",
     "saveMix": "ミックスを保存",
     "mixSaved": "ミックスを保存しました",
     "activeSounds": "再生中のサウンド",
@@ -119,5 +119,15 @@
     "train": "電車",
     "airplane": "飛行機",
     "underwater": "水中",
-    "searchSounds": "音を検索..."
+    "searchSounds": "音を検索...",
+    "nameMix": "ミックスに名前をつける",
+    "mixNameLabel": "ミックス名",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "renameMix": "ミックスをリネーム",
+    "deleteMixTitle": "ミックスを削除?",
+    "deleteMixContent": "このミックスは完全に削除されます。",
+    "duplicateMixName": "この名前はすでに使用されています",
+    "updateMixSounds": "サウンドを更新",
+    "mixUpdated": "ミックスを更新しました"
 }

@@ -50,4 +50,6 @@ class MixSound {
         volume:
             json['volume'] != null ? (json['volume'] as num).toDouble() : 0.5,
       );
+
+  bool get isStream => path.startsWith('http');
 }
