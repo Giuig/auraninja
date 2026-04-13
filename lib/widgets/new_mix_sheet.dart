@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
@@ -83,19 +84,19 @@ class _NewMixSheetState extends State<NewMixSheet> {
     final l10n = AppLocalizations.of(context);
     switch (category) {
       case '@weather':
-        return l10n.weather;
+        return l10n?.weather ?? 'Weather';
       case '@nature':
-        return l10n.nature;
+        return l10n?.nature ?? 'Nature';
       case '@objects':
-        return l10n.objects;
+        return l10n?.objects ?? 'Objects';
       case '@places':
-        return l10n.places;
+        return l10n?.places ?? 'Places';
       case '@binaural':
-        return l10n.binaural;
+        return l10n?.binaural ?? 'Binaural';
       case '@noise':
-        return l10n.noise;
+        return l10n?.noise ?? 'Noise';
       case '@internetRadio':
-        return l10n.internetRadio;
+        return l10n?.internetRadio ?? 'Internet Radio';
       default:
         return category;
     }
@@ -110,7 +111,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
       _soundsStartedHere.remove(path);
       unawaited(_handler.ninjaStop(path));
     } else {
-      // Deselect others in exclusive categories
+      // Deselect previous in exclusive categories
       if (_isExclusive(sound.category)) {
         final previous = _allSounds
             .where((s) =>
@@ -140,16 +141,17 @@ class _NewMixSheetState extends State<NewMixSheet> {
   }
 
   Future<void> _saveMix() async {
+    final l10n = AppLocalizations.of(context);
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _nameError = AppLocalizations.of(context).mixNameLabel);
+      setState(() => _nameError = l10n?.mixNameLabel ?? 'Mix name');
       return;
     }
     final existing = await MixesService.load();
     final existingNames = existing.map((m) => m.name.toLowerCase()).toSet();
     if (existingNames.contains(name.toLowerCase())) {
       setState(
-          () => _nameError = AppLocalizations.of(context).duplicateMixName);
+          () => _nameError = l10n?.duplicateMixName ?? 'Name already in use');
       return;
     }
 
@@ -190,13 +192,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
       builder: (context, scrollController) {
         return Column(
           children: [
-            // Header
+            // Header: title + name field
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 children: [
                   Text(
-                    l10n.nameMix,
+                    l10n?.nameMix ?? 'Name your mix',
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
@@ -207,7 +209,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         isDense: true,
-                        hintText: l10n.mixNameLabel,
+                        hintText: l10n?.mixNameLabel ?? 'Mix name',
                         errorText: _nameError,
                         border: const OutlineInputBorder(),
                         contentPadding: const EdgeInsets.symmetric(
@@ -256,8 +258,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
                         : const Icon(Icons.save_outlined),
                     label: Text(
                       _selectedCount > 0
-                          ? '${l10n.saveMix} ($_selectedCount)'
-                          : l10n.saveMix,
+                          ? '${l10n?.saveMix ?? 'Save Mix'} ($_selectedCount)'
+                          : (l10n?.saveMix ?? 'Save Mix'),
                     ),
                   ),
                 ),
@@ -270,8 +272,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
   }
 
   Widget _buildCategorySection(String category) {
-    final sounds =
-        _allSounds.where((s) => s.category == category).toList();
+    final sounds = _allSounds.where((s) => s.category == category).toList();
     if (sounds.isEmpty) return const SizedBox.shrink();
 
     final exclusive = _isExclusive(category);
@@ -356,10 +357,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
     if (icon is String && icon.startsWith('http')) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: Image.network(icon,
-            width: 28, height: 28, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
-          return const Icon(Icons.radio, size: 28);
-        }),
+        child: Image.network(
+          icon,
+          width: 28,
+          height: 28,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(Icons.radio, size: 28),
+        ),
       );
     }
     if (icon is String) {
