@@ -36,13 +36,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
 
   // Display order for categories
   static const _categoryOrder = [
-    '@binaural',
-    '@noise',
-    '@internetRadio',
     '@weather',
     '@nature',
+    '@noise',
     '@objects',
     '@places',
+    '@binaural',
+    '@internetRadio',
   ];
 
   @override
@@ -292,7 +292,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
     final theme = Theme.of(context);
 
     return ExpansionTile(
-      initiallyExpanded: category == '@binaural' || category == '@noise',
+      initiallyExpanded: false,
       title: Row(
         children: [
           Text(label, style: theme.textTheme.titleSmall),
