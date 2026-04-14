@@ -313,6 +313,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get nameMix => 'ミックスに名前をつける';
 
   @override
+  String get editMix => 'ミックスを編集';
+
+  @override
+  String mixSoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sounds',
+      one: '1 sound',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get mixNameLabel => 'ミックス名';
 
   @override

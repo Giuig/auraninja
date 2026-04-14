@@ -1,1 +1,21 @@
-{}
+{
+  "de": [
+    "mixSoundCount"
+  ],
+
+  "es": [
+    "mixSoundCount"
+  ],
+
+  "fr": [
+    "mixSoundCount"
+  ],
+
+  "it": [
+    "mixSoundCount"
+  ],
+
+  "ja": [
+    "mixSoundCount"
+  ]
+}

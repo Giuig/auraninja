@@ -314,6 +314,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nameMix => 'Nommer le mix';
 
   @override
+  String get editMix => 'Modifier le mix';
+
+  @override
+  String mixSoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sounds',
+      one: '1 sound',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get mixNameLabel => 'Nom du mix';
 
   @override

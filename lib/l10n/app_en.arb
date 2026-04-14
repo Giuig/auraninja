@@ -122,6 +122,13 @@
     "underwater": "Underwater",
     "searchSounds": "Search sounds...",
     "nameMix": "Name your mix",
+    "editMix": "Edit mix",
+    "mixSoundCount": "{count, plural, =1{1 sound} other{{count} sounds}}",
+    "@mixSoundCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
     "mixNameLabel": "Mix name",
     "cancel": "Cancel",
     "delete": "Delete",

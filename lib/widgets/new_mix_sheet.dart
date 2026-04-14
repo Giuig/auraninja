@@ -12,9 +12,15 @@ import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
 
 class NewMixSheet extends StatefulWidget {
-  final void Function(String mixId) onMixSaved;
+  /// Called after a new mix is created. Not called for edits.
+  final void Function(String mixId)? onMixSaved;
 
-  const NewMixSheet({super.key, required this.onMixSaved});
+  /// When non-null the sheet opens in edit mode, pre-populated with this mix.
+  final Mix? existingMix;
+
+  const NewMixSheet({super.key, this.onMixSaved, this.existingMix});
+
+  bool get _isEditMode => existingMix != null;
 
   @override
   State<NewMixSheet> createState() => _NewMixSheetState();
@@ -34,7 +40,6 @@ class _NewMixSheetState extends State<NewMixSheet> {
 
   late WrapperAudioHandler _handler;
 
-  // Display order for categories
   static const _categoryOrder = [
     '@weather',
     '@nature',
@@ -49,7 +54,6 @@ class _NewMixSheetState extends State<NewMixSheet> {
   void initState() {
     super.initState();
     _handler = Provider.of<WrapperAudioHandler>(context, listen: false);
-    // Defer to post-frame so AppLocalizations is fully attached on web.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _loadSounds();
     });
@@ -59,16 +63,28 @@ class _NewMixSheetState extends State<NewMixSheet> {
     try {
       final localSounds = buildLocalizedSounds(context);
       final userStations = await UserStationsService.load();
-      final existing = await MixesService.load();
       if (!mounted) return;
+
+      final allSounds = [...localSounds, ...userStations];
+
+      if (widget._isEditMode) {
+        for (final mixSound in widget.existingMix!.sounds) {
+          _selected[mixSound.path] = true;
+          _volumes[mixSound.path] = mixSound.volume.clamp(0.1, 1.0);
+        }
+        _nameController.text = widget.existingMix!.name;
+      } else {
+        final existing = await MixesService.load();
+        if (!mounted) return;
+        _nameController.text = 'Mix ${existing.length + 1}';
+      }
+
       setState(() {
-        _allSounds = [...localSounds, ...userStations];
+        _allSounds = allSounds;
         _loadingSounds = false;
       });
-      _nameController.text = 'Mix ${existing.length + 1}';
     } catch (_) {
       if (!mounted) return;
-      // Fall back to un-localized names so the sheet is never stuck.
       setState(() {
         _allSounds = buildLocalizedSounds(null);
         _loadingSounds = false;
@@ -123,7 +139,6 @@ class _NewMixSheetState extends State<NewMixSheet> {
       _soundsStartedHere.remove(path);
       unawaited(_handler.ninjaStop(path));
     } else {
-      // Deselect previous in exclusive categories
       if (_isExclusive(sound.category)) {
         final previous = _allSounds
             .where((s) =>
@@ -159,8 +174,12 @@ class _NewMixSheetState extends State<NewMixSheet> {
       setState(() => _nameError = l10n?.mixNameLabel ?? 'Mix name');
       return;
     }
+
     final existing = await MixesService.load();
-    final existingNames = existing.map((m) => m.name.toLowerCase()).toSet();
+    final existingNames = existing
+        .where((m) => !widget._isEditMode || m.id != widget.existingMix!.id)
+        .map((m) => m.name.toLowerCase())
+        .toSet();
     if (existingNames.contains(name.toLowerCase())) {
       setState(
           () => _nameError = l10n?.duplicateMixName ?? 'Name already in use');
@@ -174,18 +193,53 @@ class _NewMixSheetState extends State<NewMixSheet> {
         .map((s) => MixSound(path: s.path, volume: _volumes[s.path] ?? 0.5))
         .toList();
 
-    final mix = Mix(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      sounds: sounds,
+    if (widget._isEditMode) {
+      await MixesService.update(Mix(
+        id: widget.existingMix!.id,
+        name: name,
+        icon: widget.existingMix!.icon,
+        sounds: sounds,
+        createdAt: widget.existingMix!.createdAt,
+      ));
+    } else {
+      final mix = Mix(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name,
+        sounds: sounds,
+      );
+      await MixesService.add(mix);
+      _saved = true;
+      if (mounted) widget.onMixSaved?.call(mix.id);
+    }
+
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _deleteMix() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n?.deleteMixTitle ?? 'Delete mix?'),
+        content: Text(l10n?.deleteMixContent ??
+            'This mix will be permanently removed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n?.cancel ?? 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).colorScheme.error),
+            child: Text(l10n?.delete ?? 'Delete'),
+          ),
+        ],
+      ),
     );
-
-    await MixesService.add(mix);
-    _saved = true;
-
-    if (mounted) {
-      widget.onMixSaved(mix.id);
-      Navigator.of(context).pop();
+    if (confirmed == true && mounted) {
+      await MixesService.remove(widget.existingMix!.id);
+      if (mounted) Navigator.of(context).pop();
     }
   }
 
@@ -195,6 +249,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final isEdit = widget._isEditMode;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -204,13 +259,15 @@ class _NewMixSheetState extends State<NewMixSheet> {
       builder: (context, scrollController) {
         return Column(
           children: [
-            // Header: title + name field
+            // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
               child: Row(
                 children: [
                   Text(
-                    l10n?.nameMix ?? 'Name your mix',
+                    isEdit
+                        ? (l10n?.editMix ?? 'Edit mix')
+                        : (l10n?.nameMix ?? 'Name your mix'),
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
@@ -234,6 +291,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
                       },
                     ),
                   ),
+                  if (isEdit)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline,
+                          color: theme.colorScheme.error),
+                      tooltip: l10n?.delete ?? 'Delete',
+                      onPressed: _deleteMix,
+                    ),
                 ],
               ),
             ),
@@ -269,9 +333,11 @@ class _NewMixSheetState extends State<NewMixSheet> {
                           )
                         : const Icon(Icons.save_outlined),
                     label: Text(
-                      _selectedCount > 0
-                          ? '${l10n?.saveMix ?? 'Save Mix'} ($_selectedCount)'
-                          : (l10n?.saveMix ?? 'Save Mix'),
+                      isEdit
+                          ? (l10n?.saveMix ?? 'Save changes')
+                          : (_selectedCount > 0
+                              ? '${l10n?.saveMix ?? 'Save Mix'} ($_selectedCount)'
+                              : (l10n?.saveMix ?? 'Save Mix')),
                     ),
                   ),
                 ),
@@ -290,6 +356,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
     final exclusive = _isExclusive(category);
     final label = _categoryLabel(category);
     final theme = Theme.of(context);
+    final selectedCount =
+        sounds.where((s) => _selected[s.path] ?? false).length;
 
     return ExpansionTile(
       initiallyExpanded: false,
@@ -308,6 +376,23 @@ class _NewMixSheetState extends State<NewMixSheet> {
                 'max 1',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSecondaryContainer,
+                ),
+              ),
+            ),
+          ],
+          if (selectedCount > 0) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$selectedCount',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -349,7 +434,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
                 Expanded(
                   child: Slider(
                     value: volume,
-                    min: 0,
+                    min: 0.1,
                     max: 1,
                     onChanged: (v) {
                       setState(() => _volumes[path] = v);
@@ -367,16 +452,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
   Widget _buildSoundIcon(NinjaSound sound, ThemeData theme) {
     final icon = sound.icon;
     if (icon is String && icon.startsWith('http')) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Image.network(
-          icon,
-          width: 28,
-          height: 28,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.radio, size: 28),
-        ),
-      );
+      return const Text('📻', style: TextStyle(fontSize: 22));
     }
     if (icon is String) {
       return Text(icon, style: const TextStyle(fontSize: 22));

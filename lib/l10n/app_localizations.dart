@@ -706,6 +706,18 @@ abstract class AppLocalizations {
   /// **'Name your mix'**
   String get nameMix;
 
+  /// No description provided for @editMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit mix'**
+  String get editMix;
+
+  /// No description provided for @mixSoundCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sound} other{{count} sounds}}'**
+  String mixSoundCount(int count);
+
   /// No description provided for @mixNameLabel.
   ///
   /// In en, this message translates to:

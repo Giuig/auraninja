@@ -8,8 +8,6 @@ import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/ninja_sound.dart';
-import 'package:auraninja/model/mix.dart';
-import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/volume_storage.dart';
 
 class BottomPlayerBar extends StatefulWidget {
@@ -157,93 +155,6 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
   void _stopAll() {
     _audioHandler.stopAll();
     _startMarqueeInitialDelay(resetMarqueeVisibility: true);
-  }
-
-  Future<void> _saveCurrentMix(
-      BuildContext context, List<SoundController> controllers) async {
-    final existingMixes = await MixesService.load();
-    final defaultName = 'Mix ${existingMixes.length + 1}';
-
-    if (!context.mounted) return;
-    final l10n = AppLocalizations.of(context);
-    final nameController = TextEditingController(text: defaultName);
-
-    final existingNames = existingMixes.map((m) => m.name).toSet();
-
-    final confirmedName = await showDialog<String>(
-      context: context,
-      builder: (ctx) {
-        String? errorText;
-        return StatefulBuilder(
-          builder: (_, setDialogState) => AlertDialog(
-            title: Text(l10n?.nameMix ?? 'Name your mix'),
-            content: TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n?.mixNameLabel ?? 'Mix name',
-                errorText: errorText,
-              ),
-              textCapitalization: TextCapitalization.words,
-              onChanged: (_) {
-                if (errorText != null) setDialogState(() => errorText = null);
-              },
-              onSubmitted: (_) {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
-                if (existingNames.contains(name)) {
-                  setDialogState(() => errorText = l10n?.duplicateMixName ?? 'Name already in use');
-                } else {
-                  Navigator.of(ctx).pop(name);
-                }
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(null),
-                child: Text(l10n?.cancel ?? 'Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) return;
-                  if (existingNames.contains(name)) {
-                    setDialogState(() => errorText = l10n?.duplicateMixName ?? 'Name already in use');
-                  } else {
-                    Navigator.of(ctx).pop(name);
-                  }
-                },
-                child: Text(l10n?.saveMix ?? 'Save'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (confirmedName == null || !context.mounted) return;
-
-    final mixName = confirmedName.isEmpty ? defaultName : confirmedName;
-
-    final mix = Mix(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: mixName,
-      sounds: controllers
-          .map((c) => MixSound(path: c.sound.path, volume: c.volume))
-          .toList(),
-    );
-
-    await MixesService.add(mix);
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n?.mixSaved ?? 'Mix saved'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      Navigator.of(context).pop();
-    }
   }
 
   void _cancelSleepTimer() {
@@ -646,28 +557,9 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                           final controller = activeControllers[index];
                           return _ActiveSoundTile(
                             controller: controller,
-                            onStop: () {
-                              controller.stop();
-                            },
+                            onStop: () => controller.stop(),
                           );
                         },
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () =>
-                                _saveCurrentMix(context, activeControllers),
-                            icon: const Icon(Icons.save_outlined),
-                            label: Text(
-                                AppLocalizations.of(context)?.saveMix ??
-                                    'Save Mix'),
-                          ),
-                        ),
                       ),
                     ),
                   ],
