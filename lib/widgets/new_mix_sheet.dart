@@ -49,19 +49,31 @@ class _NewMixSheetState extends State<NewMixSheet> {
   void initState() {
     super.initState();
     _handler = Provider.of<WrapperAudioHandler>(context, listen: false);
-    _loadSounds();
+    // Defer to post-frame so AppLocalizations is fully attached on web.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadSounds();
+    });
   }
 
   Future<void> _loadSounds() async {
-    final localSounds = buildLocalizedSounds(context);
-    final userStations = await UserStationsService.load();
-    final existing = await MixesService.load();
-    if (!mounted) return;
-    setState(() {
-      _allSounds = [...localSounds, ...userStations];
-      _loadingSounds = false;
-    });
-    _nameController.text = 'Mix ${existing.length + 1}';
+    try {
+      final localSounds = buildLocalizedSounds(context);
+      final userStations = await UserStationsService.load();
+      final existing = await MixesService.load();
+      if (!mounted) return;
+      setState(() {
+        _allSounds = [...localSounds, ...userStations];
+        _loadingSounds = false;
+      });
+      _nameController.text = 'Mix ${existing.length + 1}';
+    } catch (_) {
+      if (!mounted) return;
+      // Fall back to un-localized names so the sheet is never stuck.
+      setState(() {
+        _allSounds = buildLocalizedSounds(null);
+        _loadingSounds = false;
+      });
+    }
   }
 
   @override
