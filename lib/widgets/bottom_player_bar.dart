@@ -9,6 +9,7 @@ import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/volume_storage.dart';
+import 'package:auraninja/widgets/volume_slider.dart';
 
 class BottomPlayerBar extends StatefulWidget {
   const BottomPlayerBar({super.key});
@@ -651,14 +652,12 @@ class _ActiveSoundTile extends StatelessWidget {
                     Icon(Icons.volume_down,
                         size: 16, color: colorScheme.outline),
                     Expanded(
-                      child: Slider(
+                      child: VolumeSlider(
                         value: controller.volume,
                         onChanged: (v) {
                           controller.setVolume(v);
                           VolumeStorage.save(controller.sound.path, v);
                         },
-                        min: 0.1,
-                        max: 1,
                       ),
                     ),
                     Text(

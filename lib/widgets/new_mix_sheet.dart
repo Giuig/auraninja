@@ -10,6 +10,7 @@ import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
+import 'package:auraninja/widgets/volume_slider.dart';
 
 class NewMixSheet extends StatefulWidget {
   /// Called after a new mix is created. Not called for edits.
@@ -70,7 +71,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
       if (widget._isEditMode) {
         for (final mixSound in widget.existingMix!.sounds) {
           _selected[mixSound.path] = true;
-          _volumes[mixSound.path] = mixSound.volume.clamp(0.1, 1.0);
+          _volumes[mixSound.path] = mixSound.volume.clamp(0.01, 1.0);
         }
         _nameController.text = widget.existingMix!.name;
       } else {
@@ -432,10 +433,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
                 Icon(Icons.volume_up_outlined,
                     size: 16, color: theme.colorScheme.onSurfaceVariant),
                 Expanded(
-                  child: Slider(
+                  child: VolumeSlider(
                     value: volume,
-                    min: 0.1,
-                    max: 1,
                     onChanged: (v) {
                       setState(() => _volumes[path] = v);
                       _handler.setVolume(path, v);

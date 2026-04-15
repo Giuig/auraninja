@@ -1,4 +1,5 @@
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
+import 'package:auraninja/widgets/volume_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -178,25 +179,11 @@ class SoundCard extends StatelessWidget {
                     Stack(
                       alignment: Alignment.center,
                       children: [
-                        SizedBox(
-                          height: 20,
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 3,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 8,
-                              ),
-                            ),
-                            child: Slider(
-                              value: controller.volume,
-                              min: 0.1,
-                              max: 1.0,
-                              onChanged: (newVolume) {
-                                handler.setVolume(
-                                    controller.sound.path, newVolume);
-                              },
-                            ),
-                          ),
+                        VolumeSlider(
+                          compact: true,
+                          value: controller.volume,
+                          onChanged: (v) =>
+                              handler.setVolume(controller.sound.path, v),
                         ),
                         Positioned(
                           right: 0,
