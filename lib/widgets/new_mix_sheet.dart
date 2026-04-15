@@ -10,7 +10,9 @@ import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/model/sound_category.dart';
+import 'package:auraninja/services/favorites_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
+import 'package:auraninja/widgets/sound_icon.dart';
 import 'package:auraninja/widgets/volume_slider.dart';
 
 class NewMixSheet extends StatefulWidget {
@@ -35,6 +37,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
   final Set<String> _soundsStartedHere = {};
 
   List<NinjaSound> _allSounds = [];
+  Set<String> _favoritePaths = {};
   bool _loadingSounds = true;
   bool _saved = false;
   String? _nameError;
@@ -64,9 +67,14 @@ class _NewMixSheetState extends State<NewMixSheet> {
   Future<void> _loadSounds() async {
     try {
       final localSounds = buildLocalizedSounds(context);
-      final userStations = await UserStationsService.load();
+      final results = await Future.wait([
+        UserStationsService.load(),
+        FavoritesService.load(),
+      ]);
       if (!mounted) return;
 
+      final userStations = results[0] as List<NinjaSound>;
+      final favoritePaths = results[1] as Set<String>;
       final allSounds = [...localSounds, ...userStations];
 
       if (widget._isEditMode) {
@@ -83,6 +91,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
 
       setState(() {
         _allSounds = allSounds;
+        _favoritePaths = favoritePaths;
         _loadingSounds = false;
       });
     } catch (_) {
@@ -308,6 +317,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
                   : ListView(
                       controller: scrollController,
                       children: [
+                        _buildFavoritesSection(),
                         for (final category in _categoryOrder)
                           _buildCategorySection(category),
                       ],
@@ -347,8 +357,52 @@ class _NewMixSheetState extends State<NewMixSheet> {
     );
   }
 
+  Widget _buildFavoritesSection() {
+    if (_favoritePaths.isEmpty) return const SizedBox.shrink();
+    final sounds =
+        _allSounds.where((s) => _favoritePaths.contains(s.path)).toList();
+    if (sounds.isEmpty) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final selectedCount =
+        sounds.where((s) => _selected[s.path] ?? false).length;
+
+    return ExpansionTile(
+      initiallyExpanded: true,
+      title: Row(
+        children: [
+          Text(l10n?.favorites ?? 'Favorites',
+              style: theme.textTheme.titleSmall),
+          if (selectedCount > 0) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$selectedCount',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      children: [
+        for (final sound in sounds) _buildSoundTile(sound),
+      ],
+    );
+  }
+
   Widget _buildCategorySection(String category) {
-    final sounds = _allSounds.where((s) => s.category == category).toList();
+    final sounds = _allSounds
+        .where((s) => s.category == category && !_favoritePaths.contains(s.path))
+        .toList();
     if (sounds.isEmpty) return const SizedBox.shrink();
 
     final exclusive = sounds.first.isExclusive;
@@ -414,7 +468,11 @@ class _NewMixSheetState extends State<NewMixSheet> {
       children: [
         ListTile(
           dense: true,
-          leading: _buildSoundIcon(sound, theme),
+          leading: SizedBox(
+            width: 28,
+            height: 28,
+            child: buildSoundIcon(sound.icon, 28, theme.colorScheme.onSurfaceVariant),
+          ),
           title: Text(sound.name),
           trailing: Checkbox(
             value: isSelected,
@@ -445,17 +503,4 @@ class _NewMixSheetState extends State<NewMixSheet> {
     );
   }
 
-  Widget _buildSoundIcon(NinjaSound sound, ThemeData theme) {
-    final icon = sound.icon;
-    if (icon is String && icon.startsWith('http')) {
-      return const Text('📻', style: TextStyle(fontSize: 22));
-    }
-    if (icon is String) {
-      return Text(icon, style: const TextStyle(fontSize: 22));
-    }
-    if (icon is IconData) {
-      return Icon(icon, size: 24, color: theme.colorScheme.primary);
-    }
-    return const Icon(Icons.music_note, size: 24);
-  }
 }

@@ -1,33 +1,10 @@
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
+import 'package:auraninja/widgets/sound_icon.dart';
 import 'package:auraninja/widgets/volume_slider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/model/ninja_sound.dart';
-
-Widget _buildSoundIcon(dynamic icon, double size, Color color) {
-  if (icon is IconData) {
-    return Icon(icon, size: size, color: color);
-  }
-  final str = icon as String? ?? '📻';
-  if (str.startsWith('http')) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: CachedNetworkImage(
-        imageUrl: str,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorWidget: (_, __, ___) =>
-            Text('📻', style: TextStyle(fontSize: size * 0.7)),
-      ),
-    );
-  }
-  return Center(
-    child: Text(str, style: TextStyle(fontSize: size * 0.7, color: color)),
-  );
-}
 
 class SoundCard extends StatelessWidget {
   final Map<String, NinjaSound> localizedSoundMap;
@@ -147,7 +124,7 @@ class SoundCard extends StatelessWidget {
                     width: iconSize,
                     child: controller.status == PlaybackStatus.loading
                         ? const CircularProgressIndicator(strokeWidth: 2.5)
-                        : _buildSoundIcon(
+                        : buildSoundIcon(
                             displayIcon, iconSize, iconAndTextColor),
                   ),
                   const SizedBox(height: 4),
