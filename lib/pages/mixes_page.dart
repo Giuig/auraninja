@@ -5,6 +5,7 @@ import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
+import 'package:auraninja/model/sound_category.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
 import 'package:auraninja/widgets/new_mix_sheet.dart';
@@ -95,21 +96,15 @@ class _MixesPageState extends State<MixesPage> {
 
     await handler.stopAll();
 
-    final hardcoded = buildLocalizedSounds(context);
-    final userStations = await UserStationsService.load();
-    final soundMap = {
-      for (final s in [...hardcoded, ...userStations]) s.path: s
-    };
-
     int unavailableCount = 0;
 
     for (final mixSound in mix.sounds) {
-      NinjaSound? sound = soundMap[mixSound.path];
+      NinjaSound? sound = _soundMap[mixSound.path];
 
       if (sound == null && mixSound.isStream) {
         sound = NinjaSound(
           name: 'Radio',
-          category: '@internetRadio',
+          category: SoundCategory.internetRadio,
           icon: '📻',
           path: mixSound.path,
           isUserAdded: true,

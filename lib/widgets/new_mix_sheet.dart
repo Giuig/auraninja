@@ -9,6 +9,7 @@ import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/mixes_service.dart';
+import 'package:auraninja/model/sound_category.dart';
 import 'package:auraninja/services/user_stations_service.dart';
 import 'package:auraninja/widgets/volume_slider.dart';
 
@@ -42,13 +43,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
   late WrapperAudioHandler _handler;
 
   static const _categoryOrder = [
-    '@weather',
-    '@nature',
-    '@noise',
-    '@objects',
-    '@places',
-    '@binaural',
-    '@internetRadio',
+    SoundCategory.weather,
+    SoundCategory.nature,
+    SoundCategory.noise,
+    SoundCategory.objects,
+    SoundCategory.places,
+    SoundCategory.binaural,
+    SoundCategory.internetRadio,
   ];
 
   @override
@@ -104,27 +105,22 @@ class _NewMixSheetState extends State<NewMixSheet> {
     super.dispose();
   }
 
-  bool _isExclusive(String category) =>
-      category == '@binaural' ||
-      category == '@noise' ||
-      category == '@internetRadio';
-
   String _categoryLabel(String category) {
     final l10n = AppLocalizations.of(context);
     switch (category) {
-      case '@weather':
+      case SoundCategory.weather:
         return l10n?.weather ?? 'Weather';
-      case '@nature':
+      case SoundCategory.nature:
         return l10n?.nature ?? 'Nature';
-      case '@objects':
+      case SoundCategory.objects:
         return l10n?.objects ?? 'Objects';
-      case '@places':
+      case SoundCategory.places:
         return l10n?.places ?? 'Places';
-      case '@binaural':
+      case SoundCategory.binaural:
         return l10n?.binaural ?? 'Binaural';
-      case '@noise':
+      case SoundCategory.noise:
         return l10n?.noise ?? 'Noise';
-      case '@internetRadio':
+      case SoundCategory.internetRadio:
         return l10n?.internetRadio ?? 'Internet Radio';
       default:
         return category;
@@ -140,7 +136,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
       _soundsStartedHere.remove(path);
       unawaited(_handler.ninjaStop(path));
     } else {
-      if (_isExclusive(sound.category)) {
+      if (sound.isExclusive) {
         final previous = _allSounds
             .where((s) =>
                 s.category == sound.category && (_selected[s.path] ?? false))
@@ -202,6 +198,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
         sounds: sounds,
         createdAt: widget.existingMix!.createdAt,
       ));
+      _saved = true; // keep any sounds toggled during editing alive after dismiss
     } else {
       final mix = Mix(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -354,7 +351,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
     final sounds = _allSounds.where((s) => s.category == category).toList();
     if (sounds.isEmpty) return const SizedBox.shrink();
 
-    final exclusive = _isExclusive(category);
+    final exclusive = sounds.first.isExclusive;
     final label = _categoryLabel(category);
     final theme = Theme.of(context);
     final selectedCount =

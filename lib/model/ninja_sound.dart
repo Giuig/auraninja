@@ -1,3 +1,5 @@
+import 'package:auraninja/model/sound_category.dart';
+
 class NinjaSound {
   final String name;
   final String category;
@@ -35,6 +37,7 @@ class NinjaSound {
 
 extension NinjaSoundType on NinjaSound {
   bool get isStream => path.startsWith('http');
-  bool get isBinaural => path.contains('binaural');
-  bool get isNoise => path.contains('noise');
+  bool get isBinaural => category == SoundCategory.binaural;
+  bool get isNoise => category == SoundCategory.noise;
+  bool get isExclusive => SoundCategory.exclusive.contains(category);
 }
