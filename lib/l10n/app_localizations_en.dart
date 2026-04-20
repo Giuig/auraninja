@@ -352,4 +352,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mixUpdated => 'Mix updated';
+
+  @override
+  String mixSoundsUnavailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sounds in this mix couldn\'t be loaded',
+      one: '1 sound in this mix couldn\'t be loaded',
+    );
+    return '$_temp0';
+  }
 }

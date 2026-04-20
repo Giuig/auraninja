@@ -130,5 +130,17 @@
     "deleteMixContent": "Esta mezcla se eliminará permanentemente.",
     "duplicateMixName": "Nombre ya en uso",
     "updateMixSounds": "Actualizar sonidos",
-    "mixUpdated": "Mezcla actualizada"
+    "mixUpdated": "Mezcla actualizada",
+    "mixSoundCount": "{count, plural, =1{1 sonido} other{{count} sonidos}}",
+    "@mixSoundCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "mixSoundsUnavailable": "{count, plural, =1{1 sonido de esta mezcla no pudo cargarse} other{{count} sonidos de esta mezcla no pudieron cargarse}}",
+    "@mixSoundsUnavailable": {
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    }
 }

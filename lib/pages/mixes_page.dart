@@ -127,9 +127,11 @@ class _MixesPageState extends State<MixesPage> {
     if (mounted) {
       setState(() => _playingMixId = null);
       if (unavailableCount > 0) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-            '$unavailableCount sound${unavailableCount == 1 ? '' : 's'} in this mix couldn\'t be loaded',
+            l10n?.mixSoundsUnavailable(unavailableCount) ??
+                '$unavailableCount sound${unavailableCount == 1 ? '' : 's'} couldn\'t be loaded',
           ),
           duration: const Duration(seconds: 3),
         ));
@@ -231,7 +233,7 @@ class _MixesPageState extends State<MixesPage> {
         body,
         Positioned(
           right: 16,
-          bottom: 16,
+          bottom: 16 + MediaQuery.of(context).padding.bottom,
           child: FloatingActionButton(
             onPressed: () => _openMixSheet(),
             tooltip: 'New mix',

@@ -771,6 +771,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mix updated'**
   String get mixUpdated;
+
+  /// No description provided for @mixSoundsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sound in this mix couldn\'t be loaded} other{{count} sounds in this mix couldn\'t be loaded}}'**
+  String mixSoundsUnavailable(int count);
 }
 
 class _AppLocalizationsDelegate

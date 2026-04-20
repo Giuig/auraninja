@@ -321,8 +321,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count sounds',
-      one: '1 sound',
+      other: '$count Klänge',
+      one: '1 Klang',
     );
     return '$_temp0';
   }
@@ -353,4 +353,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mixUpdated => 'Mischung aktualisiert';
+
+  @override
+  String mixSoundsUnavailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Klänge in diesem Mix konnten nicht geladen werden',
+      one: '1 Klang in diesem Mix konnte nicht geladen werden',
+    );
+    return '$_temp0';
+  }
 }
