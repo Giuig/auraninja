@@ -21,13 +21,14 @@
     "resumeAll": "Alle fortsetzen",
     "pauseAll": "Alle pausieren",
     "stopAll": "Alle stoppen",
-    "sleepInMinutes": "Schlaf in {minutes} Minuten",
+    "sleepInMinutes": "{minutes, plural, one{Schlaf in {minutes} Minute} other{Schlaf in {minutes} Minuten}}",
     "@sleepInMinutes": {
         "description": "Text für die Schlaf-Timer-Option, zeigt verbleibende Minuten an",
         "placeholders": {
             "minutes": {
                 "type": "int",
-                "example": "10"
+                "example": "10",
+                "plural": true
             }
         }
     },

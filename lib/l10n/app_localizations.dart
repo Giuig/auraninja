@@ -241,7 +241,7 @@ abstract class AppLocalizations {
   /// Text for sleep timer option, showing minutes remaining
   ///
   /// In en, this message translates to:
-  /// **'Sleep in {minutes} minutes'**
+  /// **'{minutes, plural, one{Sleep in {minutes} minute} other{Sleep in {minutes} minutes}}'**
   String sleepInMinutes(int minutes);
 
   /// Text for displaying remaining sleep timer duration
