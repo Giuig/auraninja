@@ -76,7 +76,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String sleepInMinutes(int minutes) {
-    return 'Dormir en $minutes minutos';
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Dormir en $minutes minutos',
+      one: 'Dormir en $minutes minuto',
+    );
+    return '$_temp0';
   }
 
   @override
