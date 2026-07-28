@@ -60,5 +60,10 @@ third_party/**/example/windows/flutter/ephemeral/
 # Kotlin build cache
 android/.kotlin/
 
+# Keep secrets out of repo
+key.properties
+*.keystore
+*.jks
+
 # Dev artifacts
 pubspec_overrides.yaml

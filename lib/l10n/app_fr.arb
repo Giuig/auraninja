@@ -27,13 +27,14 @@
     "resumeAll": "Reprendre tout",
     "pauseAll": "Tout mettre en pause",
     "stopAll": "Tout arrêter",
-    "sleepInMinutes": "Veille dans {minutes} minutes",
+    "sleepInMinutes": "{minutes, plural, one{Veille dans {minutes} minute} other{Veille dans {minutes} minutes}}",
     "@sleepInMinutes": {
         "description": "Texte pour l'option de minuterie de veille, indiquant les minutes restantes",
         "placeholders": {
             "minutes": {
                 "type": "int",
-                "example": "10"
+                "example": "10",
+                "plural": true
             }
         }
     },

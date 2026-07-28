@@ -28,13 +28,14 @@
     "resumeAll": "Resume All",
     "pauseAll": "Pause All",
     "stopAll": "Stop All",
-    "sleepInMinutes": "Sleep in {minutes} minutes",
+    "sleepInMinutes": "{minutes, plural, one{Sleep in {minutes} minute} other{Sleep in {minutes} minutes}}",
     "@sleepInMinutes": {
         "description": "Text for sleep timer option, showing minutes remaining",
         "placeholders": {
             "minutes": {
                 "type": "int",
-                "example": "10"
+                "example": "10",
+                "plural": true
             }
         }
     },

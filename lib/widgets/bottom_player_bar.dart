@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/audio/sound_controller.dart';
@@ -23,6 +24,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
 
   /// Non-null while a sleep timer is active. Used to show/hide [_SleepCountdown].
   DateTime? _timerEnd;
+
+  int _lastSleepTimerMinutes = 30;
 
   bool _showMarquee = false;
   Timer? _marqueeInitialDelayTimer;
@@ -49,6 +52,15 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
     _startMarqueeInitialDelay(resetMarqueeVisibility: true);
     _updateAudioState();
     _hadActiveSounds = _hasActiveSounds();
+    _loadLastSleepTimerMinutes();
+  }
+
+  Future<void> _loadLastSleepTimerMinutes() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _lastSleepTimerMinutes = prefs.getInt('sleepTimerMinutes') ?? 30;
+    });
   }
 
   @override
@@ -168,45 +180,92 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
   }
 
   Future<void> _showSleepTimerDialog() async {
-    final options = <Duration>[
-      const Duration(minutes: 5),
-      const Duration(minutes: 10),
-      const Duration(minutes: 15),
-      const Duration(minutes: 30),
-      const Duration(hours: 1),
-    ];
+    final localizations = AppLocalizations.of(context);
+    final presets = [5, 10, 15, 30, 60, 90, 120];
 
-    final selected = await showModalBottomSheet<Duration>(
+    int selectedMinutes = _lastSleepTimerMinutes;
+
+    final selected = await showModalBottomSheet<int>(
       context: context,
       builder: (context) {
-        final localizations = AppLocalizations.of(context);
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final option in options)
-                ListTile(
-                  title: Text(localizations?.sleepInMinutes(option.inMinutes) ??
-                      'Sleep in ${option.inMinutes} minutes'),
-                  onTap: () => Navigator.of(context).pop(option),
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      localizations?.setSleepTimer ?? 'Set Sleep Timer',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      localizations?.sleepInMinutes(selectedMinutes) ??
+                          'Sleep in $selectedMinutes minutes',
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
+                    Slider(
+                      value: selectedMinutes.toDouble(),
+                      min: 1,
+                      max: 120,
+                      divisions: 119,
+                      label: localizations?.sleepInMinutes(selectedMinutes) ??
+                          'Sleep in $selectedMinutes minutes',
+                      onChanged: (v) =>
+                          setSheetState(() => selectedMinutes = v.round()),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: presets.map((p) {
+                        final isSelected = selectedMinutes == p;
+                        return ChoiceChip(
+                          label: Text('$p min'),
+                          selected: isSelected,
+                          onSelected: (_) =>
+                              setSheetState(() => selectedMinutes = p),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (_timerEnd != null)
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.of(context).pop(0),
+                            child: Text(
+                                localizations?.cancelSleepTimer ?? 'Cancel'),
+                          ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () =>
+                              Navigator.of(context).pop(selectedMinutes),
+                          child: Text(localizations?.setSleepTimer ?? 'Set'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              if (_timerEnd != null)
-                ListTile(
-                  title: Text(
-                      localizations?.cancelSleepTimer ?? 'Cancel Sleep Timer'),
-                  onTap: () => Navigator.of(context).pop(Duration.zero),
-                ),
-            ],
-          ),
+              ),
+            );
+          },
         );
       },
     );
 
     if (selected != null) {
-      if (selected == Duration.zero) {
+      if (selected == 0) {
         _cancelSleepTimer();
       } else {
-        _startSleepTimer(selected);
+        _lastSleepTimerMinutes = selected;
+        SharedPreferences.getInstance().then((prefs) =>
+            prefs.setInt('sleepTimerMinutes', selected));
+        _startSleepTimer(Duration(minutes: selected));
       }
     }
   }

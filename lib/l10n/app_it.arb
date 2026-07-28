@@ -27,13 +27,14 @@
     "resumeAll": "Riprendi Tutto",
     "pauseAll": "Metti in Pausa Tutto",
     "stopAll": "Ferma Tutto",
-    "sleepInMinutes": "Sonno tra {minutes} minuti",
+    "sleepInMinutes": "{minutes, plural, one{Sonno tra {minutes} minuto} other{Sonno tra {minutes} minuti}}",
     "@sleepInMinutes": {
         "description": "Testo per l'opzione del timer sonno, mostra i minuti rimanenti",
         "placeholders": {
             "minutes": {
                 "type": "int",
-                "example": "10"
+                "example": "10",
+                "plural": true
             }
         }
     },

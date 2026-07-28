@@ -27,13 +27,14 @@
     "resumeAll": "Reanudar Todo",
     "pauseAll": "Pausar Todo",
     "stopAll": "Detener Todo",
-    "sleepInMinutes": "Dormir en {minutes} minutos",
+    "sleepInMinutes": "{minutes, plural, one{Dormir en {minutes} minuto} other{Dormir en {minutes} minutos}}",
     "@sleepInMinutes": {
         "description": "Texto para la opción de temporizador de apagado, mostrando los minutos restantes",
         "placeholders": {
             "minutes": {
                 "type": "int",
-                "example": "10"
+                "example": "10",
+                "plural": true
             }
         }
     },
