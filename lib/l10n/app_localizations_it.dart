@@ -370,4 +370,27 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get shareMix => 'Share';
+
+  @override
+  String get importMix => 'Import mix';
+
+  @override
+  String get importMixPrompt => 'Paste the mix code you received';
+
+  @override
+  String get importAction => 'Import';
+
+  @override
+  String get invalidMixCode => 'That isn\'t a valid mix code';
+
+  @override
+  String get newMix => 'New mix';
+
+  @override
+  String mixImported(String name) {
+    return 'Imported \"$name\"';
+  }
 }

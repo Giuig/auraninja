@@ -51,4 +51,29 @@ class MixesService {
       await save(mixes);
     }
   }
+
+  /// Add an imported [mix], giving it a non-clashing name (appends " (2)",
+  /// " (3)", … when the name already exists). Returns the stored mix.
+  static Future<Mix> importMix(Mix mix) async {
+    final mixes = await load();
+    final existing = mixes.map((m) => m.name.toLowerCase()).toSet();
+    var name = mix.name;
+    if (existing.contains(name.toLowerCase())) {
+      var n = 2;
+      while (existing.contains('${mix.name} ($n)'.toLowerCase())) {
+        n++;
+      }
+      name = '${mix.name} ($n)';
+    }
+    final stored = Mix(
+      id: mix.id,
+      name: name,
+      icon: mix.icon,
+      sounds: mix.sounds,
+      createdAt: mix.createdAt,
+    );
+    mixes.add(stored);
+    await save(mixes);
+    return stored;
+  }
 }

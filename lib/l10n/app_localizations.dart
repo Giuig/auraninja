@@ -777,6 +777,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 sound in this mix couldn\'t be loaded} other{{count} sounds in this mix couldn\'t be loaded}}'**
   String mixSoundsUnavailable(int count);
+
+  /// No description provided for @shareMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareMix;
+
+  /// No description provided for @importMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Import mix'**
+  String get importMix;
+
+  /// No description provided for @importMixPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the mix code you received'**
+  String get importMixPrompt;
+
+  /// No description provided for @importAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importAction;
+
+  /// No description provided for @invalidMixCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t a valid mix code'**
+  String get invalidMixCode;
+
+  /// No description provided for @newMix.
+  ///
+  /// In en, this message translates to:
+  /// **'New mix'**
+  String get newMix;
+
+  /// No description provided for @mixImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported \"{name}\"'**
+  String mixImported(String name);
 }
 
 class _AppLocalizationsDelegate

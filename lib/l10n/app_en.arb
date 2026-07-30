@@ -144,5 +144,17 @@
         "placeholders": {
             "count": { "type": "int" }
         }
+    },
+    "shareMix": "Share",
+    "importMix": "Import mix",
+    "importMixPrompt": "Paste the mix code you received",
+    "importAction": "Import",
+    "invalidMixCode": "That isn't a valid mix code",
+    "newMix": "New mix",
+    "mixImported": "Imported \"{name}\"",
+    "@mixImported": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
     }
 }

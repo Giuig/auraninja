@@ -1,1 +1,51 @@
-{}
+{
+  "de": [
+    "shareMix",
+    "importMix",
+    "importMixPrompt",
+    "importAction",
+    "invalidMixCode",
+    "newMix",
+    "mixImported"
+  ],
+
+  "es": [
+    "shareMix",
+    "importMix",
+    "importMixPrompt",
+    "importAction",
+    "invalidMixCode",
+    "newMix",
+    "mixImported"
+  ],
+
+  "fr": [
+    "shareMix",
+    "importMix",
+    "importMixPrompt",
+    "importAction",
+    "invalidMixCode",
+    "newMix",
+    "mixImported"
+  ],
+
+  "it": [
+    "shareMix",
+    "importMix",
+    "importMixPrompt",
+    "importAction",
+    "invalidMixCode",
+    "newMix",
+    "mixImported"
+  ],
+
+  "ja": [
+    "shareMix",
+    "importMix",
+    "importMixPrompt",
+    "importAction",
+    "invalidMixCode",
+    "newMix",
+    "mixImported"
+  ]
+}

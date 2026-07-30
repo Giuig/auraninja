@@ -8,9 +8,11 @@ import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/model/sound_category.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
+import 'package:auraninja/utils/mix_codec.dart';
 import 'package:auraninja/widgets/new_mix_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MixesPage extends StatefulWidget {
   const MixesPage({super.key});
@@ -151,6 +153,61 @@ class _MixesPageState extends State<MixesPage> {
     );
   }
 
+  void _shareMix(Mix mix) {
+    SharePlus.instance.share(
+      ShareParams(text: MixCodec.encode(mix), subject: mix.name),
+    );
+  }
+
+  Future<void> _importMix() async {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n?.importMix ?? 'Import mix'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText:
+                l10n?.importMixPrompt ?? 'Paste the mix code you received',
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n?.cancel ?? 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: Text(l10n?.importAction ?? 'Import'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (code == null || code.trim().isEmpty) return;
+
+    final mix = MixCodec.tryDecode(code);
+    if (!mounted) return;
+    if (mix == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n?.invalidMixCode ?? "That isn't a valid mix code"),
+      ));
+      return;
+    }
+    final stored = await MixesService.importMix(mix);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content:
+          Text(l10n?.mixImported(stored.name) ?? 'Imported "${stored.name}"'),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -217,6 +274,11 @@ class _MixesPageState extends State<MixesPage> {
                       onPressed: anyLoading ? null : () => _playMix(mix),
                     ),
                   IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip: l10n?.shareMix ?? 'Share',
+                    onPressed: () => _shareMix(mix),
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.edit_outlined),
                     onPressed: () => _openMixSheet(existingMix: mix),
                   ),
@@ -234,10 +296,23 @@ class _MixesPageState extends State<MixesPage> {
         Positioned(
           right: 16,
           bottom: 16 + MediaQuery.of(context).padding.bottom,
-          child: FloatingActionButton(
-            onPressed: () => _openMixSheet(),
-            tooltip: 'New mix',
-            child: const Icon(Icons.add),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton.small(
+                heroTag: 'importMix',
+                onPressed: _importMix,
+                tooltip: l10n?.importMix ?? 'Import mix',
+                child: const Icon(Icons.file_download_outlined),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton(
+                heroTag: 'newMix',
+                onPressed: () => _openMixSheet(),
+                tooltip: l10n?.newMix ?? 'New mix',
+                child: const Icon(Icons.add),
+              ),
+            ],
           ),
         ),
       ],
