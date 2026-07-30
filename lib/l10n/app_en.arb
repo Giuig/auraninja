@@ -146,6 +146,7 @@
         }
     },
     "shareMix": "Share",
+    "stopMix": "Stop",
     "importMix": "Import mix",
     "importMixPrompt": "Paste the mix code you received",
     "importAction": "Import",

@@ -784,6 +784,12 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get shareMix;
 
+  /// No description provided for @stopMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stopMix;
+
   /// No description provided for @importMix.
   ///
   /// In en, this message translates to:

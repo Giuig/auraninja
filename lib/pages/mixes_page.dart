@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
@@ -28,6 +29,11 @@ class _MixesPageState extends State<MixesPage> {
 
   /// Non-null while a mix is being loaded — disables all play buttons.
   String? _playingMixId;
+
+  /// The mix the user last started (and hasn't stopped). Combined with the
+  /// audio handler's live status to show a "now playing" highlight; it clears
+  /// automatically if playback stops elsewhere.
+  String? _activeMixId;
 
   @override
   void initState() {
@@ -95,14 +101,14 @@ class _MixesPageState extends State<MixesPage> {
   Future<void> _playMix(Mix mix) async {
     setState(() => _playingMixId = mix.id);
     final handler = Provider.of<WrapperAudioHandler>(context, listen: false);
+    final l10n = AppLocalizations.of(context);
 
-    await handler.stopAll();
-
-    int unavailableCount = 0;
-
+    // Resolve each mix sound to a NinjaSound (known local/user sound, or an
+    // ad-hoc entry for a radio stream), counting any that can't be found.
+    final resolved = <MixSound, NinjaSound>{};
+    var unavailableCount = 0;
     for (final mixSound in mix.sounds) {
       NinjaSound? sound = _soundMap[mixSound.path];
-
       if (sound == null && mixSound.isStream) {
         sound = NinjaSound(
           name: 'Radio',
@@ -112,33 +118,56 @@ class _MixesPageState extends State<MixesPage> {
           isUserAdded: true,
         );
       }
-
       if (sound != null) {
-        handler.registerSounds([sound]);
-        if (mixSound.isStream) {
-          unawaited(handler.ninjaPlay(mixSound.path));
-        } else {
-          await handler.ninjaPlay(mixSound.path);
-        }
-        handler.setVolume(mixSound.path, mixSound.volume);
+        resolved[mixSound] = sound;
       } else {
         unavailableCount++;
       }
     }
 
-    if (mounted) {
-      setState(() => _playingMixId = null);
-      if (unavailableCount > 0) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-            l10n?.mixSoundsUnavailable(unavailableCount) ??
-                '$unavailableCount sound${unavailableCount == 1 ? '' : 's'} couldn\'t be loaded',
-          ),
-          duration: const Duration(seconds: 3),
-        ));
+    await handler.stopAll();
+    handler.registerSounds(resolved.values.toList());
+
+    // Start every sound concurrently so the mix begins together instead of
+    // fading in one-by-one. Time-box each so a single dead stream can't hang
+    // the whole batch, and swallow per-sound errors.
+    await Future.wait(resolved.keys.map((mixSound) async {
+      try {
+        await handler
+            .ninjaPlay(mixSound.path)
+            .timeout(const Duration(seconds: 8));
+      } catch (_) {
+        // A single failed/slow sound shouldn't abort the rest of the mix.
       }
+    }));
+
+    // Apply the mix's per-sound volumes WITHOUT persisting, so playing a mix
+    // never overwrites the Sounds page's global per-sound volumes. Done after
+    // playback starts so it wins over registerSounds' async volume restore.
+    for (final entry in resolved.entries) {
+      handler.setVolume(entry.key.path, entry.key.volume, persist: false);
     }
+
+    if (!mounted) return;
+    setState(() {
+      _playingMixId = null;
+      _activeMixId = resolved.isEmpty ? null : mix.id;
+    });
+    if (unavailableCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+          l10n?.mixSoundsUnavailable(unavailableCount) ??
+              '$unavailableCount sound${unavailableCount == 1 ? '' : 's'} couldn\'t be loaded',
+        ),
+        duration: const Duration(seconds: 3),
+      ));
+    }
+  }
+
+  Future<void> _stopMix() async {
+    final handler = Provider.of<WrapperAudioHandler>(context, listen: false);
+    await handler.stopAll();
+    if (mounted) setState(() => _activeMixId = null);
   }
 
   void _openMixSheet({Mix? existingMix}) {
@@ -213,6 +242,12 @@ class _MixesPageState extends State<MixesPage> {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
+    // Watch the handler so the "now playing" highlight clears itself when audio
+    // stops (here or elsewhere), rather than getting stuck lit.
+    final handler = context.watch<WrapperAudioHandler>();
+    final anyPlaying = handler.activeControllers
+        .any((c) => c.status == PlaybackStatus.playing);
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -249,10 +284,17 @@ class _MixesPageState extends State<MixesPage> {
           final mix = _mixes[index];
           final isLoading = _playingMixId == mix.id;
           final anyLoading = _playingMixId != null;
+          final isActive = _activeMixId == mix.id && anyPlaying;
 
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
+            color: isActive
+                ? colorScheme.primaryContainer.withValues(alpha: 0.45)
+                : null,
             child: ListTile(
+              onTap: anyLoading
+                  ? null
+                  : () => isActive ? _stopMix() : _playMix(mix),
               leading:
                   Text(mix.icon ?? '🎵', style: const TextStyle(fontSize: 24)),
               title: Text(mix.name),
@@ -270,8 +312,13 @@ class _MixesPageState extends State<MixesPage> {
                     )
                   else
                     IconButton(
-                      icon: const Icon(Icons.play_arrow),
-                      onPressed: anyLoading ? null : () => _playMix(mix),
+                      icon: Icon(isActive ? Icons.stop : Icons.play_arrow),
+                      tooltip: isActive
+                          ? (l10n?.stopMix ?? 'Stop')
+                          : null,
+                      onPressed: anyLoading
+                          ? null
+                          : () => isActive ? _stopMix() : _playMix(mix),
                     ),
                   IconButton(
                     icon: const Icon(Icons.share_outlined),

@@ -375,6 +375,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shareMix => 'Share';
 
   @override
+  String get stopMix => 'Stop';
+
+  @override
   String get importMix => 'Import mix';
 
   @override

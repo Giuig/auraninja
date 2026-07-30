@@ -1,6 +1,7 @@
 {
   "de": [
     "shareMix",
+    "stopMix",
     "importMix",
     "importMixPrompt",
     "importAction",
@@ -11,6 +12,7 @@
 
   "es": [
     "shareMix",
+    "stopMix",
     "importMix",
     "importMixPrompt",
     "importAction",
@@ -21,6 +23,7 @@
 
   "fr": [
     "shareMix",
+    "stopMix",
     "importMix",
     "importMixPrompt",
     "importAction",
@@ -31,6 +34,7 @@
 
   "it": [
     "shareMix",
+    "stopMix",
     "importMix",
     "importMixPrompt",
     "importAction",
@@ -41,6 +45,7 @@
 
   "ja": [
     "shareMix",
+    "stopMix",
     "importMix",
     "importMixPrompt",
     "importAction",

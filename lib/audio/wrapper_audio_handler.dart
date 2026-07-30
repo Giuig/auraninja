@@ -241,11 +241,15 @@ class WrapperAudioHandler extends BaseAudioHandler
     notifyListeners();
   }
 
-  void setVolume(String path, double volume) {
+  void setVolume(String path, double volume, {bool persist = true}) {
     _manager.setVolume(path, volume);
-    // Persist so the volume survives app restarts.
-    SharedPreferences.getInstance()
-        .then((p) => p.setDouble('vol_$path', volume));
+    // Persist so the volume survives app restarts. Mix playback passes
+    // persist:false so applying a mix's per-sound levels never overwrites the
+    // user's global per-sound volume on the Sounds page.
+    if (persist) {
+      SharedPreferences.getInstance()
+          .then((p) => p.setDouble('vol_$path', volume));
+    }
     // No explicit notifyListeners() — manager.setVolume → controller.setVolume
     // → _onControllerStateChanged → manager.notifyListeners → handler listener.
   }
