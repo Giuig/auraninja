@@ -45,11 +45,15 @@ android {
     defaultConfig {
         applicationId "io.github.giuig.auraninja"
         minSdk 26
-        targetSdk 35
+        targetSdk 36
         versionCode pubspecVersionCode
         versionName pubspecVersionName
         multiDexEnabled true
     }
+
+    // Only sign with our keystore when building AABs (Play Store).
+    // APK builds (local dev, CI) use debug signing to avoid signature conflicts.
+    def isAabBuild = gradle.startParameter.taskNames.any { it.contains('bundle') }
 
     // Required by IzzyOnDroid / F-Droid
     dependenciesInfo {
@@ -68,7 +72,11 @@ android {
 
     buildTypes {
         release {
-            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+            if (keystorePropertiesFile.exists() && isAabBuild) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
