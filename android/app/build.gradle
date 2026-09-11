@@ -51,10 +51,6 @@ android {
         multiDexEnabled true
     }
 
-    // Only sign with our keystore when building AABs (Play Store).
-    // APK builds (local dev, CI) use debug signing to avoid signature conflicts.
-    def isAabBuild = gradle.startParameter.taskNames.any { it.contains('bundle') }
-
     // Required by IzzyOnDroid / F-Droid
     dependenciesInfo {
         includeInApk = false
@@ -72,7 +68,7 @@ android {
 
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists() && isAabBuild) {
+            if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             } else {
                 signingConfig signingConfigs.debug
