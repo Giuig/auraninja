@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -136,6 +137,19 @@ class _NewMixSheetState extends State<NewMixSheet> {
             !_soundsStartedHere.contains(entry.key)) {
           unawaited(_handler.ninjaPlay(entry.key));
           _handler.setVolume(entry.key, entry.value, persist: false);
+        }
+      }
+      // If what's playing again is exactly the mix being edited, re-assert
+      // it as active. Restoring the sounds above doesn't by itself tell the
+      // handler which named mix they belong to, so without this the audio
+      // comes back correctly but the mix list loses its highlight even
+      // though nothing about the active mix actually changed.
+      if (widget._isEditMode) {
+        final mixPaths =
+            widget.existingMix!.sounds.map((s) => s.path).toSet();
+        if (mixPaths.isNotEmpty &&
+            setEquals(_originallyPlaying.keys.toSet(), mixPaths)) {
+          _handler.setActiveMix(widget.existingMix!.id);
         }
       }
     }

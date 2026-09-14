@@ -128,11 +128,19 @@ class _MixesPageState extends State<MixesPage> {
     // Start every sound concurrently so the mix begins together instead of
     // fading in one-by-one. Time-box each so a single dead stream can't hang
     // the whole batch, and swallow per-sound errors.
+    //
+    // 4s, not longer: the loading spinner blocks on this Future.wait, so a
+    // single slow/dead stream in the mix holds up the whole indicator for
+    // however long this is. Every real stream observed while testing this
+    // connected within ~2s — a connection that hasn't established by 4s is
+    // overwhelmingly likely dead rather than merely slow, so this trims the
+    // worst-case stuck-spinner time without meaningfully risking cutting off
+    // a stream that would have succeeded given longer.
     await Future.wait(resolved.keys.map((mixSound) async {
       try {
         await handler
             .ninjaPlay(mixSound.path)
-            .timeout(const Duration(seconds: 8));
+            .timeout(const Duration(seconds: 4));
       } catch (_) {
         // A single failed/slow sound shouldn't abort the rest of the mix.
       }
@@ -327,6 +335,10 @@ class _MixesPageState extends State<MixesPage> {
             color: isActive
                 ? colorScheme.primaryContainer.withValues(alpha: 0.45)
                 : null,
+            // Card doesn't clip its child by default, so the ListTile's
+            // hover/splash highlight was rendering as a full square past the
+            // card's rounded corners instead of following its shape.
+            clipBehavior: Clip.antiAlias,
             child: ListTile(
               onTap: anyLoading
                   ? null
@@ -359,11 +371,20 @@ class _MixesPageState extends State<MixesPage> {
                   IconButton(
                     icon: const Icon(Icons.share_outlined),
                     tooltip: l10n?.shareMix ?? 'Share',
+                    // Not gated on anyLoading: this only reads the mix's
+                    // static sound list, never live playback state, so
+                    // there's nothing for it to race with.
                     onPressed: () => _shareMix(mix),
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
-                    onPressed: () => _openMixSheet(existingMix: mix),
+                    // Gated like Play/Stop: opening Edit while _playMix's
+                    // Future.wait is still in flight lets the sheet's
+                    // "what's already playing" snapshot race against sounds
+                    // that haven't started yet, so it can end up incomplete.
+                    onPressed: anyLoading
+                        ? null
+                        : () => _openMixSheet(existingMix: mix),
                   ),
                 ],
               ),
