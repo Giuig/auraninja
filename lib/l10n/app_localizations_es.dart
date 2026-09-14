@@ -57,22 +57,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get birds => 'Aves';
 
   @override
-  String get cat => 'gato';
+  String get cat => 'Gato';
 
   @override
   String get thunder => 'Trueno';
 
   @override
-  String get cancelSleepTimer => 'Cancelar Temporizador de Apagado';
+  String get cancelSleepTimer => 'Cancelar temporizador de apagado';
 
   @override
-  String get resumeAll => 'Reanudar Todo';
+  String get resumeAll => 'Reanudar todo';
 
   @override
-  String get pauseAll => 'Pausar Todo';
+  String get pauseAll => 'Pausar todo';
 
   @override
-  String get stopAll => 'Detener Todo';
+  String get stopAll => 'Detener todo';
 
   @override
   String sleepInMinutes(int minutes) {
@@ -91,7 +91,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get setSleepTimer => 'Establecer Temporizador de Apagado';
+  String get setSleepTimer => 'Establecer temporizador de apagado';
 
   @override
   String get visualizer => 'Visualizador';

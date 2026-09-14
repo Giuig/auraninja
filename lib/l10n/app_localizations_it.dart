@@ -63,16 +63,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get thunder => 'Tuono';
 
   @override
-  String get cancelSleepTimer => 'Annulla Timer Sonno';
+  String get cancelSleepTimer => 'Annulla timer sonno';
 
   @override
-  String get resumeAll => 'Riprendi Tutto';
+  String get resumeAll => 'Riprendi tutto';
 
   @override
-  String get pauseAll => 'Metti in Pausa Tutto';
+  String get pauseAll => 'Metti in pausa tutto';
 
   @override
-  String get stopAll => 'Ferma Tutto';
+  String get stopAll => 'Ferma tutto';
 
   @override
   String sleepInMinutes(int minutes) {
@@ -91,7 +91,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get setSleepTimer => 'Imposta Timer Sonno';
+  String get setSleepTimer => 'Imposta timer sonno';
 
   @override
   String get visualizer => 'Visualizzatore';

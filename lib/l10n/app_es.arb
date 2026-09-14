@@ -15,12 +15,12 @@
     "zenCalm": "Calma Zen",
     "credits": "Créditos",
     "birds": "Aves",
-    "cat": "gato",
+    "cat": "Gato",
     "thunder": "Trueno",
-    "cancelSleepTimer": "Cancelar Temporizador de Apagado",
-    "resumeAll": "Reanudar Todo",
-    "pauseAll": "Pausar Todo",
-    "stopAll": "Detener Todo",
+    "cancelSleepTimer": "Cancelar temporizador de apagado",
+    "resumeAll": "Reanudar todo",
+    "pauseAll": "Pausar todo",
+    "stopAll": "Detener todo",
     "sleepInMinutes": "{minutes, plural, one{Dormir en {minutes} minuto} other{Dormir en {minutes} minutos}}",
     "@sleepInMinutes": {
         "description": "Texto para la opción de temporizador de apagado, mostrando los minutos restantes",
@@ -46,7 +46,7 @@
             }
         }
     },
-    "setSleepTimer": "Establecer Temporizador de Apagado",
+    "setSleepTimer": "Establecer temporizador de apagado",
     "visualizer": "Visualizador",
     "internetRadio": "Radio por Internet",
     "copyToClipboard": "Copiar al portapapeles",
