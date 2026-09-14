@@ -6,6 +6,7 @@ import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/pages/visualizers/aurora_visualizer.dart';
 import 'package:auraninja/pages/visualizers/breathing_orb_visualizer.dart';
 import 'package:auraninja/pages/visualizers/constellation_visualizer.dart';
+import 'package:auraninja/pages/visualizers/firefly_swarm_visualizer.dart';
 import 'package:auraninja/pages/visualizers/ink_diffusion_visualizer.dart';
 import 'package:auraninja/pages/visualizers/liquid_ribbons_visualizer.dart';
 import 'package:auraninja/pages/visualizers/morphing_polygon_visualizer.dart';
@@ -33,6 +34,7 @@ List<String> _visualizerNames(BuildContext context) {
     l.vizMorphingPolygon,
     l.vizAurora,
     l.vizInkDiffusion,
+    l.vizFireflySwarm,
   ];
 }
 
@@ -70,8 +72,11 @@ Widget _buildVisualizer(
       return AuroraVisualizer(
           colors: colors, isPlaying: isPlaying, activeCount: activeCount);
     case 8:
-    default:
       return InkDiffusionVisualizer(
+          colors: colors, isPlaying: isPlaying, activeCount: activeCount);
+    case 9:
+    default:
+      return FireflySwarmVisualizer(
           colors: colors, isPlaying: isPlaying, activeCount: activeCount);
   }
 }
@@ -88,7 +93,7 @@ class VisualizerPage extends StatefulWidget {
 class _VisualizerPageState extends State<VisualizerPage>
     with WidgetsBindingObserver {
   static const _prefKey = 'selected_visualizer_index';
-  static const _count = 9;
+  static const _count = 10;
   static const _swipeVelocityThreshold = 200.0;
   static const _overlayHideDelay = Duration(seconds: 3);
 

@@ -400,6 +400,12 @@ abstract class AppLocalizations {
   /// **'Ink Diffusion'**
   String get vizInkDiffusion;
 
+  /// No description provided for @vizFireflySwarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Firefly Swarm'**
+  String get vizFireflySwarm;
+
   /// No description provided for @playingSounds.
   ///
   /// In en, this message translates to:

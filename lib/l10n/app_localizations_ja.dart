@@ -160,6 +160,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get vizInkDiffusion => '墨流し';
 
   @override
+  String get vizFireflySwarm => 'Firefly Swarm';
+
+  @override
   String get playingSounds => 'サウンド再生中';
 
   @override
