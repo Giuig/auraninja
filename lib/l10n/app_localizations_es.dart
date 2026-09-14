@@ -167,6 +167,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vizInkDiffusion => 'Difusión de Tinta';
 
   @override
+  String get vizFireflySwarm => 'Firefly Swarm';
+
+  @override
   String get playingSounds => 'Reproduciendo sonidos';
 
   @override

@@ -1,1 +1,21 @@
-{}
+{
+  "de": [
+    "vizFireflySwarm"
+  ],
+
+  "es": [
+    "vizFireflySwarm"
+  ],
+
+  "fr": [
+    "vizFireflySwarm"
+  ],
+
+  "it": [
+    "vizFireflySwarm"
+  ],
+
+  "ja": [
+    "vizFireflySwarm"
+  ]
+}
