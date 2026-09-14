@@ -365,28 +365,28 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get shareMix => 'Share';
+  String get shareMix => '共有';
 
   @override
-  String get stopMix => 'Stop';
+  String get stopMix => '停止';
 
   @override
-  String get importMix => 'Import mix';
+  String get importMix => 'ミックスをインポート';
 
   @override
-  String get importMixPrompt => 'Paste the mix code you received';
+  String get importMixPrompt => '受け取ったミックスコードを貼り付けてください';
 
   @override
-  String get importAction => 'Import';
+  String get importAction => 'インポート';
 
   @override
-  String get invalidMixCode => 'That isn\'t a valid mix code';
+  String get invalidMixCode => '有効なミックスコードではありません';
 
   @override
-  String get newMix => 'New mix';
+  String get newMix => '新しいミックス';
 
   @override
   String mixImported(String name) {
-    return 'Imported \"$name\"';
+    return '「$name」をインポートしました';
   }
 }

@@ -142,5 +142,18 @@
         "placeholders": {
             "count": { "type": "int" }
         }
+    },
+    "shareMix": "共有",
+    "stopMix": "停止",
+    "importMix": "ミックスをインポート",
+    "importMixPrompt": "受け取ったミックスコードを貼り付けてください",
+    "importAction": "インポート",
+    "invalidMixCode": "有効なミックスコードではありません",
+    "newMix": "新しいミックス",
+    "mixImported": "「{name}」をインポートしました",
+    "@mixImported": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
     }
 }

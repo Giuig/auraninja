@@ -143,5 +143,18 @@
         "placeholders": {
             "count": { "type": "int" }
         }
+    },
+    "shareMix": "Condividi",
+    "stopMix": "Ferma",
+    "importMix": "Importa mix",
+    "importMixPrompt": "Incolla il codice del mix ricevuto",
+    "importAction": "Importa",
+    "invalidMixCode": "Non è un codice mix valido",
+    "newMix": "Nuovo mix",
+    "mixImported": "Importato \"{name}\"",
+    "@mixImported": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
     }
 }

@@ -372,28 +372,28 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get shareMix => 'Share';
+  String get shareMix => 'Teilen';
 
   @override
-  String get stopMix => 'Stop';
+  String get stopMix => 'Stoppen';
 
   @override
-  String get importMix => 'Import mix';
+  String get importMix => 'Mix importieren';
 
   @override
-  String get importMixPrompt => 'Paste the mix code you received';
+  String get importMixPrompt => 'Füge den erhaltenen Mix-Code ein';
 
   @override
-  String get importAction => 'Import';
+  String get importAction => 'Importieren';
 
   @override
-  String get invalidMixCode => 'That isn\'t a valid mix code';
+  String get invalidMixCode => 'Das ist kein gültiger Mix-Code';
 
   @override
-  String get newMix => 'New mix';
+  String get newMix => 'Neuer Mix';
 
   @override
   String mixImported(String name) {
-    return 'Imported \"$name\"';
+    return '\"$name\" importiert';
   }
 }

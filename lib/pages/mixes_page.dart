@@ -11,7 +11,9 @@ import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
 import 'package:auraninja/utils/mix_codec.dart';
 import 'package:auraninja/widgets/new_mix_sheet.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -29,11 +31,6 @@ class _MixesPageState extends State<MixesPage> {
 
   /// Non-null while a mix is being loaded — disables all play buttons.
   String? _playingMixId;
-
-  /// The mix the user last started (and hasn't stopped). Combined with the
-  /// audio handler's live status to show a "now playing" highlight; it clears
-  /// automatically if playback stops elsewhere.
-  String? _activeMixId;
 
   @override
   void initState() {
@@ -149,10 +146,7 @@ class _MixesPageState extends State<MixesPage> {
     }
 
     if (!mounted) return;
-    setState(() {
-      _playingMixId = null;
-      _activeMixId = resolved.isEmpty ? null : mix.id;
-    });
+    setState(() => _playingMixId = null);
     if (unavailableCount > 0) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(
@@ -167,7 +161,8 @@ class _MixesPageState extends State<MixesPage> {
   Future<void> _stopMix() async {
     final handler = Provider.of<WrapperAudioHandler>(context, listen: false);
     await handler.stopAll();
-    if (mounted) setState(() => _activeMixId = null);
+    // No local state to clear — "active" is derived from what's actually
+    // playing, so it updates itself once stopAll() takes effect.
   }
 
   void _openMixSheet({Mix? existingMix}) {
@@ -182,10 +177,25 @@ class _MixesPageState extends State<MixesPage> {
     );
   }
 
-  void _shareMix(Mix mix) {
-    SharePlus.instance.share(
-      ShareParams(text: MixCodec.encode(mix), subject: mix.name),
-    );
+  Future<void> _shareMix(Mix mix) async {
+    final code = MixCodec.encode(mix);
+    try {
+      await SharePlus.instance.share(
+        ShareParams(text: code, subject: mix.name),
+      );
+    } catch (_) {
+      // share_plus deliberately throws on web when the Web Share API isn't
+      // available (most desktop browsers) and no fallback is configured —
+      // silently do nothing without this, since the exception otherwise
+      // propagates unhandled. Clipboard works everywhere, so use it as the
+      // universal fallback rather than only patching the web case.
+      await Clipboard.setData(ClipboardData(text: code));
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n?.copiedToClipboard ?? 'Copied to clipboard'),
+      ));
+    }
   }
 
   Future<void> _importMix() async {
@@ -242,11 +252,15 @@ class _MixesPageState extends State<MixesPage> {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Watch the handler so the "now playing" highlight clears itself when audio
-    // stops (here or elsewhere), rather than getting stuck lit.
+    // Watch the handler so the "now playing" highlight tracks actual audio
+    // state directly, rather than a separately-tracked flag that only one
+    // code path (_playMix) ever set — that left it stale whenever playback
+    // started some other way (e.g. still running from building a new mix).
     final handler = context.watch<WrapperAudioHandler>();
-    final anyPlaying = handler.activeControllers
-        .any((c) => c.status == PlaybackStatus.playing);
+    final playingPaths = handler.activeControllers
+        .where((c) => c.status == PlaybackStatus.playing)
+        .map((c) => c.sound.path)
+        .toSet();
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -284,7 +298,9 @@ class _MixesPageState extends State<MixesPage> {
           final mix = _mixes[index];
           final isLoading = _playingMixId == mix.id;
           final anyLoading = _playingMixId != null;
-          final isActive = _activeMixId == mix.id && anyPlaying;
+          final mixPaths = mix.sounds.map((s) => s.path).toSet();
+          final isActive =
+              mixPaths.isNotEmpty && setEquals(playingPaths, mixPaths);
 
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
