@@ -125,7 +125,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get copiedToClipboard => 'In Zwischenablage kopiert!';
 
   @override
-  String get noise => 'Geräusch';
+  String get noise => 'Rauschen';
 
   @override
   String get brown => 'Braun';
