@@ -240,7 +240,12 @@ class _SoundsPageState extends State<SoundsPage> {
               .where((c) => !_favorites.contains(c.sound.path))
               .toList()
           : entry.value;
-      if (filteredSounds.isNotEmpty) {
+      // Internet Radio stays visible even with zero un-favorited stations:
+      // it's the only place the "+ add station" button lives, so favoriting
+      // the last station would otherwise remove the only way to add another.
+      final keepEmptyForAddButton =
+          entry.key == '@internetRadio' && _searchQuery.isEmpty;
+      if (filteredSounds.isNotEmpty || keepEmptyForAddButton) {
         orderedCategories.add(MapEntry(entry.key, filteredSounds));
       }
     }
@@ -316,9 +321,10 @@ class _SoundsPageState extends State<SoundsPage> {
                     final categoryKey = entry.key;
                     final categorySounds = entry.value;
                     final isFavoritesCategory = categoryKey == '@favorites';
-                    final isRadioCategory = categorySounds.any(
-                      (c) => c.sound.isStream,
-                    );
+                    // Keyed off the category itself, not its contents — a
+                    // fully-favorited Internet Radio category renders with
+                    // zero cards, and .any(isStream) would wrongly go false.
+                    final isRadioCategory = categoryKey == '@internetRadio';
 
                     final isCollapsed =
                         _collapsedCategories.contains(categoryKey);
