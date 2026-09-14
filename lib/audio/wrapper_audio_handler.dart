@@ -229,6 +229,7 @@ class WrapperAudioHandler extends BaseAudioHandler
   Future<void> stopAll() async {
     debugPrint('[WH] stopAll() called');
     _pausedPaths.clear();
+    _activeMixId = null;
     final futures = <Future<void>>[];
 
     for (final controller in allControllers) {
@@ -239,6 +240,25 @@ class WrapperAudioHandler extends BaseAudioHandler
     await Future.wait(futures);
     await super.stop();
     notifyListeners();
+  }
+
+  // Which saved mix (if any) the user last explicitly started or created
+  // from the sounds now playing. This can't be derived from playback state
+  // alone: two mixes with identical sound selections are indistinguishable
+  // once playing, so "which one is highlighted" has to be tracked by id, not
+  // inferred from content. Callers should still treat this as advisory and
+  // re-validate it against the mix's own sounds — see MixesPage — since it
+  // goes stale (harmlessly) the moment playback diverges from that mix
+  // without going through stopAll() (e.g. a sound stopped individually from
+  // the Sounds page).
+  String? _activeMixId;
+  String? get activeMixId => _activeMixId;
+
+  void setActiveMix(String? mixId) {
+    if (_activeMixId != mixId) {
+      _activeMixId = mixId;
+      notifyListeners();
+    }
   }
 
   void setVolume(String path, double volume, {bool persist = true}) {

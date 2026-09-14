@@ -145,6 +145,7 @@ class _MixesPageState extends State<MixesPage> {
       handler.setVolume(entry.key.path, entry.key.volume, persist: false);
     }
 
+    handler.setActiveMix(resolved.isEmpty ? null : mix.id);
     if (!mounted) return;
     setState(() => _playingMixId = null);
     if (unavailableCount > 0) {
@@ -252,15 +253,36 @@ class _MixesPageState extends State<MixesPage> {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Watch the handler so the "now playing" highlight tracks actual audio
-    // state directly, rather than a separately-tracked flag that only one
-    // code path (_playMix) ever set — that left it stale whenever playback
-    // started some other way (e.g. still running from building a new mix).
     final handler = context.watch<WrapperAudioHandler>();
     final playingPaths = handler.activeControllers
         .where((c) => c.status == PlaybackStatus.playing)
         .map((c) => c.sound.path)
         .toSet();
+
+    // "Active mix" has to be tracked by id (handler.activeMixId), not
+    // inferred from sound content — two mixes with identical selections are
+    // indistinguishable once playing, so matching by path set alone would
+    // highlight every one of them at once. Still validate the remembered id
+    // against what's actually playing right now, so it self-clears
+    // (harmlessly) if playback diverged from that mix without going through
+    // stopAll() — e.g. a sound stopped individually from the Sounds page.
+    String? effectiveActiveMixId;
+    final rememberedId = handler.activeMixId;
+    if (rememberedId != null) {
+      Mix? rememberedMix;
+      for (final m in _mixes) {
+        if (m.id == rememberedId) {
+          rememberedMix = m;
+          break;
+        }
+      }
+      final rememberedPaths =
+          rememberedMix?.sounds.map((s) => s.path).toSet() ?? const {};
+      if (rememberedPaths.isNotEmpty &&
+          setEquals(playingPaths, rememberedPaths)) {
+        effectiveActiveMixId = rememberedId;
+      }
+    }
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -298,9 +320,7 @@ class _MixesPageState extends State<MixesPage> {
           final mix = _mixes[index];
           final isLoading = _playingMixId == mix.id;
           final anyLoading = _playingMixId != null;
-          final mixPaths = mix.sounds.map((s) => s.path).toSet();
-          final isActive =
-              mixPaths.isNotEmpty && setEquals(playingPaths, mixPaths);
+          final isActive = mix.id == effectiveActiveMixId;
 
           return Card(
             margin: const EdgeInsets.only(bottom: 8),

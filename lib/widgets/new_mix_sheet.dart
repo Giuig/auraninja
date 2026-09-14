@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
@@ -36,6 +37,14 @@ class _NewMixSheetState extends State<NewMixSheet> {
   final TextEditingController _nameController = TextEditingController();
   final Set<String> _soundsStartedHere = {};
 
+  // Snapshot of what was actually playing (path -> volume) before this sheet
+  // touched anything. Live-preview toggling can stop a sound that was
+  // already playing for real — e.g. editing the mix that's currently
+  // active and unchecking one of its sounds — and without this, cancelling
+  // the sheet left that sound stopped permanently even though nothing was
+  // ever saved. Restored in dispose() for anything not explicitly saved.
+  late final Map<String, double> _originallyPlaying;
+
   List<NinjaSound> _allSounds = [];
   Set<String> _favoritePaths = {};
   bool _loadingSounds = true;
@@ -59,6 +68,10 @@ class _NewMixSheetState extends State<NewMixSheet> {
   void initState() {
     super.initState();
     _handler = Provider.of<WrapperAudioHandler>(context, listen: false);
+    _originallyPlaying = {
+      for (final c in _handler.activeControllers)
+        if (c.status == PlaybackStatus.playing) c.sound.path: c.volume,
+    };
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _loadSounds();
     });
@@ -109,6 +122,21 @@ class _NewMixSheetState extends State<NewMixSheet> {
     if (!_saved) {
       for (final path in _soundsStartedHere) {
         unawaited(_handler.ninjaStop(path));
+      }
+      // Undo the other half of live-preview side effects: anything that was
+      // already playing for real before this sheet opened but got toggled
+      // off while editing. Without this, cancelling an edit left that sound
+      // stopped for good even though nothing was ever saved.
+      final stillPlaying = _handler.activeControllers
+          .where((c) => c.status == PlaybackStatus.playing)
+          .map((c) => c.sound.path)
+          .toSet();
+      for (final entry in _originallyPlaying.entries) {
+        if (!stillPlaying.contains(entry.key) &&
+            !_soundsStartedHere.contains(entry.key)) {
+          unawaited(_handler.ninjaPlay(entry.key));
+          _handler.setVolume(entry.key, entry.value, persist: false);
+        }
       }
     }
     super.dispose();

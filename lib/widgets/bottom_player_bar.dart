@@ -242,6 +242,11 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
           .toList(),
     );
     await MixesService.add(mix);
+    // These exact sounds are what's now playing, and this new mix is
+    // unambiguously the one that just captured them — mark it active so the
+    // Mixes list highlights it immediately instead of waiting for its Play
+    // button to be pressed (which would also needlessly restart playback).
+    _audioHandler.setActiveMix(mix.id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(l10n?.mixSaved ?? 'Mix saved'),
