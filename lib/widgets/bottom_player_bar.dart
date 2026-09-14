@@ -8,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
+import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
+import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/volume_storage.dart';
 import 'package:auraninja/widgets/volume_slider.dart';
 
@@ -168,6 +170,83 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
   void _stopAll() {
     _audioHandler.stopAll();
     _startMarqueeInitialDelay(resetMarqueeVisibility: true);
+  }
+
+  /// Saves whatever is currently playing as a new mix — the shortcut the
+  /// empty-mixes-list hint text has always promised ("Play sounds, then tap
+  /// 'Save Mix' in the player"), restored here since the mix sheet's
+  /// checkbox picker doesn't offer a way to save what's already playing
+  /// without re-selecting every sound from scratch.
+  Future<void> _saveCurrentAsMix() async {
+    final playing = _audioHandler.activeControllers
+        .where((c) => c.status == PlaybackStatus.playing)
+        .toList();
+    if (playing.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context);
+    final existing = await MixesService.load();
+    if (!mounted) return;
+    final controller =
+        TextEditingController(text: 'Mix ${existing.length + 1}');
+    String? nameError;
+
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n?.nameMix ?? 'Name your mix'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: l10n?.mixNameLabel ?? 'Mix name',
+              errorText: nameError,
+            ),
+            onChanged: (_) {
+              if (nameError != null) setDialogState(() => nameError = null);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n?.cancel ?? 'Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final trimmed = controller.text.trim();
+                if (trimmed.isEmpty) return;
+                if (existing
+                    .map((m) => m.name.toLowerCase())
+                    .contains(trimmed.toLowerCase())) {
+                  setDialogState(() => nameError =
+                      l10n?.duplicateMixName ?? 'Name already in use');
+                  return;
+                }
+                Navigator.of(ctx).pop(trimmed);
+              },
+              child: Text(l10n?.saveMix ?? 'Save Mix'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (name == null || !mounted) return;
+
+    final mix = Mix(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      sounds: playing
+          .map((c) => MixSound(path: c.sound.path, volume: c.volume))
+          .toList(),
+    );
+    await MixesService.add(mix);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(l10n?.mixSaved ?? 'Mix saved'),
+      duration: const Duration(seconds: 2),
+    ));
   }
 
   void _cancelSleepTimer() {
@@ -538,6 +617,21 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                     tooltip: localizations?.activeSounds ?? 'Active Sounds',
                     onPressed: () => _showActiveSoundsSheet(context),
                   ),
+                );
+              },
+            ),
+            // Save current playback as a mix — only when something is
+            // actually playing to save.
+            ListenableBuilder(
+              listenable: _audioHandler,
+              builder: (context, _) {
+                final anySoundPlaying = _audioHandler.activeControllers
+                    .any((c) => c.status == PlaybackStatus.playing);
+                if (!anySoundPlaying) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.playlist_add_outlined),
+                  tooltip: localizations?.saveMix ?? 'Save Mix',
+                  onPressed: _saveCurrentAsMix,
                 );
               },
             ),
