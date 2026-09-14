@@ -320,8 +320,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                       children: [
                         if (_timerEnd != null)
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(0),
+                            onPressed: () => Navigator.of(context).pop(0),
                             child: Text(
                                 localizations?.cancelSleepTimer ?? 'Cancel'),
                           ),
@@ -347,8 +346,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
         _cancelSleepTimer();
       } else {
         _lastSleepTimerMinutes = selected;
-        SharedPreferences.getInstance().then((prefs) =>
-            prefs.setInt('sleepTimerMinutes', selected));
+        SharedPreferences.getInstance()
+            .then((prefs) => prefs.setInt('sleepTimerMinutes', selected));
         _startSleepTimer(Duration(minutes: selected));
       }
     }
@@ -497,23 +496,38 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                                                   subtitleStyle);
                                           if (overflows) {
                                             return _showMarquee
-                                                ? Marquee(
-                                                    key: ValueKey(metadata),
-                                                    text: metadata,
-                                                    style: subtitleStyle,
-                                                    scrollAxis: Axis.horizontal,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    blankSpace: 20.0,
-                                                    velocity: 50.0,
-                                                    pauseAfterRound:
-                                                        const Duration(
-                                                            seconds: 5),
-                                                    startPadding: 0.0,
-                                                    fadingEdgeStartFraction:
-                                                        0.1,
-                                                    fadingEdgeEndFraction: 0.1,
+                                                ? SizedBox(
+                                                    // Marquee's own intrinsic
+                                                    // height doesn't exactly
+                                                    // match the static Text's,
+                                                    // so the outer Align was
+                                                    // re-centering it a couple
+                                                    // px higher the instant
+                                                    // scrolling kicked in.
+                                                    // Pin it to the same slot
+                                                    // height so the swap is
+                                                    // seamless.
+                                                    height: subtitleH,
+                                                    child: Marquee(
+                                                      key: ValueKey(metadata),
+                                                      text: metadata,
+                                                      style: subtitleStyle,
+                                                      scrollAxis:
+                                                          Axis.horizontal,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      blankSpace: 20.0,
+                                                      velocity: 50.0,
+                                                      pauseAfterRound:
+                                                          const Duration(
+                                                              seconds: 5),
+                                                      startPadding: 0.0,
+                                                      fadingEdgeStartFraction:
+                                                          0.1,
+                                                      fadingEdgeEndFraction:
+                                                          0.1,
+                                                    ),
                                                   )
                                                 : Text(
                                                     metadata,
