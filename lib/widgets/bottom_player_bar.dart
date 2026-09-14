@@ -592,7 +592,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                     _SleepCountdown(
                       timerEnd: _timerEnd!,
                       onExpired: () {
-                        _stopAll();
+                        _audioHandler.fadeOutAndStop();
+                        _startMarqueeInitialDelay(resetMarqueeVisibility: true);
                         _cancelSleepTimer();
                       },
                     ),

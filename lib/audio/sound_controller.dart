@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:just_audio/just_audio.dart' as just_audio;
+import 'package:auraninja/audio/fade_curve.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/audio/web_audio_seamless.dart';
 import 'package:auraninja/services/web_metadata_service.dart';
@@ -41,6 +42,11 @@ class SoundController with ChangeNotifier {
   StreamSubscription<just_audio.IcyMetadata?>? _icyMetadataSubscription;
   StreamSubscription<Duration>? _recoveryWatchdog;
   WebMetadataService? _webMetadataService;
+
+  // just_audio has no native volume-ramp API, unlike SoLoud/Web Audio, so
+  // fadeTo() drives it with a plain Dart ticker. Tracked so a new fade (or
+  // any stop/pause/dispose) can cancel a stale one before it fires again.
+  Timer? _justAudioFadeTimer;
 
   String _currentMetadata = '';
   Duration? _singleTrackDuration;
@@ -310,6 +316,8 @@ class SoundController with ChangeNotifier {
 
   Future<void> pause() async {
     debugPrint('[SC:${sound.name}] pause() status=$_status');
+    _justAudioFadeTimer?.cancel();
+    _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
         await SoLoud.instance.stop(_soloudHandle!);
@@ -353,6 +361,8 @@ class SoundController with ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _justAudioFadeTimer?.cancel();
+    _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
         await SoLoud.instance.stop(_soloudHandle!);
@@ -398,9 +408,59 @@ class SoundController with ChangeNotifier {
     }
   }
 
+  /// Ramps this sound's volume down to [target] over [duration], then
+  /// leaves it stopped/paused as-is — callers decide when to actually stop
+  /// playback (e.g. once every active sound has finished fading).
+  ///
+  /// Deliberately does NOT touch [_volume] or call [setVolume]/persist
+  /// anything: every backend re-establishes its live volume from [_volume]
+  /// on its next real play() (SoLoud passes it explicitly, the web-seamless
+  /// player builds a fresh gain node from it, just_audio re-applies it via
+  /// load() after a stop()) — so leaving [_volume] untouched here means the
+  /// next play() is back at full volume with no separate restore step.
+  void fadeTo(double target, Duration duration) {
+    _justAudioFadeTimer?.cancel();
+    _justAudioFadeTimer = null;
+
+    if (_useSoloud) {
+      if (_soloudHandle != null) {
+        SoLoud.instance.fadeVolume(_soloudHandle!, target, duration);
+      }
+      return;
+    }
+
+    if (_useWebSeamless) {
+      // Native, AudioContext-clock-driven ramp — keeps going smoothly even
+      // if the tab is backgrounded/throttled, unlike a Dart Timer would.
+      _webSeamlessPlayer?.fadeTo(target, duration);
+      return;
+    }
+
+    // just_audio has no native ramp primitive, so drive it with a ticker.
+    if (!hasPlayer) return;
+    final start = _player!.volume;
+    final startTime = DateTime.now();
+    const tickInterval = Duration(milliseconds: 50);
+    _justAudioFadeTimer = Timer.periodic(tickInterval, (timer) {
+      final elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
+      final t = duration.inMilliseconds == 0
+          ? 1.0
+          : elapsedMs / duration.inMilliseconds;
+      final eased = fadeOutEase(t);
+      final v = start + (target - start) * eased;
+      _player?.setVolume(v.clamp(0.0, 1.0));
+      if (t >= 1.0) {
+        timer.cancel();
+        _justAudioFadeTimer = null;
+      }
+    });
+  }
+
   /// Disposes the underlying audio resource and resets all state, but keeps
   /// this SoundController alive. Resources will be lazily recreated on next play().
   Future<void> releasePlayer() async {
+    _justAudioFadeTimer?.cancel();
+    _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
         await SoLoud.instance.stop(_soloudHandle!);
@@ -442,6 +502,8 @@ class SoundController with ChangeNotifier {
 
   @override
   void dispose() {
+    _justAudioFadeTimer?.cancel();
+    _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
         SoLoud.instance.stop(_soloudHandle!);
