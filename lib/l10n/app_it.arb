@@ -17,10 +17,10 @@
     "birds": "Uccelli",
     "cat": "Gatto",
     "thunder": "Tuono",
-    "cancelSleepTimer": "Annulla Timer Sonno",
-    "resumeAll": "Riprendi Tutto",
-    "pauseAll": "Metti in Pausa Tutto",
-    "stopAll": "Ferma Tutto",
+    "cancelSleepTimer": "Annulla timer sonno",
+    "resumeAll": "Riprendi tutto",
+    "pauseAll": "Metti in pausa tutto",
+    "stopAll": "Ferma tutto",
     "sleepInMinutes": "{minutes, plural, one{Sonno tra {minutes} minuto} other{Sonno tra {minutes} minuti}}",
     "@sleepInMinutes": {
         "description": "Testo per l'opzione del timer sonno, mostra i minuti rimanenti",
@@ -46,7 +46,7 @@
             }
         }
     },
-    "setSleepTimer": "Imposta Timer Sonno",
+    "setSleepTimer": "Imposta timer sonno",
     "visualizer": "Visualizzatore",
     "internetRadio": "Radio Internet",
     "copyToClipboard": "Copia negli appunti",
