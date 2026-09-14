@@ -24,6 +24,18 @@ class WebAudioSeamlessPlayer {
   // To prevent multiple scheduling loops running at once
   int _activeLoopId = 0;
 
+  // How far ahead we keep buffers queued, and how often we top that up.
+  // Backgrounded tabs get their JS timers throttled by the browser (commonly
+  // clamped to ~1/s), which would starve the old 100ms/50ms margins the
+  // instant a tab lost focus — audio would then go silent once whatever was
+  // already scheduled ran out, without the controller ever finding out.
+  // Several seconds of look-ahead absorbs that throttling; the visibility
+  // listener below is the safety net for anything that outlasts it.
+  static const double _lookAheadSeconds = 3.0;
+  static const Duration _checkInterval = Duration(milliseconds: 500);
+
+  bool _visibilityListenerAdded = false;
+
   bool get isPlaying => _isPlaying;
 
   Future<void> loadAsset(String assetPath, {bool isNoise = false}) async {
@@ -56,6 +68,7 @@ class WebAudioSeamlessPlayer {
     _stopAllSources();
     _isPlaying = true;
     _activeLoopId++;
+    _ensureVisibilityListener();
 
     if (_isNoise) {
       _playGeneratedNoise();
@@ -83,9 +96,10 @@ class WebAudioSeamlessPlayer {
         mainGain == null ||
         loopId != _activeLoopId) return;
 
-    // Look-ahead: We schedule the next buffer 100ms before it's actually needed
-    // This ensures that even if the CPU is busy, the audio hardware already has the command.
-    while (_nextStartTime < ctx.currentTime + 0.1) {
+    // Look-ahead: schedule buffers up to _lookAheadSeconds before they're
+    // actually needed, so a throttled recheck timer (background tab) still
+    // finds several seconds of already-queued audio instead of running dry.
+    while (_nextStartTime < ctx.currentTime + _lookAheadSeconds) {
       _playOneShot(buffer, ctx, mainGain, _nextStartTime);
 
       // Increment the next start time by buffer duration minus crossfade
@@ -94,9 +108,25 @@ class WebAudioSeamlessPlayer {
       _nextStartTime += (buffer.duration - crossfade);
     }
 
-    // Check again in 50ms to see if we need to schedule more
-    Future.delayed(
-        const Duration(milliseconds: 50), () => _scheduleLoop(loopId));
+    // Check again to see if we need to schedule more.
+    Future.delayed(_checkInterval, () => _scheduleLoop(loopId));
+  }
+
+  /// Registered once per player: when the tab regains visibility, immediately
+  /// top up scheduling instead of waiting for the next (possibly still
+  /// throttled) periodic check. Catches any gap the look-ahead margin above
+  /// wasn't wide enough to cover.
+  void _ensureVisibilityListener() {
+    if (_visibilityListenerAdded) return;
+    _visibilityListenerAdded = true;
+    web.document.addEventListener(
+      'visibilitychange',
+      (web.Event e) {
+        if (_isPlaying && web.document.visibilityState == 'visible') {
+          _scheduleLoop(_activeLoopId);
+        }
+      }.toJS,
+    );
   }
 
   void _playOneShot(web.AudioBuffer buffer, web.AudioContext ctx,
