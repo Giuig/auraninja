@@ -228,6 +228,9 @@ class WrapperAudioHandler extends BaseAudioHandler
 
   Future<void> stopAll() async {
     debugPrint('[WH] stopAll() called');
+    // Invalidate any in-flight fadeOutAndStop() so its delayed continuation
+    // doesn't run a second, redundant stop after this one already happened.
+    _fadeToken++;
     _pausedPaths.clear();
     final futures = <Future<void>>[];
 
@@ -239,6 +242,41 @@ class WrapperAudioHandler extends BaseAudioHandler
     await Future.wait(futures);
     await super.stop();
     notifyListeners();
+  }
+
+  int _fadeToken = 0;
+
+  /// Gently ramps every currently-playing sound's volume down to zero over
+  /// [duration], then stops everything for real — used when the sleep timer
+  /// expires, instead of cutting playback off instantly.
+  ///
+  /// Each active [SoundController.fadeTo] call routes to whichever engine
+  /// that sound actually uses (SoLoud, Web Audio, or just_audio) — this
+  /// method itself has no platform-specific code.
+  Future<void> fadeOutAndStop({
+    Duration duration = const Duration(seconds: 6),
+  }) async {
+    final myToken = ++_fadeToken;
+    final active = allControllers
+        .where((c) => c.status == PlaybackStatus.playing)
+        .toList();
+
+    if (active.isEmpty) {
+      await stopAll();
+      return;
+    }
+
+    debugPrint(
+        '[WH] fadeOutAndStop() — fading ${active.map((c) => c.sound.name)} over $duration');
+    for (final controller in active) {
+      controller.fadeTo(0, duration);
+    }
+
+    await Future.delayed(duration);
+    // A manual stop (or a newer fade) already ran while we were waiting —
+    // don't run a second, now-pointless stopAll() on top of it.
+    if (myToken != _fadeToken) return;
+    await stopAll();
   }
 
   void setVolume(String path, double volume) {

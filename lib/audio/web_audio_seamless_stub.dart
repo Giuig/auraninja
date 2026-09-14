@@ -21,6 +21,8 @@ class WebAudioSeamlessPlayer {
 
   void setVolume(double volume) {}
 
+  void fadeTo(double target, Duration duration) {}
+
   Future<void> dispose() async {}
 }
 

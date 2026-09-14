@@ -208,6 +208,32 @@ class WebAudioSeamlessPlayer {
     _masterGain?.gain.setTargetAtTime(_volume, now, 0.02);
   }
 
+  /// Schedules a native, AudioContext-clock-driven ramp to [target] over
+  /// [duration] — runs on the audio thread, not the JS event loop, so it
+  /// keeps going smoothly even if the tab is backgrounded/throttled.
+  ///
+  /// Deliberately does NOT touch [_volume]: play() always initializes a
+  /// fresh gain node from [_volume], so leaving it alone means the next
+  /// play() after a stop() is back at full volume with no separate restore
+  /// step needed.
+  void fadeTo(double target, Duration duration) {
+    final ctx = _audioContext;
+    if (ctx == null) return;
+    final now = ctx.currentTime;
+    final seconds = duration.inMicroseconds / Duration.microsecondsPerSecond;
+    final clampedTarget = target.clamp(0.0, 1.0);
+    for (final gain in [_mainGainNode?.gain, _masterGain?.gain]) {
+      if (gain == null) continue;
+      // Cancel any pending automation (e.g. setVolume's setTargetAtTime)
+      // and anchor the ramp at the param's current live value first, or
+      // the ramp would jump from whatever was last scheduled instead of
+      // where the sound actually is right now.
+      gain.cancelScheduledValues(now);
+      gain.setValueAtTime(gain.value, now);
+      gain.linearRampToValueAtTime(clampedTarget, now + seconds);
+    }
+  }
+
   void dispose() {
     stop();
     _audioContext?.close();
