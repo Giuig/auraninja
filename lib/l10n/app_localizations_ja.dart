@@ -12,6 +12,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sounds => 'サウンド';
 
   @override
+  String get mixes => 'ミックス';
+
+  @override
+  String get noMixes => '保存されたミックスはありません';
+
+  @override
+  String get noMixesHint => 'サウンドを再生し、プレイヤーの「ミックスを保存」をタップ';
+
+  @override
+  String get saveMix => 'ミックスを保存';
+
+  @override
+  String get mixSaved => 'ミックスを保存しました';
+
+  @override
+  String get activeSounds => '再生中のサウンド';
+
+  @override
   String get weather => '天気';
 
   @override
@@ -290,4 +308,85 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get searchSounds => '音を検索...';
+
+  @override
+  String get nameMix => 'ミックスに名前をつける';
+
+  @override
+  String get editMix => 'ミックスを編集';
+
+  @override
+  String mixSoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countつのサウンド',
+      one: '1つのサウンド',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mixNameLabel => 'ミックス名';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get delete => '削除';
+
+  @override
+  String get renameMix => 'ミックスをリネーム';
+
+  @override
+  String get deleteMixTitle => 'ミックスを削除?';
+
+  @override
+  String get deleteMixContent => 'このミックスは完全に削除されます。';
+
+  @override
+  String get duplicateMixName => 'この名前はすでに使用されています';
+
+  @override
+  String get updateMixSounds => 'サウンドを更新';
+
+  @override
+  String get mixUpdated => 'ミックスを更新しました';
+
+  @override
+  String mixSoundsUnavailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'このミックスの$countつのサウンドを読み込めませんでした',
+      one: 'このミックスの1つのサウンドを読み込めませんでした',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareMix => '共有';
+
+  @override
+  String get stopMix => '停止';
+
+  @override
+  String get importMix => 'ミックスをインポート';
+
+  @override
+  String get importMixPrompt => '受け取ったミックスコードを貼り付けてください';
+
+  @override
+  String get importAction => 'インポート';
+
+  @override
+  String get invalidMixCode => '有効なミックスコードではありません';
+
+  @override
+  String get newMix => '新しいミックス';
+
+  @override
+  String mixImported(String name) {
+    return '「$name」をインポートしました';
+  }
 }

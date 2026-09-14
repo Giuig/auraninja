@@ -232,6 +232,7 @@ class WrapperAudioHandler extends BaseAudioHandler
     // doesn't run a second, redundant stop after this one already happened.
     _fadeToken++;
     _pausedPaths.clear();
+    _activeMixId = null;
     final futures = <Future<void>>[];
 
     for (final controller in allControllers) {
@@ -242,6 +243,25 @@ class WrapperAudioHandler extends BaseAudioHandler
     await Future.wait(futures);
     await super.stop();
     notifyListeners();
+  }
+
+  // Which saved mix (if any) the user last explicitly started or created
+  // from the sounds now playing. This can't be derived from playback state
+  // alone: two mixes with identical sound selections are indistinguishable
+  // once playing, so "which one is highlighted" has to be tracked by id, not
+  // inferred from content. Callers should still treat this as advisory and
+  // re-validate it against the mix's own sounds — see MixesPage — since it
+  // goes stale (harmlessly) the moment playback diverges from that mix
+  // without going through stopAll() (e.g. a sound stopped individually from
+  // the Sounds page).
+  String? _activeMixId;
+  String? get activeMixId => _activeMixId;
+
+  void setActiveMix(String? mixId) {
+    if (_activeMixId != mixId) {
+      _activeMixId = mixId;
+      notifyListeners();
+    }
   }
 
   int _fadeToken = 0;
@@ -279,11 +299,15 @@ class WrapperAudioHandler extends BaseAudioHandler
     await stopAll();
   }
 
-  void setVolume(String path, double volume) {
+  void setVolume(String path, double volume, {bool persist = true}) {
     _manager.setVolume(path, volume);
-    // Persist so the volume survives app restarts.
-    SharedPreferences.getInstance()
-        .then((p) => p.setDouble('vol_$path', volume));
+    // Persist so the volume survives app restarts. Mix playback passes
+    // persist:false so applying a mix's per-sound levels never overwrites the
+    // user's global per-sound volume on the Sounds page.
+    if (persist) {
+      SharedPreferences.getInstance()
+          .then((p) => p.setDouble('vol_$path', volume));
+    }
     // No explicit notifyListeners() — manager.setVolume → controller.setVolume
     // → _onControllerStateChanged → manager.notifyListeners → handler listener.
   }

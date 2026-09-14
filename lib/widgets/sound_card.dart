@@ -1,30 +1,10 @@
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:auraninja/widgets/sound_icon.dart';
+import 'package:auraninja/widgets/volume_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/model/ninja_sound.dart';
-
-Widget _buildSoundIcon(dynamic icon, double size, Color color) {
-  if (icon is IconData) {
-    return Icon(icon, size: size, color: color);
-  }
-  final str = icon as String? ?? '📻';
-  if (str.startsWith('http')) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: CachedNetworkImage(
-        imageUrl: str,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorWidget: (_, __, ___) =>
-            Text('📻', style: TextStyle(fontSize: size * 0.7)),
-      ),
-    );
-  }
-  return Text(str, style: TextStyle(fontSize: size * 0.7, color: color));
-}
 
 class SoundCard extends StatelessWidget {
   final Map<String, NinjaSound> localizedSoundMap;
@@ -110,153 +90,143 @@ class SoundCard extends StatelessWidget {
       }
     }
 
-    return GestureDetector(
-      onTap: () {
-        if (controller.status == PlaybackStatus.playing ||
-            controller.status == PlaybackStatus.loading) {
-          handler.ninjaStop(controller.sound.path);
-        } else {
-          handler.ninjaPlay(controller.sound.path);
-        }
-      },
-      child: Stack(
-        children: [
-          Card(
-            elevation: controller.status == PlaybackStatus.loading ||
-                    controller.status == PlaybackStatus.playing
-                ? 6
-                : 1,
-            color: cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: borderColor,
-                width: isActive ? 2 : 1,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          if (controller.status == PlaybackStatus.playing ||
+              controller.status == PlaybackStatus.loading) {
+            handler.ninjaStop(controller.sound.path);
+          } else {
+            handler.ninjaPlay(controller.sound.path);
+          }
+        },
+        child: Stack(
+          children: [
+            Card(
+              elevation: controller.status == PlaybackStatus.loading ||
+                      controller.status == PlaybackStatus.playing
+                  ? 6
+                  : 1,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: borderColor,
+                  width: isActive ? 2 : 1,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: iconSize,
-                    width: iconSize,
-                    child: controller.status == PlaybackStatus.loading
-                        ? const CircularProgressIndicator(strokeWidth: 2.5)
-                        : _buildSoundIcon(
-                            displayIcon, iconSize, iconAndTextColor),
-                  ),
-                  const SizedBox(height: 4),
-                  Builder(
-                    builder: (context) {
-                      final scaledFontSize = MediaQuery.textScalerOf(context)
-                          .scale(textStyle?.fontSize ?? 12.0);
-                      return ClipRect(
-                        child: SizedBox(
-                          height: scaledFontSize * lineHeight * 2,
-                          child: Center(
-                            child: Text(
-                              localizedName,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: textStyle?.copyWith(
-                                color: iconAndTextColor,
-                                height: lineHeight,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  if (isActive) ...[
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: iconSize,
+                      width: iconSize,
+                      child: controller.status == PlaybackStatus.loading
+                          ? const CircularProgressIndicator(strokeWidth: 2.5)
+                          : buildSoundIcon(
+                              displayIcon, iconSize, iconAndTextColor),
+                    ),
                     const SizedBox(height: 4),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          height: 20,
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 3,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 8,
-                              ),
-                            ),
-                            child: Slider(
-                              value: controller.volume,
-                              min: 0.1,
-                              max: 1.0,
-                              onChanged: (newVolume) {
-                                handler.setVolume(
-                                    controller.sound.path, newVolume);
-                              },
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          child: Opacity(
-                            opacity: (controller.volume - 0.5).abs() > 0.03
-                                ? 1.0
-                                : 0.0,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () =>
-                                  handler.setVolume(controller.sound.path, 0.5),
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Icon(
-                                  Icons.refresh,
-                                  size: 16,
-                                  color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
+                    Builder(
+                      builder: (context) {
+                        final scaledFontSize = MediaQuery.textScalerOf(context)
+                            .scale(textStyle?.fontSize ?? 12.0);
+                        return ClipRect(
+                          child: SizedBox(
+                            height: scaledFontSize * lineHeight * 2,
+                            child: Center(
+                              child: Text(
+                                localizedName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: textStyle?.copyWith(
+                                  color: iconAndTextColor,
+                                  height: lineHeight,
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
+                    if (isActive) ...[
+                      const SizedBox(height: 4),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          VolumeSlider(
+                            compact: true,
+                            value: controller.volume,
+                            onChanged: (v) =>
+                                handler.setVolume(controller.sound.path, v),
+                          ),
+                          Positioned(
+                            right: 0,
+                            child: Opacity(
+                              opacity: (controller.volume - 0.5).abs() > 0.03
+                                  ? 1.0
+                                  : 0.0,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => handler.setVolume(
+                                    controller.sound.path, 0.5),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: Icon(
+                                    Icons.refresh,
+                                    size: 16,
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            ),
-          ),
-          if (onFavoriteToggle != null)
-            Positioned(
-              top: 4,
-              left: 4,
-              child: GestureDetector(
-                onTap: onFavoriteToggle,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: isFavorite
-                        ? colorScheme.primaryContainer
-                        : colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.85),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isFavorite
-                          ? colorScheme.primary
-                          : colorScheme.outlineVariant,
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    size: 14,
-                    color: isFavorite
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurfaceVariant,
-                  ),
                 ),
               ),
             ),
-        ],
+            if (onFavoriteToggle != null)
+              Positioned(
+                top: 4,
+                left: 4,
+                child: GestureDetector(
+                  onTap: onFavoriteToggle,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: isFavorite
+                          ? colorScheme.primaryContainer
+                          : colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.85),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isFavorite
+                            ? colorScheme.primary
+                            : colorScheme.outlineVariant,
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      size: 14,
+                      color: isFavorite
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

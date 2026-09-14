@@ -1,5 +1,11 @@
 {
     "sounds": "Klänge",
+    "mixes": "Mischungen",
+    "noMixes": "Keine Mischungen gespeichert",
+    "noMixesHint": "Spiele Klänge ab, dann tippe 'Mischung Speichern' im Player",
+    "saveMix": "Mischung Speichern",
+    "mixSaved": "Mischung gespeichert",
+    "activeSounds": "Aktive Klänge",
     "weather": "Wetter",
     "nature": "Natur",
     "rain": "Regen",
@@ -114,5 +120,41 @@
     "train": "Zug",
     "airplane": "Flugzeug",
     "underwater": "Unterwasser",
-    "searchSounds": "Klänge suchen..."
+    "searchSounds": "Klänge suchen...",
+    "nameMix": "Mix benennen",
+    "editMix": "Mix bearbeiten",
+    "mixNameLabel": "Mix-Name",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "renameMix": "Mix umbenennen",
+    "deleteMixTitle": "Mix löschen?",
+    "deleteMixContent": "Dieser Mix wird dauerhaft gelöscht.",
+    "duplicateMixName": "Name bereits vergeben",
+    "updateMixSounds": "Klänge aktualisieren",
+    "mixUpdated": "Mischung aktualisiert",
+    "mixSoundCount": "{count, plural, =1{1 Klang} other{{count} Klänge}}",
+    "@mixSoundCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "mixSoundsUnavailable": "{count, plural, =1{1 Klang in diesem Mix konnte nicht geladen werden} other{{count} Klänge in diesem Mix konnten nicht geladen werden}}",
+    "@mixSoundsUnavailable": {
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "shareMix": "Teilen",
+    "stopMix": "Stoppen",
+    "importMix": "Mix importieren",
+    "importMixPrompt": "Füge den erhaltenen Mix-Code ein",
+    "importAction": "Importieren",
+    "invalidMixCode": "Das ist kein gültiger Mix-Code",
+    "newMix": "Neuer Mix",
+    "mixImported": "\"{name}\" importiert",
+    "@mixImported": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
+    }
 }

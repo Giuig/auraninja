@@ -8,7 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
+import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
+import 'package:auraninja/services/mixes_service.dart';
+import 'package:auraninja/services/volume_storage.dart';
+import 'package:auraninja/widgets/volume_slider.dart';
 
 class BottomPlayerBar extends StatefulWidget {
   const BottomPlayerBar({super.key});
@@ -168,6 +172,88 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
     _startMarqueeInitialDelay(resetMarqueeVisibility: true);
   }
 
+  /// Saves whatever is currently playing as a new mix — the shortcut the
+  /// empty-mixes-list hint text has always promised ("Play sounds, then tap
+  /// 'Save Mix' in the player"), restored here since the mix sheet's
+  /// checkbox picker doesn't offer a way to save what's already playing
+  /// without re-selecting every sound from scratch.
+  Future<void> _saveCurrentAsMix() async {
+    final playing = _audioHandler.activeControllers
+        .where((c) => c.status == PlaybackStatus.playing)
+        .toList();
+    if (playing.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context);
+    final existing = await MixesService.load();
+    if (!mounted) return;
+    final controller =
+        TextEditingController(text: 'Mix ${existing.length + 1}');
+    String? nameError;
+
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n?.nameMix ?? 'Name your mix'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: l10n?.mixNameLabel ?? 'Mix name',
+              errorText: nameError,
+            ),
+            onChanged: (_) {
+              if (nameError != null) setDialogState(() => nameError = null);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n?.cancel ?? 'Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final trimmed = controller.text.trim();
+                if (trimmed.isEmpty) return;
+                if (existing
+                    .map((m) => m.name.toLowerCase())
+                    .contains(trimmed.toLowerCase())) {
+                  setDialogState(() => nameError =
+                      l10n?.duplicateMixName ?? 'Name already in use');
+                  return;
+                }
+                Navigator.of(ctx).pop(trimmed);
+              },
+              child: Text(l10n?.saveMix ?? 'Save Mix'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (name == null || !mounted) return;
+
+    final mix = Mix(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      sounds: playing
+          .map((c) => MixSound(path: c.sound.path, volume: c.volume))
+          .toList(),
+    );
+    await MixesService.add(mix);
+    // These exact sounds are what's now playing, and this new mix is
+    // unambiguously the one that just captured them — mark it active so the
+    // Mixes list highlights it immediately instead of waiting for its Play
+    // button to be pressed (which would also needlessly restart playback).
+    _audioHandler.setActiveMix(mix.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(l10n?.mixSaved ?? 'Mix saved'),
+      duration: const Duration(seconds: 2),
+    ));
+  }
+
   void _cancelSleepTimer() {
     if (_timerEnd == null) return;
     setState(() => _timerEnd = null);
@@ -234,8 +320,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                       children: [
                         if (_timerEnd != null)
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(0),
+                            onPressed: () => Navigator.of(context).pop(0),
                             child: Text(
                                 localizations?.cancelSleepTimer ?? 'Cancel'),
                           ),
@@ -261,8 +346,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
         _cancelSleepTimer();
       } else {
         _lastSleepTimerMinutes = selected;
-        SharedPreferences.getInstance().then((prefs) =>
-            prefs.setInt('sleepTimerMinutes', selected));
+        SharedPreferences.getInstance()
+            .then((prefs) => prefs.setInt('sleepTimerMinutes', selected));
         _startSleepTimer(Duration(minutes: selected));
       }
     }
@@ -312,8 +397,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
 
     // Fixed subtitle height — same as one line of bodySmall — keeps the bar
     // the same height regardless of whether a subtitle is shown.
-    final subtitleH =
-        Theme.of(context).textTheme.bodySmall!.fontSize! * 1.6;
+    final subtitleH = Theme.of(context).textTheme.bodySmall!.fontSize! * 1.6;
     final subtitleStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
           fontStyle: FontStyle.italic,
           color: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -398,8 +482,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                                     valueListenable:
                                         _audioHandler.metadataNotifier,
                                     builder: (context, metaMap, _) {
-                                      final metadata =
-                                          _audioHandler.getMetadata(networkSound);
+                                      final metadata = _audioHandler
+                                          .getMetadata(networkSound);
                                       if (metadata.isEmpty) {
                                         return const SizedBox.shrink();
                                       }
@@ -412,22 +496,38 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                                                   subtitleStyle);
                                           if (overflows) {
                                             return _showMarquee
-                                                ? Marquee(
-                                                    key: ValueKey(metadata),
-                                                    text: metadata,
-                                                    style: subtitleStyle,
-                                                    scrollAxis: Axis.horizontal,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
-                                                    blankSpace: 20.0,
-                                                    velocity: 50.0,
-                                                    pauseAfterRound:
-                                                        const Duration(
-                                                            seconds: 5),
-                                                    startPadding: 0.0,
-                                                    fadingEdgeStartFraction:
-                                                        0.1,
-                                                    fadingEdgeEndFraction: 0.1,
+                                                ? SizedBox(
+                                                    // Marquee's own intrinsic
+                                                    // height doesn't exactly
+                                                    // match the static Text's,
+                                                    // so the outer Align was
+                                                    // re-centering it a couple
+                                                    // px higher the instant
+                                                    // scrolling kicked in.
+                                                    // Pin it to the same slot
+                                                    // height so the swap is
+                                                    // seamless.
+                                                    height: subtitleH,
+                                                    child: Marquee(
+                                                      key: ValueKey(metadata),
+                                                      text: metadata,
+                                                      style: subtitleStyle,
+                                                      scrollAxis:
+                                                          Axis.horizontal,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      blankSpace: 20.0,
+                                                      velocity: 50.0,
+                                                      pauseAfterRound:
+                                                          const Duration(
+                                                              seconds: 5),
+                                                      startPadding: 0.0,
+                                                      fadingEdgeStartFraction:
+                                                          0.1,
+                                                      fadingEdgeEndFraction:
+                                                          0.1,
+                                                    ),
                                                   )
                                                 : Text(
                                                     metadata,
@@ -525,6 +625,36 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                   );
                 },
               ),
+            // Active sounds button with badge
+            ListenableBuilder(
+              listenable: _audioHandler,
+              builder: (context, _) {
+                final activeCount = _audioHandler.activeControllers.length;
+                return Badge(
+                  label: Text('$activeCount'),
+                  child: IconButton(
+                    icon: const Icon(Icons.graphic_eq_outlined),
+                    tooltip: localizations?.activeSounds ?? 'Active Sounds',
+                    onPressed: () => _showActiveSoundsSheet(context),
+                  ),
+                );
+              },
+            ),
+            // Save current playback as a mix — only when something is
+            // actually playing to save.
+            ListenableBuilder(
+              listenable: _audioHandler,
+              builder: (context, _) {
+                final anySoundPlaying = _audioHandler.activeControllers
+                    .any((c) => c.status == PlaybackStatus.playing);
+                if (!anySoundPlaying) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.playlist_add_outlined),
+                  tooltip: localizations?.saveMix ?? 'Save Mix',
+                  onPressed: _saveCurrentAsMix,
+                );
+              },
+            ),
             IconButton(
               icon: Icon(Icons.timer_outlined,
                   color: Theme.of(context).colorScheme.primary),
@@ -540,6 +670,180 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showActiveSoundsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return ListenableBuilder(
+          listenable: _audioHandler,
+          builder: (context, _) {
+            final activeControllers = _audioHandler.activeControllers;
+
+            // Close the sheet when no active sounds remain
+            if (activeControllers.isEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.of(ctx).canPop()) {
+                  Navigator.of(ctx).pop();
+                }
+              });
+              return const SizedBox.shrink();
+            }
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.55,
+              minChildSize: 0.3,
+              maxChildSize: 0.8,
+              expand: false,
+              builder: (ctx, scrollController) {
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)?.activeSounds ??
+                                'Active Sounds',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          TextButton(
+                            onPressed: _stopAll,
+                            child: Text(
+                              AppLocalizations.of(context)?.stopAll ??
+                                  'Stop All',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        itemCount: activeControllers.length,
+                        itemBuilder: (context, index) {
+                          final controller = activeControllers[index];
+                          return _ActiveSoundTile(
+                            controller: controller,
+                            onStop: () => controller.stop(),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ActiveSoundTile extends StatelessWidget {
+  final SoundController controller;
+  final VoidCallback onStop;
+
+  const _ActiveSoundTile({
+    required this.controller,
+    required this.onStop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final icon = controller.sound.icon;
+    // For radio streams, just show the radio emoji
+    final displayIcon =
+        (icon is String && icon.startsWith('http')) ? '📻' : icon;
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Icon
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Center(
+                        child: displayIcon is String
+                            ? Text(displayIcon,
+                                style: const TextStyle(fontSize: 20))
+                            : Icon(displayIcon as IconData, size: 20),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Name
+                    Expanded(
+                      child: Text(
+                        controller.sound.name,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Status indicator
+                    if (controller.status == PlaybackStatus.loading)
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    // Stop button
+                    IconButton(
+                      icon: Icon(Icons.close, size: 20),
+                      onPressed: onStop,
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
+                      tooltip: 'Stop',
+                    ),
+                  ],
+                ),
+                // Volume slider
+                Row(
+                  children: [
+                    Icon(Icons.volume_down,
+                        size: 16, color: colorScheme.outline),
+                    Expanded(
+                      child: VolumeSlider(
+                        value: controller.volume,
+                        onChanged: (v) {
+                          controller.setVolume(v);
+                          VolumeStorage.save(controller.sound.path, v);
+                        },
+                      ),
+                    ),
+                    Text(
+                      '${(controller.volume * 100).round()}%',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

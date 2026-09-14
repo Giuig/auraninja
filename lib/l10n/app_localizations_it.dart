@@ -12,6 +12,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sounds => 'Suoni';
 
   @override
+  String get mixes => 'Mix';
+
+  @override
+  String get noMixes => 'Nessun mix salvato';
+
+  @override
+  String get noMixesHint =>
+      'Riproduci suoni, poi tocca \'Salva Mix\' nel player';
+
+  @override
+  String get saveMix => 'Salva Mix';
+
+  @override
+  String get mixSaved => 'Mix salvato';
+
+  @override
+  String get activeSounds => 'Suoni Attivi';
+
+  @override
   String get weather => 'Meteo';
 
   @override
@@ -296,4 +315,85 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get searchSounds => 'Cerca suoni...';
+
+  @override
+  String get nameMix => 'Dai un nome al mix';
+
+  @override
+  String get editMix => 'Modifica mix';
+
+  @override
+  String mixSoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count suoni',
+      one: '1 suono',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mixNameLabel => 'Nome mix';
+
+  @override
+  String get cancel => 'Annulla';
+
+  @override
+  String get delete => 'Elimina';
+
+  @override
+  String get renameMix => 'Rinomina mix';
+
+  @override
+  String get deleteMixTitle => 'Eliminare il mix?';
+
+  @override
+  String get deleteMixContent => 'Il mix verrà eliminato definitivamente.';
+
+  @override
+  String get duplicateMixName => 'Nome già in uso';
+
+  @override
+  String get updateMixSounds => 'Aggiorna suoni';
+
+  @override
+  String get mixUpdated => 'Mix aggiornato';
+
+  @override
+  String mixSoundsUnavailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count suoni in questo mix non sono stati caricati',
+      one: '1 suono in questo mix non è stato caricato',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareMix => 'Condividi';
+
+  @override
+  String get stopMix => 'Ferma';
+
+  @override
+  String get importMix => 'Importa mix';
+
+  @override
+  String get importMixPrompt => 'Incolla il codice del mix ricevuto';
+
+  @override
+  String get importAction => 'Importa';
+
+  @override
+  String get invalidMixCode => 'Non è un codice mix valido';
+
+  @override
+  String get newMix => 'Nuovo mix';
+
+  @override
+  String mixImported(String name) {
+    return 'Importato \"$name\"';
+  }
 }

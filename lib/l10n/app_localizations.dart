@@ -112,6 +112,42 @@ abstract class AppLocalizations {
   /// **'Sounds'**
   String get sounds;
 
+  /// No description provided for @mixes.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixes'**
+  String get mixes;
+
+  /// No description provided for @noMixes.
+  ///
+  /// In en, this message translates to:
+  /// **'No mixes saved'**
+  String get noMixes;
+
+  /// No description provided for @noMixesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sounds, then tap \'Save Mix\' in the player'**
+  String get noMixesHint;
+
+  /// No description provided for @saveMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Mix'**
+  String get saveMix;
+
+  /// No description provided for @mixSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix saved'**
+  String get mixSaved;
+
+  /// No description provided for @activeSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Sounds'**
+  String get activeSounds;
+
   /// No description provided for @weather.
   ///
   /// In en, this message translates to:
@@ -663,6 +699,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search sounds...'**
   String get searchSounds;
+
+  /// No description provided for @nameMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Name your mix'**
+  String get nameMix;
+
+  /// No description provided for @editMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit mix'**
+  String get editMix;
+
+  /// No description provided for @mixSoundCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sound} other{{count} sounds}}'**
+  String mixSoundCount(int count);
+
+  /// No description provided for @mixNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix name'**
+  String get mixNameLabel;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @renameMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename mix'**
+  String get renameMix;
+
+  /// No description provided for @deleteMixTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete mix?'**
+  String get deleteMixTitle;
+
+  /// No description provided for @deleteMixContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This mix will be permanently removed.'**
+  String get deleteMixContent;
+
+  /// No description provided for @duplicateMixName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already in use'**
+  String get duplicateMixName;
+
+  /// No description provided for @updateMixSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Update sounds'**
+  String get updateMixSounds;
+
+  /// No description provided for @mixUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix updated'**
+  String get mixUpdated;
+
+  /// No description provided for @mixSoundsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sound in this mix couldn\'t be loaded} other{{count} sounds in this mix couldn\'t be loaded}}'**
+  String mixSoundsUnavailable(int count);
+
+  /// No description provided for @shareMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareMix;
+
+  /// No description provided for @stopMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stopMix;
+
+  /// No description provided for @importMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Import mix'**
+  String get importMix;
+
+  /// No description provided for @importMixPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the mix code you received'**
+  String get importMixPrompt;
+
+  /// No description provided for @importAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importAction;
+
+  /// No description provided for @invalidMixCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t a valid mix code'**
+  String get invalidMixCode;
+
+  /// No description provided for @newMix.
+  ///
+  /// In en, this message translates to:
+  /// **'New mix'**
+  String get newMix;
+
+  /// No description provided for @mixImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported \"{name}\"'**
+  String mixImported(String name);
 }
 
 class _AppLocalizationsDelegate

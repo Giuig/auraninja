@@ -1,7 +1,8 @@
 import 'package:auraninja/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:auraninja/model/ninja_sound.dart';
+import 'package:auraninja/model/sound_category.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
   final bool hasContext = context != null;
@@ -12,55 +13,55 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Weather
     NinjaSound(
       name: hasContext ? projLocalization!.lightRain : 'Light Rain',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '🌦️',
       path: 'assets/sounds/rain/light-rain.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.heavyRain : 'Heavy Rain',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '🌧️',
       path: 'assets/sounds/rain/heavy-rain.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.rainOnWindow : 'Rain on Window',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '🪟',
       path: 'assets/sounds/rain/rain-on-window.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.rainOnCarRoof : 'Rain on Car Roof',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '🚗',
       path: 'assets/sounds/rain/rain-on-car-roof.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.rainOnUmbrella : 'Rain on Umbrella',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '☂️',
       path: 'assets/sounds/rain/rain-on-umbrella.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.thunder : 'Thunder',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '⚡',
       path: 'assets/sounds/nature/thunder.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.wind : 'Wind',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '🌬️',
       path: 'assets/sounds/nature/wind.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.howlingWind : 'Howling Wind',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '💨',
       path: 'assets/sounds/nature/howling-wind.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.windInTrees : 'Wind in Trees',
-      category: '@weather',
+      category: SoundCategory.weather,
       icon: '🌳',
       path: 'assets/sounds/nature/wind-in-trees.ogg',
     ),
@@ -68,25 +69,25 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Nature - Water
     NinjaSound(
       name: hasContext ? projLocalization!.waves : 'Waves',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🌊',
       path: 'assets/sounds/nature/waves.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.river : 'River',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🏞️',
       path: 'assets/sounds/nature/river.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.waterfall : 'Waterfall',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '💧',
       path: 'assets/sounds/nature/waterfall.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.droplets : 'Droplets',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '💦',
       path: 'assets/sounds/nature/droplets.ogg',
     ),
@@ -94,25 +95,25 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Nature - Forest & Ambient
     NinjaSound(
       name: hasContext ? projLocalization!.fire : 'Fire',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🔥',
       path: 'assets/sounds/nature/fire.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.walkInSnow : 'Walk in Snow',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '❄️',
       path: 'assets/sounds/nature/walk-in-snow.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.walkOnLeaves : 'Walk on Leaves',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🍂',
       path: 'assets/sounds/nature/walk-on-leaves.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.jungle : 'Jungle',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🌴',
       path: 'assets/sounds/nature/jungle.ogg',
     ),
@@ -120,37 +121,37 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Nature - Animals
     NinjaSound(
       name: hasContext ? projLocalization!.birds : 'Birds',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🐦',
       path: 'assets/sounds/nature/birds.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.crickets : 'Crickets',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🦗',
       path: 'assets/sounds/nature/crickets.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.frog : 'Frog',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🐸',
       path: 'assets/sounds/nature/frog.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.owl : 'Owl',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🦉',
       path: 'assets/sounds/nature/owl.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.whale : 'Whale',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🐋',
       path: 'assets/sounds/nature/whale.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.cat : 'Cat',
-      category: '@nature',
+      category: SoundCategory.nature,
       icon: '🐱',
       path: 'assets/sounds/nature/cat.ogg',
     ),
@@ -158,49 +159,49 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Objects
     NinjaSound(
       name: hasContext ? projLocalization!.keyboard : 'Keyboard',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '⌨️',
       path: 'assets/sounds/things/keyboard.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.typewriter : 'Typewriter',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '📝',
       path: 'assets/sounds/things/typewriter.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.clock : 'Clock',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '🕐',
       path: 'assets/sounds/things/clock.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.windChimes : 'Wind Chimes',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '🎐',
       path: 'assets/sounds/things/wind-chimes.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.singingBowl : 'Singing Bowl',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '🥣',
       path: 'assets/sounds/things/singing-bowl.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.ceilingFan : 'Ceiling Fan',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '🌀',
       path: 'assets/sounds/things/ceiling-fan.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.boilingWater : 'Boiling Water',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '🫖',
       path: 'assets/sounds/things/boiling-water.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.bubbles : 'Bubbles',
-      category: '@objects',
+      category: SoundCategory.objects,
       icon: '🫧',
       path: 'assets/sounds/things/bubbles.ogg',
     ),
@@ -208,37 +209,37 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Places
     NinjaSound(
       name: hasContext ? projLocalization!.cafe : 'Cafe',
-      category: '@places',
+      category: SoundCategory.places,
       icon: '☕',
       path: 'assets/sounds/places/cafe.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.library2 : 'Library',
-      category: '@places',
+      category: SoundCategory.places,
       icon: '📚',
       path: 'assets/sounds/places/library.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.office : 'Office',
-      category: '@places',
+      category: SoundCategory.places,
       icon: '🏢',
       path: 'assets/sounds/places/office.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.train : 'Train',
-      category: '@places',
+      category: SoundCategory.places,
       icon: '🚂',
       path: 'assets/sounds/places/train.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.airplane : 'Airplane',
-      category: '@places',
+      category: SoundCategory.places,
       icon: '✈️',
       path: 'assets/sounds/places/plane.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.underwater : 'Underwater',
-      category: '@places',
+      category: SoundCategory.places,
       icon: '🐡',
       path: 'assets/sounds/places/underwater.ogg',
     ),
@@ -246,38 +247,37 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Binaural
     NinjaSound(
       name: hasContext ? projLocalization!.laserFocus : 'Laser Focus',
-      category: '@binaural',
+      category: SoundCategory.binaural,
       icon: '🎯',
       path: 'assets/sounds/binaural/focus-10hz.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.creativeFlow : 'Creative Flow',
-      category: '@binaural',
+      category: SoundCategory.binaural,
       icon: '🎨',
       path: 'assets/sounds/binaural/alpha-8hz.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.zenCalm : 'Zen Calm',
-      category: '@binaural',
+      category: SoundCategory.binaural,
       icon: '🧘',
       path: 'assets/sounds/binaural/theta-5hz.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.deepCalm : 'Deep Calm',
-      category: '@binaural',
+      category: SoundCategory.binaural,
       icon: '🌙',
       path: 'assets/sounds/binaural/theta-4hz.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.deepSleep : 'Deep Sleep',
-      category: '@binaural',
+      category: SoundCategory.binaural,
       icon: '😴',
       path: 'assets/sounds/binaural/delta-2hz.ogg',
     ),
     NinjaSound(
-      name:
-          hasContext ? projLocalization!.theDeepestSleep : 'The Deepest Sleep',
-      category: '@binaural',
+      name: hasContext ? projLocalization!.theDeepestSleep : 'The Deepest Sleep',
+      category: SoundCategory.binaural,
       icon: '💤',
       path: 'assets/sounds/binaural/delta-1hz.ogg',
     ),
@@ -285,25 +285,25 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     // Noise
     NinjaSound(
       name: hasContext ? projLocalization!.brown : 'Brown Noise',
-      category: '@noise',
+      category: SoundCategory.noise,
       icon: '🟤',
       path: 'assets/sounds/noise/brown-noise.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.green : 'Green Noise',
-      category: '@noise',
+      category: SoundCategory.noise,
       icon: '🟢',
       path: 'assets/sounds/noise/green.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.pink : 'Pink Noise',
-      category: '@noise',
+      category: SoundCategory.noise,
       icon: '🌸',
       path: 'assets/sounds/noise/pink-noise.ogg',
     ),
     NinjaSound(
       name: hasContext ? projLocalization!.white : 'White Noise',
-      category: '@noise',
+      category: SoundCategory.noise,
       icon: '⚪',
       path: 'assets/sounds/noise/white-noise.ogg',
     ),
@@ -311,10 +311,9 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
 
   if (!kDebugMode) {
     sounds.addAll([
-      // Internet Radio
       NinjaSound(
         name: 'Yumi Co. Radio',
-        category: '@internetRadio',
+        category: SoundCategory.internetRadio,
         icon: '🌆',
         path: 'https://yumicoradio.net/stream',
       ),
@@ -325,13 +324,13 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
     sounds.addAll([
       NinjaSound(
         name: 'Sample Radio Mast',
-        category: '@internetRadio',
+        category: SoundCategory.internetRadio,
         icon: '📻',
         path: 'https://audio-edge-cmc51.fra.h.radiomast.io/ref-128k-mp3-stereo',
       ),
       NinjaSound(
         name: 'Plaza One',
-        category: '@internetRadio',
+        category: SoundCategory.internetRadio,
         icon: '🐈‍⬛',
         path: 'https://radio.plaza.one/mp3',
       ),

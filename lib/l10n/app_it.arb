@@ -1,5 +1,11 @@
 {
     "sounds": "Suoni",
+    "mixes": "Mix",
+    "noMixes": "Nessun mix salvato",
+    "noMixesHint": "Riproduci suoni, poi tocca 'Salva Mix' nel player",
+    "saveMix": "Salva Mix",
+    "mixSaved": "Mix salvato",
+    "activeSounds": "Suoni Attivi",
     "weather": "Meteo",
     "nature": "Natura",
     "rain": "Pioggia",
@@ -114,5 +120,41 @@
     "train": "Treno",
     "airplane": "Aereo",
     "underwater": "Sott'acqua",
-    "searchSounds": "Cerca suoni..."
+    "searchSounds": "Cerca suoni...",
+    "nameMix": "Dai un nome al mix",
+    "editMix": "Modifica mix",
+    "mixNameLabel": "Nome mix",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "renameMix": "Rinomina mix",
+    "deleteMixTitle": "Eliminare il mix?",
+    "deleteMixContent": "Il mix verrà eliminato definitivamente.",
+    "duplicateMixName": "Nome già in uso",
+    "updateMixSounds": "Aggiorna suoni",
+    "mixUpdated": "Mix aggiornato",
+    "mixSoundCount": "{count, plural, =1{1 suono} other{{count} suoni}}",
+    "@mixSoundCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "mixSoundsUnavailable": "{count, plural, =1{1 suono in questo mix non è stato caricato} other{{count} suoni in questo mix non sono stati caricati}}",
+    "@mixSoundsUnavailable": {
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "shareMix": "Condividi",
+    "stopMix": "Ferma",
+    "importMix": "Importa mix",
+    "importMixPrompt": "Incolla il codice del mix ricevuto",
+    "importAction": "Importa",
+    "invalidMixCode": "Non è un codice mix valido",
+    "newMix": "Nuovo mix",
+    "mixImported": "Importato \"{name}\"",
+    "@mixImported": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
+    }
 }
