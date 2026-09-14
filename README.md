@@ -12,7 +12,9 @@ Ambient sound and focus app built with Flutter. Mix nature sounds, binaural beat
 - **Custom Stations** — add radio streams by URL or search by name
 - **Station Logos** — automatic artwork fetched from Radio Browser
 - **Volume Per Sound** — independent volume slider on every card
-- **Playback-aware Visualizer** — animated ribbons that react to what is playing
+- **Sound Mixes** — save combinations of sounds as a mix, share it as a copy-paste code, import others'
+- **Sleep Timer** — auto-stop your sounds after a set time, with a gentle fade-out
+- **10 Visualizers** — ribbons, orbs, particles, mandalas, fireflies, and more, in fullscreen
 - **Lock Screen Controls** — media notification with track metadata
 - **Material You** — dynamic color theming, light and dark mode
 - **Google-Free** — no Google Play Services required, fully FOSS
@@ -32,6 +34,11 @@ Get the latest APK from the [Releases page](https://github.com/Giuig/auraninja/r
 | `auraninja-X.X.X-arm64-v8a.apk` | Most modern Android phones |
 | `auraninja-X.X.X-armeabi-v7a.apk` | Older 32-bit devices |
 | `auraninja-X.X.X-x86_64.apk` | Emulators |
+
+### Install via Google Play
+
+[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">](https://play.google.com/store/apps/details?id=io.github.giuig.auraninja)
+
 
 ### Install via Obtainium
 
