@@ -94,7 +94,14 @@ class _NewMixSheetState extends State<NewMixSheet> {
       if (widget._isEditMode) {
         for (final mixSound in widget.existingMix!.sounds) {
           _selected[mixSound.path] = true;
-          _volumes[mixSound.path] = mixSound.volume.clamp(0.01, 1.0);
+          // Prefer the sound's actual live volume when it's already playing
+          // (e.g. nudged via the Active Sounds popup while this mix was
+          // active) — otherwise the slider shown here would silently
+          // contradict what's audible right now. Falls back to the mix's
+          // last-saved volume for anything not currently playing.
+          _volumes[mixSound.path] =
+              (_originallyPlaying[mixSound.path] ?? mixSound.volume)
+                  .clamp(0.01, 1.0);
         }
         _nameController.text = widget.existingMix!.name;
       } else {
@@ -145,8 +152,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
       // comes back correctly but the mix list loses its highlight even
       // though nothing about the active mix actually changed.
       if (widget._isEditMode) {
-        final mixPaths =
-            widget.existingMix!.sounds.map((s) => s.path).toSet();
+        final mixPaths = widget.existingMix!.sounds.map((s) => s.path).toSet();
         if (mixPaths.isNotEmpty &&
             setEquals(_originallyPlaying.keys.toSet(), mixPaths)) {
           _handler.setActiveMix(widget.existingMix!.id);
@@ -251,7 +257,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
         sounds: sounds,
         createdAt: widget.existingMix!.createdAt,
       ));
-      _saved = true; // keep any sounds toggled during editing alive after dismiss
+      _saved =
+          true; // keep any sounds toggled during editing alive after dismiss
     } else {
       final mix = Mix(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -272,8 +279,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n?.deleteMixTitle ?? 'Delete mix?'),
-        content: Text(l10n?.deleteMixContent ??
-            'This mix will be permanently removed.'),
+        content: Text(
+            l10n?.deleteMixContent ?? 'This mix will be permanently removed.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -295,6 +302,31 @@ class _NewMixSheetState extends State<NewMixSheet> {
   }
 
   int get _selectedCount => _selected.values.where((v) => v).length;
+
+  /// Whether the current selection/volumes/name differ from the mix being
+  /// edited. Always true in create mode — there's no baseline to diff
+  /// against, so the existing selectedCount>0 gate is what matters there.
+  bool get _hasChanges {
+    if (!widget._isEditMode) return true;
+    final original = widget.existingMix!;
+    if (_nameController.text.trim() != original.name) return true;
+
+    // Mirror _saveMix's own computation of what would actually be saved,
+    // so "no changes" here always agrees with what Save would produce.
+    final currentSounds = <String, double>{
+      for (final s in _allSounds)
+        if (_selected[s.path] ?? false) s.path: _volumes[s.path] ?? 0.5,
+    };
+    final originalSounds = <String, double>{
+      for (final s in original.sounds) s.path: s.volume,
+    };
+    if (currentSounds.length != originalSounds.length) return true;
+    for (final entry in currentSounds.entries) {
+      final orig = originalSounds[entry.key];
+      if (orig == null || (entry.value - orig).abs() > 0.001) return true;
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -336,9 +368,11 @@ class _NewMixSheetState extends State<NewMixSheet> {
                             horizontal: 10, vertical: 8),
                       ),
                       onChanged: (_) {
-                        if (_nameError != null) {
-                          setState(() => _nameError = null);
-                        }
+                        // Always rebuild, not just on error-clear — the Save
+                        // button's enabled state depends on this text too.
+                        setState(() {
+                          if (_nameError != null) _nameError = null;
+                        });
                       },
                     ),
                   ),
@@ -375,8 +409,9 @@ class _NewMixSheetState extends State<NewMixSheet> {
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed:
-                        (_selectedCount > 0 && !_saving) ? _saveMix : null,
+                    onPressed: (_selectedCount > 0 && !_saving && _hasChanges)
+                        ? _saveMix
+                        : null,
                     icon: _saving
                         ? const SizedBox(
                             width: 16,
@@ -445,7 +480,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
 
   Widget _buildCategorySection(String category) {
     final sounds = _allSounds
-        .where((s) => s.category == category && !_favoritePaths.contains(s.path))
+        .where(
+            (s) => s.category == category && !_favoritePaths.contains(s.path))
         .toList();
     if (sounds.isEmpty) return const SizedBox.shrink();
 
@@ -515,7 +551,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
           leading: SizedBox(
             width: 28,
             height: 28,
-            child: buildSoundIcon(sound.icon, 28, theme.colorScheme.onSurfaceVariant),
+            child: buildSoundIcon(
+                sound.icon, 28, theme.colorScheme.onSurfaceVariant),
           ),
           title: Text(sound.name),
           trailing: Checkbox(
@@ -546,5 +583,4 @@ class _NewMixSheetState extends State<NewMixSheet> {
       ],
     );
   }
-
 }
