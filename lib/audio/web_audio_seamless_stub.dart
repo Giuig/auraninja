@@ -15,7 +15,7 @@ class WebAudioSeamlessPlayer {
     debugPrint('[WebAudioSeamless] Stub: loadAsset called on non-web platform');
   }
 
-  Future<void> play() async {}
+  Future<void> play({required double volume}) async {}
 
   Future<void> stop() async {}
 
