@@ -34,9 +34,6 @@ Future<bool> copyToClipboard(String text) async {
 ///   matters most on web, where Flutter paints to a canvas — text rendered
 ///   anywhere else in the app cannot be selected by the user at all.
 ///
-/// [display] overrides how the text is presented (e.g. a title/subtitle pair);
-/// [text] is always what gets copied.
-///
 /// [onShare], when non-null, adds a Share button that hands off to the
 /// platform's own share sheet. Pass it only where such a sheet exists — on web
 /// most desktop browsers have no Web Share API, so a button there would be a
@@ -47,7 +44,6 @@ Future<void> showCopyableDialog({
   required String title,
   required String description,
   required String text,
-  Widget? display,
   Future<bool> Function()? onShare,
 }) async {
   final l10n = AppLocalizations.of(context);
@@ -69,11 +65,10 @@ Future<void> showCopyableDialog({
         children: [
           Text(description),
           const SizedBox(height: 12),
-          display ??
-              SelectableText(
-                text,
-                style: Theme.of(ctx).textTheme.bodySmall,
-              ),
+          SelectableText(
+            text,
+            style: Theme.of(ctx).textTheme.bodySmall,
+          ),
         ],
       ),
       actions: [
