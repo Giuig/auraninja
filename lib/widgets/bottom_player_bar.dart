@@ -612,12 +612,27 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                     icon: const Icon(Icons.copy),
                     tooltip:
                         localizations?.copyToClipboard ?? 'Copy to Clipboard',
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: metadata));
+                    onPressed: () async {
+                      // Clipboard.setData can be refused (web throws
+                      // PlatformException(copy_fail) when the browser denies
+                      // clipboard-write). It used to be unawaited and
+                      // unguarded, with the snackbar shown unconditionally, so
+                      // a refusal surfaced as an uncaught error and a "Copied
+                      // to clipboard" message that was simply untrue.
+                      var copied = true;
+                      try {
+                        await Clipboard.setData(ClipboardData(text: metadata));
+                      } catch (_) {
+                        copied = false;
+                      }
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(localizations?.copiedToClipboard ??
-                              'Copied to clipboard'),
+                          content: Text(copied
+                              ? (localizations?.copiedToClipboard ??
+                                  'Copied to clipboard')
+                              : (localizations?.copyFailed ??
+                                  'Couldn\'t copy to the clipboard')),
                           duration: const Duration(seconds: 2),
                         ),
                       );
