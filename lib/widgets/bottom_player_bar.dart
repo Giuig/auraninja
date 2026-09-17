@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:marquee/marquee.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +11,7 @@ import 'package:auraninja/model/mix.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/volume_storage.dart';
+import 'package:auraninja/widgets/copyable_dialog.dart';
 import 'package:auraninja/widgets/volume_slider.dart';
 
 class BottomPlayerBar extends StatefulWidget {
@@ -613,28 +613,32 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                     tooltip:
                         localizations?.copyToClipboard ?? 'Copy to Clipboard',
                     onPressed: () async {
-                      // Clipboard.setData can be refused (web throws
-                      // PlatformException(copy_fail) when the browser denies
-                      // clipboard-write). It used to be unawaited and
-                      // unguarded, with the snackbar shown unconditionally, so
-                      // a refusal surfaced as an uncaught error and a "Copied
-                      // to clipboard" message that was simply untrue.
-                      var copied = true;
-                      try {
-                        await Clipboard.setData(ClipboardData(text: metadata));
-                      } catch (_) {
-                        copied = false;
-                      }
+                      // Fast path: this is the first await in the handler, so
+                      // it still runs inside the transient user activation
+                      // browsers require, and succeeds wherever the clipboard
+                      // is permitted at all.
+                      final copied = await copyToClipboard(metadata);
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(copied
-                              ? (localizations?.copiedToClipboard ??
-                                  'Copied to clipboard')
-                              : (localizations?.copyFailed ??
-                                  'Couldn\'t copy to the clipboard')),
-                          duration: const Duration(seconds: 2),
-                        ),
+                      if (copied) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(localizations?.copiedToClipboard ??
+                                'Copied to clipboard'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                        return;
+                      }
+                      // Refused. On web the metadata drawn in this bar is
+                      // canvas, not selectable text, so without showing it in
+                      // a dialog the user has no way to get it at all.
+                      await showCopyableDialog(
+                        context: context,
+                        title: localizations?.nowPlaying ?? 'Now playing',
+                        description: localizations?.copyManually ??
+                            'Couldn\'t copy automatically. Select the text '
+                                'below and copy it by hand.',
+                        text: metadata,
                       );
                     },
                   );

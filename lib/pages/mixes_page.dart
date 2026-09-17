@@ -10,10 +10,10 @@ import 'package:auraninja/model/sound_category.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
 import 'package:auraninja/utils/mix_codec.dart';
+import 'package:auraninja/widgets/copyable_dialog.dart';
 import 'package:auraninja/widgets/new_mix_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -186,88 +186,49 @@ class _MixesPageState extends State<MixesPage> {
     );
   }
 
-  /// Copies [text], reporting whether it actually worked instead of letting a
-  /// platform refusal escape as an unhandled error.
+  /// One flow on every platform: show the code, with a copy button beside it.
   ///
-  /// `Clipboard.setData` is NOT universally available, despite reading like it
-  /// is: on web it throws `PlatformException(copy_fail)` whenever the browser
-  /// denies `clipboard-write` permission. Every caller must therefore handle
-  /// the false case rather than assuming success.
-  static Future<bool> _copyToClipboard(String text) async {
-    try {
-      await Clipboard.setData(ClipboardData(text: text));
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  /// Last resort when the code can be neither shared nor copied: show it so the
-  /// user can select it by hand. Without this the share button appears dead.
-  Future<void> _showCodeFallbackDialog(String code) async {
-    final l10n = AppLocalizations.of(context);
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        // scrollable, because the code is unbounded in length: MixCodec.encode
-        // is base64url over the whole mix, and a mix has no cap on its sound
-        // count while a stream's path is an arbitrary-length URL. Without this
-        // the content overflows on tall codes — i.e. exactly the mixes most
-        // likely to need this fallback. Matches _importMix's bounded dialog
-        // below and sounds_page.dart's SingleChildScrollView.
-        scrollable: true,
-        title: Text(l10n?.shareMix ?? 'Share'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n?.copyManually ??
-                'Couldn\'t copy automatically. Select the code below and copy '
-                    'it by hand.'),
-            const SizedBox(height: 12),
-            SelectableText(
-              code,
-              style: Theme.of(ctx).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n?.close ?? 'Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
+  /// Copying is the honest framing — the app's own import dialog asks the
+  /// recipient to "paste the mix code you received", so the round trip is
+  /// copy-and-paste regardless of how the code travels. A share sheet only ever
+  /// saved the sender a step, and only on Android; on web most desktop browsers
+  /// have no Web Share API at all.
+  ///
+  /// The copy button lives inside the dialog rather than firing on the row tap,
+  /// because browsers only permit a clipboard write during transient user
+  /// activation: a copy attempted after awaiting anything else is refused even
+  /// where permission would have allowed it. Pressing the dialog's button is a
+  /// fresh gesture, so it works wherever the clipboard works at all — and when
+  /// it does not, the code is on screen and selectable, which on web is the
+  /// only way to reach it (Flutter paints to a canvas, so text rendered
+  /// anywhere else cannot be selected).
+  ///
+  /// Where a real share sheet exists, the dialog still offers it — one tap
+  /// further than before, rather than gone.
   Future<void> _shareMix(Mix mix) async {
     final code = MixCodec.encode(mix);
-    try {
-      await SharePlus.instance.share(
-        ShareParams(text: code, subject: mix.name),
-      );
-      return;
-    } catch (_) {
-      // share_plus deliberately throws on web when the Web Share API isn't
-      // available (most desktop browsers) and no fallback is configured, so
-      // fall through to the clipboard rather than letting it propagate.
-    }
-
-    // The clipboard is the fallback, but it can fail too — it used to be called
-    // here unguarded, inside the catch above, so a denied clipboard threw an
-    // uncaught PlatformException AND skipped the success snackbar below: the
-    // button did nothing at all, with no error shown.
-    final copied = await _copyToClipboard(code);
-    if (!mounted) return;
     final l10n = AppLocalizations.of(context);
-    if (copied) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n?.copiedToClipboard ?? 'Copied to clipboard'),
-      ));
-      return;
-    }
-    await _showCodeFallbackDialog(code);
+    await showCopyableDialog(
+      context: context,
+      title: mix.name,
+      description:
+          l10n?.shareMixPrompt ?? 'Copy this code and send it to anyone.',
+      text: code,
+      onShare: kIsWeb
+          ? null
+          : () async {
+              try {
+                await SharePlus.instance.share(
+                  ShareParams(text: code, subject: mix.name),
+                );
+                return true;
+              } catch (_) {
+                // No sheet available after all — keep the dialog open so the
+                // code stays reachable.
+                return false;
+              }
+            },
+    );
   }
 
   Future<void> _importMix() async {
@@ -432,8 +393,12 @@ class _MixesPageState extends State<MixesPage> {
                           : () => isActive ? _stopMix() : _playMix(mix),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.share_outlined),
-                    tooltip: l10n?.shareMix ?? 'Share',
+                    // A copy icon, not a share icon: what this actually does
+                    // is hand you the mix code. The share sheet still exists
+                    // where the platform has one, but it lives inside the
+                    // dialog now rather than being the whole action.
+                    icon: const Icon(Icons.copy_outlined),
+                    tooltip: l10n?.copyToClipboard ?? 'Copy to clipboard',
                     // Not gated on anyLoading: this only reads the mix's
                     // static sound list, never live playback state, so
                     // there's nothing for it to race with.

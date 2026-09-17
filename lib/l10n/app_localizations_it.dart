@@ -400,10 +400,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get copyManually =>
-      'Couldn\'t copy automatically. Select the code below and copy it by hand.';
+      'Couldn\'t copy automatically. Select the text below and copy it by hand.';
 
   @override
   String get close => 'Close';
+
+  @override
+  String get shareMixPrompt => 'Copy this code and send it to anyone.';
+
+  @override
+  String get nowPlaying => 'Now playing';
 
   @override
   String mixImported(String name) {

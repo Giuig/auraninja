@@ -3,34 +3,44 @@
     "vizFireflySwarm",
     "copyFailed",
     "copyManually",
-    "close"
+    "close",
+    "shareMixPrompt",
+    "nowPlaying"
   ],
 
   "es": [
     "vizFireflySwarm",
     "copyFailed",
     "copyManually",
-    "close"
+    "close",
+    "shareMixPrompt",
+    "nowPlaying"
   ],
 
   "fr": [
     "vizFireflySwarm",
     "copyFailed",
     "copyManually",
-    "close"
+    "close",
+    "shareMixPrompt",
+    "nowPlaying"
   ],
 
   "it": [
     "vizFireflySwarm",
     "copyFailed",
     "copyManually",
-    "close"
+    "close",
+    "shareMixPrompt",
+    "nowPlaying"
   ],
 
   "ja": [
     "vizFireflySwarm",
     "copyFailed",
     "copyManually",
-    "close"
+    "close",
+    "shareMixPrompt",
+    "nowPlaying"
   ]
 }

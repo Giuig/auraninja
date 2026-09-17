@@ -154,8 +154,10 @@
     "invalidMixCode": "That isn't a valid mix code",
     "newMix": "New mix",
     "copyFailed": "Couldn't copy to the clipboard",
-    "copyManually": "Couldn't copy automatically. Select the code below and copy it by hand.",
+    "copyManually": "Couldn't copy automatically. Select the text below and copy it by hand.",
     "close": "Close",
+    "shareMixPrompt": "Copy this code and send it to anyone.",
+    "nowPlaying": "Now playing",
     "mixImported": "Imported \"{name}\"",
     "@mixImported": {
         "placeholders": {
