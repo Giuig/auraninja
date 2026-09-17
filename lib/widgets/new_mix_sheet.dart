@@ -118,7 +118,9 @@ class _NewMixSheetState extends State<NewMixSheet> {
         // and diffing against disk would then light up Save the instant the
         // sheet opens, with the user having touched nothing — which is the
         // very thing gating Save is meant to stop.
-        _initialName = _nameController.text;
+        // Trimmed on both sides of the later comparison, so this doesn't rely
+        // on every upstream writer of Mix.name having trimmed it first.
+        _initialName = _nameController.text.trim();
         _initialVolumes = Map<String, double>.from(_volumes);
         _initialSelected = {
           for (final e in _selected.entries)
@@ -336,7 +338,9 @@ class _NewMixSheetState extends State<NewMixSheet> {
   /// this differ from disk?".
   bool get _hasChanges {
     if (!widget._isEditMode) return true;
-    if (_nameController.text != _initialName) return true;
+    // Trimmed, to match what _saveMix actually writes — otherwise typing a
+    // trailing space enables Save for an edit that would store nothing new.
+    if (_nameController.text.trim() != _initialName) return true;
 
     final currentSelected = {
       for (final e in _selected.entries)
