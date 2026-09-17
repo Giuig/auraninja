@@ -46,6 +46,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
   // ever saved. Restored in dispose() for anything not explicitly saved.
   late final Map<String, double> _originallyPlaying;
 
+  // What the sheet was seeded with, captured once loading finishes. [_hasChanges]
+  // diffs against these rather than against the saved mix, so "changed" means
+  // "the user changed it here", not "this differs from disk".
+  String _initialName = '';
+  Map<String, double> _initialVolumes = {};
+  Set<String> _initialSelected = {};
+
   List<NinjaSound> _allSounds = [];
   Set<String> _favoritePaths = {};
   bool _loadingSounds = true;
@@ -94,9 +101,31 @@ class _NewMixSheetState extends State<NewMixSheet> {
       if (widget._isEditMode) {
         for (final mixSound in widget.existingMix!.sounds) {
           _selected[mixSound.path] = true;
-          _volumes[mixSound.path] = mixSound.volume.clamp(0.01, 1.0);
+          // Prefer the sound's actual live volume when it's already playing
+          // (e.g. nudged via the Active Sounds popup while this mix was
+          // active) — otherwise the slider shown here would silently
+          // contradict what's audible right now. Falls back to the mix's
+          // last-saved volume for anything not currently playing.
+          _volumes[mixSound.path] =
+              (_originallyPlaying[mixSound.path] ?? mixSound.volume)
+                  .clamp(0.01, 1.0);
         }
         _nameController.text = widget.existingMix!.name;
+        // Snapshot what the sheet opened WITH, once seeding is done. This is
+        // the baseline _hasChanges diffs against — deliberately not the saved
+        // mix. Seeding above may legitimately differ from disk (a live level
+        // nudged via Active Sounds, or a legacy 0.0 volume clamped to 0.01),
+        // and diffing against disk would then light up Save the instant the
+        // sheet opens, with the user having touched nothing — which is the
+        // very thing gating Save is meant to stop.
+        // Trimmed on both sides of the later comparison, so this doesn't rely
+        // on every upstream writer of Mix.name having trimmed it first.
+        _initialName = _nameController.text.trim();
+        _initialVolumes = Map<String, double>.from(_volumes);
+        _initialSelected = {
+          for (final e in _selected.entries)
+            if (e.value) e.key,
+        };
       } else {
         final existing = await MixesService.load();
         if (!mounted) return;
@@ -145,8 +174,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
       // comes back correctly but the mix list loses its highlight even
       // though nothing about the active mix actually changed.
       if (widget._isEditMode) {
-        final mixPaths =
-            widget.existingMix!.sounds.map((s) => s.path).toSet();
+        final mixPaths = widget.existingMix!.sounds.map((s) => s.path).toSet();
         if (mixPaths.isNotEmpty &&
             setEquals(_originallyPlaying.keys.toSet(), mixPaths)) {
           _handler.setActiveMix(widget.existingMix!.id);
@@ -251,7 +279,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
         sounds: sounds,
         createdAt: widget.existingMix!.createdAt,
       ));
-      _saved = true; // keep any sounds toggled during editing alive after dismiss
+      _saved =
+          true; // keep any sounds toggled during editing alive after dismiss
     } else {
       final mix = Mix(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -272,8 +301,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n?.deleteMixTitle ?? 'Delete mix?'),
-        content: Text(l10n?.deleteMixContent ??
-            'This mix will be permanently removed.'),
+        content: Text(
+            l10n?.deleteMixContent ?? 'This mix will be permanently removed.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -295,6 +324,38 @@ class _NewMixSheetState extends State<NewMixSheet> {
   }
 
   int get _selectedCount => _selected.values.where((v) => v).length;
+
+  /// Whether anything has been changed **since this sheet opened**. Always
+  /// true in create mode — there's no baseline to diff against, so the
+  /// existing selectedCount>0 gate is what matters there.
+  ///
+  /// The comparison is against the seeded baseline, not against the saved mix.
+  /// Those differ whenever seeding legitimately diverges from disk — a live
+  /// level nudged via Active Sounds, or a legacy 0.0 volume clamped to 0.01 —
+  /// and diffing against disk would enable Save on open with nothing touched,
+  /// reinstating the very behaviour this gate removes. The question the user
+  /// is really asking of a Save button is "did I change something?", not "does
+  /// this differ from disk?".
+  bool get _hasChanges {
+    if (!widget._isEditMode) return true;
+    // Trimmed, to match what _saveMix actually writes — otherwise typing a
+    // trailing space enables Save for an edit that would store nothing new.
+    if (_nameController.text.trim() != _initialName) return true;
+
+    final currentSelected = {
+      for (final e in _selected.entries)
+        if (e.value) e.key,
+    };
+    if (!setEquals(currentSelected, _initialSelected)) return true;
+
+    for (final path in currentSelected) {
+      final initial = _initialVolumes[path];
+      final current = _volumes[path];
+      if (initial == null || current == null) return true;
+      if ((current - initial).abs() > 0.001) return true;
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -336,9 +397,11 @@ class _NewMixSheetState extends State<NewMixSheet> {
                             horizontal: 10, vertical: 8),
                       ),
                       onChanged: (_) {
-                        if (_nameError != null) {
-                          setState(() => _nameError = null);
-                        }
+                        // Always rebuild, not just on error-clear — the Save
+                        // button's enabled state depends on this text too.
+                        setState(() {
+                          if (_nameError != null) _nameError = null;
+                        });
                       },
                     ),
                   ),
@@ -375,8 +438,9 @@ class _NewMixSheetState extends State<NewMixSheet> {
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed:
-                        (_selectedCount > 0 && !_saving) ? _saveMix : null,
+                    onPressed: (_selectedCount > 0 && !_saving && _hasChanges)
+                        ? _saveMix
+                        : null,
                     icon: _saving
                         ? const SizedBox(
                             width: 16,
@@ -445,7 +509,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
 
   Widget _buildCategorySection(String category) {
     final sounds = _allSounds
-        .where((s) => s.category == category && !_favoritePaths.contains(s.path))
+        .where(
+            (s) => s.category == category && !_favoritePaths.contains(s.path))
         .toList();
     if (sounds.isEmpty) return const SizedBox.shrink();
 
@@ -515,7 +580,8 @@ class _NewMixSheetState extends State<NewMixSheet> {
           leading: SizedBox(
             width: 28,
             height: 28,
-            child: buildSoundIcon(sound.icon, 28, theme.colorScheme.onSurfaceVariant),
+            child: buildSoundIcon(
+                sound.icon, 28, theme.colorScheme.onSurfaceVariant),
           ),
           title: Text(sound.name),
           trailing: Checkbox(
@@ -546,5 +612,4 @@ class _NewMixSheetState extends State<NewMixSheet> {
       ],
     );
   }
-
 }
