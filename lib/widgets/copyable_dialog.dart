@@ -36,12 +36,19 @@ Future<bool> copyToClipboard(String text) async {
 ///
 /// [display] overrides how the text is presented (e.g. a title/subtitle pair);
 /// [text] is always what gets copied.
+///
+/// [onShare], when non-null, adds a Share button that hands off to the
+/// platform's own share sheet. Pass it only where such a sheet exists — on web
+/// most desktop browsers have no Web Share API, so a button there would be a
+/// control that does nothing. It should report whether the share happened; the
+/// dialog closes only if it did, leaving the code on screen otherwise.
 Future<void> showCopyableDialog({
   required BuildContext context,
   required String title,
   required String description,
   required String text,
   Widget? display,
+  Future<bool> Function()? onShare,
 }) async {
   final l10n = AppLocalizations.of(context);
   // Captured before any await: after the dialog pops, its own context can no
@@ -74,6 +81,15 @@ Future<void> showCopyableDialog({
           onPressed: () => Navigator.of(ctx).pop(),
           child: Text(l10n?.close ?? 'Close'),
         ),
+        if (onShare != null)
+          TextButton.icon(
+            onPressed: () async {
+              final shared = await onShare();
+              if (shared && ctx.mounted) Navigator.of(ctx).pop();
+            },
+            icon: const Icon(Icons.share_outlined, size: 18),
+            label: Text(l10n?.shareMix ?? 'Share'),
+          ),
         FilledButton.icon(
           onPressed: () async {
             final copied = await copyToClipboard(text);
