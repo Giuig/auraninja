@@ -46,6 +46,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
   // ever saved. Restored in dispose() for anything not explicitly saved.
   late final Map<String, double> _originallyPlaying;
 
+  // What the sheet was seeded with, captured once loading finishes. [_hasChanges]
+  // diffs against these rather than against the saved mix, so "changed" means
+  // "the user changed it here", not "this differs from disk".
+  String _initialName = '';
+  Map<String, double> _initialVolumes = {};
+  Set<String> _initialSelected = {};
+
   List<NinjaSound> _allSounds = [];
   Set<String> _favoritePaths = {};
   bool _loadingSounds = true;
@@ -104,6 +111,19 @@ class _NewMixSheetState extends State<NewMixSheet> {
                   .clamp(0.01, 1.0);
         }
         _nameController.text = widget.existingMix!.name;
+        // Snapshot what the sheet opened WITH, once seeding is done. This is
+        // the baseline _hasChanges diffs against — deliberately not the saved
+        // mix. Seeding above may legitimately differ from disk (a live level
+        // nudged via Active Sounds, or a legacy 0.0 volume clamped to 0.01),
+        // and diffing against disk would then light up Save the instant the
+        // sheet opens, with the user having touched nothing — which is the
+        // very thing gating Save is meant to stop.
+        _initialName = _nameController.text;
+        _initialVolumes = Map<String, double>.from(_volumes);
+        _initialSelected = {
+          for (final e in _selected.entries)
+            if (e.value) e.key,
+        };
       } else {
         final existing = await MixesService.load();
         if (!mounted) return;
@@ -303,27 +323,32 @@ class _NewMixSheetState extends State<NewMixSheet> {
 
   int get _selectedCount => _selected.values.where((v) => v).length;
 
-  /// Whether the current selection/volumes/name differ from the mix being
-  /// edited. Always true in create mode — there's no baseline to diff
-  /// against, so the existing selectedCount>0 gate is what matters there.
+  /// Whether anything has been changed **since this sheet opened**. Always
+  /// true in create mode — there's no baseline to diff against, so the
+  /// existing selectedCount>0 gate is what matters there.
+  ///
+  /// The comparison is against the seeded baseline, not against the saved mix.
+  /// Those differ whenever seeding legitimately diverges from disk — a live
+  /// level nudged via Active Sounds, or a legacy 0.0 volume clamped to 0.01 —
+  /// and diffing against disk would enable Save on open with nothing touched,
+  /// reinstating the very behaviour this gate removes. The question the user
+  /// is really asking of a Save button is "did I change something?", not "does
+  /// this differ from disk?".
   bool get _hasChanges {
     if (!widget._isEditMode) return true;
-    final original = widget.existingMix!;
-    if (_nameController.text.trim() != original.name) return true;
+    if (_nameController.text != _initialName) return true;
 
-    // Mirror _saveMix's own computation of what would actually be saved,
-    // so "no changes" here always agrees with what Save would produce.
-    final currentSounds = <String, double>{
-      for (final s in _allSounds)
-        if (_selected[s.path] ?? false) s.path: _volumes[s.path] ?? 0.5,
+    final currentSelected = {
+      for (final e in _selected.entries)
+        if (e.value) e.key,
     };
-    final originalSounds = <String, double>{
-      for (final s in original.sounds) s.path: s.volume,
-    };
-    if (currentSounds.length != originalSounds.length) return true;
-    for (final entry in currentSounds.entries) {
-      final orig = originalSounds[entry.key];
-      if (orig == null || (entry.value - orig).abs() > 0.001) return true;
+    if (!setEquals(currentSelected, _initialSelected)) return true;
+
+    for (final path in currentSelected) {
+      final initial = _initialVolumes[path];
+      final current = _volumes[path];
+      if (initial == null || current == null) return true;
+      if ((current - initial).abs() > 0.001) return true;
     }
     return false;
   }
