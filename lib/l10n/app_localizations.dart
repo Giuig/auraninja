@@ -835,7 +835,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyManually.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t copy automatically. Select the code below and copy it by hand.'**
+  /// **'Couldn\'t copy automatically. Select the text below and copy it by hand.'**
   String get copyManually;
 
   /// No description provided for @close.
@@ -843,6 +843,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @shareMixPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this code and send it to anyone.'**
+  String get shareMixPrompt;
+
+  /// No description provided for @nowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get nowPlaying;
 
   /// No description provided for @mixImported.
   ///
