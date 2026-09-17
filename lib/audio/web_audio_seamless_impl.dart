@@ -19,6 +19,9 @@ class WebAudioSeamlessPlayer {
   String? _currentPath;
   bool _isNoise = false;
   String _noiseType = 'white';
+  // Overwritten by every play() call, which now receives the volume
+  // explicitly from its caller (SoundController._volume) instead of relying
+  // on this default.
   double _volume = 0.5;
 
   // To prevent multiple scheduling loops running at once
@@ -59,7 +62,8 @@ class WebAudioSeamlessPlayer {
     }
   }
 
-  Future<void> play() async {
+  Future<void> play({required double volume}) async {
+    _volume = volume.clamp(0.0, 1.0);
     final ctx = _audioContext;
     if (ctx == null) return;
 
@@ -212,10 +216,11 @@ class WebAudioSeamlessPlayer {
   /// [duration] — runs on the audio thread, not the JS event loop, so it
   /// keeps going smoothly even if the tab is backgrounded/throttled.
   ///
-  /// Deliberately does NOT touch [_volume]: play() always initializes a
-  /// fresh gain node from [_volume], so leaving it alone means the next
-  /// play() after a stop() is back at full volume with no separate restore
-  /// step needed.
+  /// Deliberately does NOT touch [_volume]: the gain node built in play()
+  /// comes from the volume its caller supplies (`SoundController._volume`),
+  /// not from this field, so leaving [_volume] untouched here is still safe
+  /// — the next play() after a stop() gets the caller's real level again,
+  /// no separate restore step needed.
   void fadeTo(double target, Duration duration) {
     final ctx = _audioContext;
     if (ctx == null) return;

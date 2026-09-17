@@ -207,6 +207,16 @@ class SoundController with ChangeNotifier {
         _webSeamlessPlayer ??=
             WebAudioSeamlessManager().getOrCreate(sound.path);
         await _webSeamlessPlayer!.loadAsset(sound.path, isNoise: sound.isNoise);
+        // Re-establish volume from the controller — parity with the
+        // just_audio branch (line 234: player.setVolume(_volume)) and the
+        // SoLoud branch (line 259: play(..., volume: _volume)). Without
+        // this, a setVolume() that arrived while _webSeamlessPlayer was
+        // still null (e.g. the unawaited prefs restore in registerSounds)
+        // is silently dropped by `?.`, and nothing re-establishes it.
+        // Calling setVolume() here while stopped only updates the player's
+        // cached field — _mainGainNode is null, so the setTargetAtTime
+        // calls are no-ops — which is exactly the intent.
+        _webSeamlessPlayer!.setVolume(_volume);
         _status = PlaybackStatus.paused;
         notifyListeners();
       } catch (_) {
@@ -274,7 +284,10 @@ class SoundController with ChangeNotifier {
         if (_status == PlaybackStatus.error) return;
       }
       try {
-        await _webSeamlessPlayer!.play();
+        // Web analogue of the SoLoud branch's play(..., volume: _volume)
+        // above — the volume is passed explicitly rather than read from a
+        // private default that can diverge from the controller.
+        await _webSeamlessPlayer!.play(volume: _volume);
         _status = PlaybackStatus.playing;
         notifyListeners();
       } catch (_) {
@@ -392,18 +405,44 @@ class SoundController with ChangeNotifier {
     }
   }
 
+  // setVolume() always forwards the write to whichever backend is active,
+  // even when [v] equals the cached [_volume] already — only
+  // notifyListeners() stays gated on an actual change:
+  //   - Keeping notifyListeners() change-gated is the point. The manager ->
+  //     handler chain (j_a_sound_manager.dart:154-160 ->
+  //     _onControllerStateChanged -> wrapper_audio_handler.dart:99-110) runs
+  //     an async notification-metadata update on every notification, and
+  //     wrapper_audio_handler's listener relies on exactly this chain.
+  //     Notifying on no-op writes would add rebuilds and metadata work for
+  //     nothing; gating it keeps listener behaviour byte-for-byte identical
+  //     to today.
+  //   - Redundant engine calls are accepted and bounded: setVolume() is
+  //     driven by slider onChanged (which only fires on an actual value
+  //     change), by the mix apply loop (once per sound per mix start), and
+  //     by the prefs restore (once per sound). SoLoud's setVolume and the
+  //     web player's setTargetAtTime are cheap; just_audio's is a
+  //     platform-channel hop but at that call rate it is immaterial.
+  //   - One accepted behaviour delta, worth stating out loud:
+  //     sound_card.dart:176's reset-to-0.5 tap target stays hit-testable
+  //     while invisible (Opacity(0) + HitTestBehavior.opaque). Tapping it
+  //     while the volume is already exactly 0.5 used to be swallowed; it now
+  //     reaches the engine, which during a sleep-timer fade would snap that
+  //     sound back to 0.5. Marginal and already true for any other value
+  //     pre-fix (the guard never protected the fade), so it is accepted
+  //     rather than worked around.
   void setVolume(double v) {
-    if (_volume != v) {
-      _volume = v;
-      if (_useSoloud) {
-        if (_soloudHandle != null) {
-          SoLoud.instance.setVolume(_soloudHandle!, v);
-        }
-      } else if (_useWebSeamless) {
-        _webSeamlessPlayer?.setVolume(v);
-      } else if (hasPlayer) {
-        _player!.setVolume(v);
+    final changed = _volume != v;
+    _volume = v;
+    if (_useSoloud) {
+      if (_soloudHandle != null) {
+        SoLoud.instance.setVolume(_soloudHandle!, v);
       }
+    } else if (_useWebSeamless) {
+      _webSeamlessPlayer?.setVolume(v);
+    } else if (hasPlayer) {
+      _player!.setVolume(v);
+    }
+    if (changed) {
       notifyListeners();
     }
   }
@@ -414,10 +453,12 @@ class SoundController with ChangeNotifier {
   ///
   /// Deliberately does NOT touch [_volume] or call [setVolume]/persist
   /// anything: every backend re-establishes its live volume from [_volume]
-  /// on its next real play() (SoLoud passes it explicitly, the web-seamless
-  /// player builds a fresh gain node from it, just_audio re-applies it via
-  /// load() after a stop()) — so leaving [_volume] untouched here means the
-  /// next play() is back at full volume with no separate restore step.
+  /// on its next real play() — SoLoud passes [_volume] into play() directly,
+  /// the web-seamless player now receives it explicitly via
+  /// play(volume: _volume) and is re-synced from [_volume] again in load(),
+  /// and just_audio re-applies [_volume] via load() after a stop() — so
+  /// leaving [_volume] untouched here means the next play() is back at full
+  /// volume with no separate restore step.
   void fadeTo(double target, Duration duration) {
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;

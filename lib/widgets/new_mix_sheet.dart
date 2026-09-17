@@ -211,7 +211,9 @@ class _NewMixSheetState extends State<NewMixSheet> {
       } else {
         await _handler.ninjaPlay(path);
       }
-      _handler.setVolume(path, _volumes[path]!);
+      // Contextual live-preview level only — must not overwrite the Sounds
+      // page's global per-sound volume. Same rationale as mixes_page.dart:149-151.
+      _handler.setVolume(path, _volumes[path]!, persist: false);
     }
   }
 
@@ -534,7 +536,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
                     value: volume,
                     onChanged: (v) {
                       setState(() => _volumes[path] = v);
-                      _handler.setVolume(path, v);
+                      _handler.setVolume(path, v, persist: false);
                     },
                   ),
                 ),
