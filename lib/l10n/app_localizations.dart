@@ -826,6 +826,24 @@ abstract class AppLocalizations {
   /// **'New mix'**
   String get newMix;
 
+  /// No description provided for @copyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy to the clipboard'**
+  String get copyFailed;
+
+  /// No description provided for @copyManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy automatically. Select the code below and copy it by hand.'**
+  String get copyManually;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
   /// No description provided for @mixImported.
   ///
   /// In en, this message translates to:

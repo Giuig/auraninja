@@ -1,21 +1,36 @@
 {
   "de": [
-    "vizFireflySwarm"
+    "vizFireflySwarm",
+    "copyFailed",
+    "copyManually",
+    "close"
   ],
 
   "es": [
-    "vizFireflySwarm"
+    "vizFireflySwarm",
+    "copyFailed",
+    "copyManually",
+    "close"
   ],
 
   "fr": [
-    "vizFireflySwarm"
+    "vizFireflySwarm",
+    "copyFailed",
+    "copyManually",
+    "close"
   ],
 
   "it": [
-    "vizFireflySwarm"
+    "vizFireflySwarm",
+    "copyFailed",
+    "copyManually",
+    "close"
   ],
 
   "ja": [
-    "vizFireflySwarm"
+    "vizFireflySwarm",
+    "copyFailed",
+    "copyManually",
+    "close"
   ]
 }

@@ -396,6 +396,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newMix => 'Neuer Mix';
 
   @override
+  String get copyFailed => 'Couldn\'t copy to the clipboard';
+
+  @override
+  String get copyManually =>
+      'Couldn\'t copy automatically. Select the code below and copy it by hand.';
+
+  @override
+  String get close => 'Close';
+
+  @override
   String mixImported(String name) {
     return '\"$name\" importiert';
   }

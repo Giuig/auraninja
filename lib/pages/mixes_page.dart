@@ -186,25 +186,88 @@ class _MixesPageState extends State<MixesPage> {
     );
   }
 
+  /// Copies [text], reporting whether it actually worked instead of letting a
+  /// platform refusal escape as an unhandled error.
+  ///
+  /// `Clipboard.setData` is NOT universally available, despite reading like it
+  /// is: on web it throws `PlatformException(copy_fail)` whenever the browser
+  /// denies `clipboard-write` permission. Every caller must therefore handle
+  /// the false case rather than assuming success.
+  static Future<bool> _copyToClipboard(String text) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Last resort when the code can be neither shared nor copied: show it so the
+  /// user can select it by hand. Without this the share button appears dead.
+  Future<void> _showCodeFallbackDialog(String code) async {
+    final l10n = AppLocalizations.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        // scrollable, because the code is unbounded in length: MixCodec.encode
+        // is base64url over the whole mix, and a mix has no cap on its sound
+        // count while a stream's path is an arbitrary-length URL. Without this
+        // the content overflows on tall codes — i.e. exactly the mixes most
+        // likely to need this fallback. Matches _importMix's bounded dialog
+        // below and sounds_page.dart's SingleChildScrollView.
+        scrollable: true,
+        title: Text(l10n?.shareMix ?? 'Share'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n?.copyManually ??
+                'Couldn\'t copy automatically. Select the code below and copy '
+                    'it by hand.'),
+            const SizedBox(height: 12),
+            SelectableText(
+              code,
+              style: Theme.of(ctx).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n?.close ?? 'Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _shareMix(Mix mix) async {
     final code = MixCodec.encode(mix);
     try {
       await SharePlus.instance.share(
         ShareParams(text: code, subject: mix.name),
       );
+      return;
     } catch (_) {
       // share_plus deliberately throws on web when the Web Share API isn't
-      // available (most desktop browsers) and no fallback is configured —
-      // silently do nothing without this, since the exception otherwise
-      // propagates unhandled. Clipboard works everywhere, so use it as the
-      // universal fallback rather than only patching the web case.
-      await Clipboard.setData(ClipboardData(text: code));
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
+      // available (most desktop browsers) and no fallback is configured, so
+      // fall through to the clipboard rather than letting it propagate.
+    }
+
+    // The clipboard is the fallback, but it can fail too — it used to be called
+    // here unguarded, inside the catch above, so a denied clipboard threw an
+    // uncaught PlatformException AND skipped the success snackbar below: the
+    // button did nothing at all, with no error shown.
+    final copied = await _copyToClipboard(code);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    if (copied) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(l10n?.copiedToClipboard ?? 'Copied to clipboard'),
       ));
+      return;
     }
+    await _showCodeFallbackDialog(code);
   }
 
   Future<void> _importMix() async {
