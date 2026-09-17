@@ -209,6 +209,13 @@ class _MixesPageState extends State<MixesPage> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // scrollable, because the code is unbounded in length: MixCodec.encode
+        // is base64url over the whole mix, and a mix has no cap on its sound
+        // count while a stream's path is an arbitrary-length URL. Without this
+        // the content overflows on tall codes — i.e. exactly the mixes most
+        // likely to need this fallback. Matches _importMix's bounded dialog
+        // below and sounds_page.dart's SingleChildScrollView.
+        scrollable: true,
         title: Text(l10n?.shareMix ?? 'Share'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
