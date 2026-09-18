@@ -23,16 +23,33 @@ Future<bool> copyToClipboard(String text) async {
   }
 }
 
-/// Shows [text] as selectable content with its own copy button, so there is
-/// always a way for the user to get it.
+/// Shows [text] as selectable content, so there is always a way for the user to
+/// get it.
 ///
-/// Two things make this work where a bare `Clipboard.setData` does not:
+/// What makes this work where a bare `Clipboard.setData` does not is that the
+/// text is on screen and selectable. That matters most on web, where Flutter
+/// paints to a canvas — text rendered anywhere else in the app cannot be
+/// selected by the user at all. Selecting it here and copying with the
+/// browser's own copy command **does** work even when `Clipboard.setData` is
+/// refused: Flutter mirrors a [SelectableText] into a real DOM `<textarea>`,
+/// and the browser's copy command is not gated by the `clipboard-write`
+/// permission that governs the async clipboard API. Measured 2026-09-18.
 ///
-/// * The copy button is a **fresh user gesture** with no preceding `await`,
-///   which is the condition browsers require for a clipboard write.
-/// * If the copy is refused anyway, the text is on screen and selectable. That
-///   matters most on web, where Flutter paints to a canvas — text rendered
-///   anywhere else in the app cannot be selected by the user at all.
+/// [showCopyButton] controls the built-in copy action, and the distinction is
+/// not cosmetic:
+///
+/// * A **proactive** caller (the dialog is the primary way to get the text)
+///   should keep it. Pressing it is a fresh user gesture with no preceding
+///   `await`, which is the condition browsers require for a clipboard write, so
+///   it succeeds wherever the clipboard is permitted at all.
+/// * A **failure-fallback** caller — one that opens this dialog only *because* a
+///   copy already failed — must pass `false`. That caller's first attempt was
+///   already the optimal one, so a refusal was on permission grounds and an
+///   identical retry is refused identically. Offering it under a description
+///   that says to copy by hand is incoherent, and it was reported as such.
+///   Verified: both attempts reject with the same `NotAllowedError` while
+///   `document.hasFocus()` is true, and Flutter attempts no `execCommand`
+///   fallback because it selects its clipboard strategy upfront.
 ///
 /// [onShare], when non-null, adds a Share button that hands off to the
 /// platform's own share sheet. Pass it only where such a sheet exists — on web
@@ -45,6 +62,7 @@ Future<void> showCopyableDialog({
   required String description,
   required String text,
   Future<bool> Function()? onShare,
+  bool showCopyButton = true,
 }) async {
   final l10n = AppLocalizations.of(context);
   // Captured before any await: after the dialog pops, its own context can no
@@ -85,22 +103,23 @@ Future<void> showCopyableDialog({
             icon: const Icon(Icons.share_outlined, size: 18),
             label: Text(l10n?.shareMix ?? 'Share'),
           ),
-        FilledButton.icon(
-          onPressed: () async {
-            final copied = await copyToClipboard(text);
-            // Only dismiss on success — if the copy was refused the user still
-            // needs the text on screen to select by hand.
-            if (copied && ctx.mounted) Navigator.of(ctx).pop();
-            messenger.showSnackBar(SnackBar(
-              content: Text(copied
-                  ? (l10n?.copiedToClipboard ?? 'Copied to clipboard')
-                  : (l10n?.copyFailed ?? "Couldn't copy to the clipboard")),
-              duration: const Duration(seconds: 2),
-            ));
-          },
-          icon: const Icon(Icons.copy, size: 18),
-          label: Text(l10n?.copyToClipboard ?? 'Copy'),
-        ),
+        if (showCopyButton)
+          FilledButton.icon(
+            onPressed: () async {
+              final copied = await copyToClipboard(text);
+              // Only dismiss on success — if the copy was refused the user still
+              // needs the text on screen to select by hand.
+              if (copied && ctx.mounted) Navigator.of(ctx).pop();
+              messenger.showSnackBar(SnackBar(
+                content: Text(copied
+                    ? (l10n?.copiedToClipboard ?? 'Copied to clipboard')
+                    : (l10n?.copyFailed ?? "Couldn't copy to the clipboard")),
+                duration: const Duration(seconds: 2),
+              ));
+            },
+            icon: const Icon(Icons.copy, size: 18),
+            label: Text(l10n?.copyToClipboard ?? 'Copy'),
+          ),
       ],
     ),
   );

@@ -639,6 +639,12 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                             'Couldn\'t copy automatically. Select the text '
                                 'below and copy it by hand.',
                         text: metadata,
+                        // No copy button: the attempt above was already the
+                        // optimal one, so its refusal was on permission
+                        // grounds and an identical retry is refused
+                        // identically. Selecting the text and using the
+                        // browser's own copy command still works.
+                        showCopyButton: false,
                       );
                     },
                   );
