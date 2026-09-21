@@ -8,6 +8,11 @@ Future<WrapperAudioHandler> initAudioHandler() async {
       androidNotificationChannelId: 'io.github.giuig.auraninja.audio',
       androidNotificationChannelName: 'Auraninja Audio',
       androidNotificationOngoing: true,
+      // Android draws the small icon as an ALPHA MASK, so the default
+      // ('mipmap/ic_launcher') renders as a solid filled square -- a launcher
+      // icon is opaque edge to edge. This is a white-on-transparent silhouette
+      // of the logo; see the comment in the drawable itself.
+      androidNotificationIcon: 'drawable/ic_stat_auraninja',
     ),
   );
 }
