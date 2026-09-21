@@ -15,7 +15,7 @@ dependencies:
   ninja_material:
     git:
       url: https://github.com/Giuig/ninja_material.git
-      ref: v1.6.7
+      ref: v1.6.8
 
   flutter_localizations:
     sdk: flutter
