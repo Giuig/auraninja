@@ -600,11 +600,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v1.5.0"
-      resolved-ref: "4d85ae211189bf9b5b1bbd2cfab32ed15c90e569"
+      ref: "v1.6.6"
+      resolved-ref: "659b5dd42b81f580929b860e942c1b02f224fe83"
       url: "https://github.com/Giuig/ninja_material.git"
     source: git
-    version: "1.5.0"
+    version: "1.6.6"
   objective_c:
     dependency: transitive
     description:
