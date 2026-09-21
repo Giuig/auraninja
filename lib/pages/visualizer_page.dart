@@ -44,8 +44,13 @@ Widget _buildVisualizer(
   int index,
   List<Color> colors,
   bool isPlaying,
-  int activeCount,
-) {
+  int activeCount, {
+  // True when the visualizer is painting onto a light surface. Only the two
+  // additive visualizers care: `BlendMode.plus` adds light, which is invisible
+  // on a light background, so they swap to the subtractive `BlendMode.multiply`.
+  // The fullscreen overlay always passes false — its stage is black.
+  bool onLight = false,
+}) {
   switch (index) {
     case 0:
       return LiquidRibbonsVisualizer(
@@ -70,14 +75,20 @@ Widget _buildVisualizer(
           colors: colors, isPlaying: isPlaying, activeCount: activeCount);
     case 7:
       return AuroraVisualizer(
-          colors: colors, isPlaying: isPlaying, activeCount: activeCount);
+          colors: colors,
+          isPlaying: isPlaying,
+          activeCount: activeCount,
+          onLight: onLight);
     case 8:
       return InkDiffusionVisualizer(
           colors: colors, isPlaying: isPlaying, activeCount: activeCount);
     case 9:
     default:
       return FireflySwarmVisualizer(
-          colors: colors, isPlaying: isPlaying, activeCount: activeCount);
+          colors: colors,
+          isPlaying: isPlaying,
+          activeCount: activeCount,
+          onLight: onLight);
   }
 }
 
@@ -504,7 +515,13 @@ class _VisualizerPageState extends State<VisualizerPage>
                         key: ValueKey(_selectedIndex),
                         child: SizedBox.expand(
                           child: _buildVisualizer(
-                              _selectedIndex, colors, isPlaying, activeCount),
+                            _selectedIndex,
+                            colors,
+                            isPlaying,
+                            activeCount,
+                            onLight: Theme.of(context).brightness ==
+                                Brightness.light,
+                          ),
                         ),
                       ),
                     ),

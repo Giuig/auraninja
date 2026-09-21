@@ -7,11 +7,20 @@ class FireflySwarmVisualizer extends StatefulWidget {
   final bool isPlaying;
   final int activeCount;
 
+  /// Paint for a light background instead of a dark one.
+  ///
+  /// The flies are drawn with `BlendMode.plus`, which is what turns a blurred
+  /// circle into a glow. Adding light to a light surface clamps to white, so
+  /// the light variant uses `BlendMode.multiply` — the same shapes read as
+  /// soft, deepening motes rather than glowing points.
+  final bool onLight;
+
   const FireflySwarmVisualizer({
     super.key,
     required this.colors,
     required this.isPlaying,
     required this.activeCount,
+    this.onLight = false,
   });
 
   @override
@@ -119,6 +128,7 @@ class _FireflySwarmVisualizerState extends State<FireflySwarmVisualizer>
           flies: _flies,
           colors: widget.colors,
           time: _time,
+          onLight: widget.onLight,
         ),
       ),
     );
@@ -129,22 +139,25 @@ class _FireflyPainter extends CustomPainter {
   final List<_Firefly> flies;
   final List<Color> colors;
   final double time;
+  final bool onLight;
 
   _FireflyPainter({
     required this.flies,
     required this.colors,
     required this.time,
+    required this.onLight,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final blend = onLight ? BlendMode.multiply : BlendMode.plus;
     final glowPaint = Paint()
       ..style = PaintingStyle.fill
-      ..blendMode = BlendMode.plus
+      ..blendMode = blend
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6.0);
     final corePaint = Paint()
       ..style = PaintingStyle.fill
-      ..blendMode = BlendMode.plus;
+      ..blendMode = blend;
 
     for (final f in flies) {
       // A real firefly's flash is a quick bright pulse, not a smooth sine —
