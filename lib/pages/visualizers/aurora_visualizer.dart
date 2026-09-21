@@ -8,11 +8,21 @@ class AuroraVisualizer extends StatefulWidget {
   final bool isPlaying;
   final int activeCount;
 
+  /// Paint for a light background instead of a dark one.
+  ///
+  /// The bands are drawn with `BlendMode.plus` — they *add* light where they
+  /// overlap, which is what makes an aurora read as a glow. On a light surface
+  /// that addition clamps to white and the whole thing disappears, so the light
+  /// variant uses `BlendMode.multiply`, the subtractive dual: overlaps get
+  /// deeper instead of brighter, like washes of ink on paper.
+  final bool onLight;
+
   const AuroraVisualizer({
     super.key,
     required this.colors,
     required this.isPlaying,
     required this.activeCount,
+    this.onLight = false,
   });
 
   @override
@@ -79,6 +89,7 @@ class _AuroraVisualizerState extends State<AuroraVisualizer>
           time: _time,
           colors: widget.colors,
           bandParams: _bandParams,
+          onLight: widget.onLight,
         ),
       ),
     );
@@ -89,11 +100,13 @@ class _AuroraPainter extends CustomPainter {
   final double time;
   final List<Color> colors;
   final List<List<double>> bandParams;
+  final bool onLight;
 
   _AuroraPainter({
     required this.time,
     required this.colors,
     required this.bandParams,
+    required this.onLight,
   });
 
   @override
@@ -150,12 +163,13 @@ class _AuroraPainter extends CustomPainter {
         ..shader = gradient.createShader(
           Rect.fromLTWH(0, 0, size.width, size.height),
         )
-        ..blendMode = BlendMode.plus;
+        ..blendMode = onLight ? BlendMode.multiply : BlendMode.plus;
 
       canvas.drawPath(bandPath, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _AuroraPainter old) => time != old.time;
+  bool shouldRepaint(covariant _AuroraPainter old) =>
+      time != old.time || onLight != old.onLight;
 }
