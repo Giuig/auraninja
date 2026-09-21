@@ -193,6 +193,22 @@
     };
   </script>
 
+
+  <!-- Shared loading screen, shipped by ninja_material as a package asset.
+       In <head> and NOT async on purpose: a head script blocks first paint,
+       so the first paint already carries the right background instead of
+       flashing white and being corrected a frame later.
+
+       data-prefix MUST match SharedPreferences.setPrefix() in main.dart.
+       A wrong prefix does not error, it silently falls back to the colours
+       below. Those are this app's real resolved ColorScheme and are the
+       first-run fallback only; after one render the app publishes the exact
+       palette and the loader uses that instead. -->
+  <script src="assets/packages/ninja_material/assets/web/ninja_loader.js"
+          data-prefix="auraninja."
+          data-bg-light="#f9faef" data-bg-dark="#12140e"
+          data-accent-light="#4b662c" data-accent-dark="#b1d18a"
+          data-container-light="#eeefe4" data-container-dark="#1e201a"></script>
 </head>
 
 <body>
