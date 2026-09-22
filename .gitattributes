@@ -19,6 +19,13 @@
 *.kt text eol=lf
 *.java text eol=lf
 
+# Generated/plain text. `desiredFileName.txt` is rewritten by `flutter gen-l10n`
+# on every build and is always written with LF, so without this it flips to LF
+# while the checkout is CRLF and shows up as a modified file forever -- a diff
+# with no content in it. Note *.json above does not cover it: the file holds
+# JSON but is named .txt.
+*.txt text eol=lf
+
 # Binary
 *.png binary
 *.jpg binary
