@@ -186,52 +186,15 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
     final l10n = AppLocalizations.of(context);
     final existing = await MixesService.load();
     if (!mounted) return;
-    final controller =
-        TextEditingController(text: 'Mix ${existing.length + 1}');
-    String? nameError;
 
     final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n?.nameMix ?? 'Name your mix'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: l10n?.mixNameLabel ?? 'Mix name',
-              errorText: nameError,
-            ),
-            onChanged: (_) {
-              if (nameError != null) setDialogState(() => nameError = null);
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n?.cancel ?? 'Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final trimmed = controller.text.trim();
-                if (trimmed.isEmpty) return;
-                if (existing
-                    .map((m) => m.name.toLowerCase())
-                    .contains(trimmed.toLowerCase())) {
-                  setDialogState(() => nameError =
-                      l10n?.duplicateMixName ?? 'Name already in use');
-                  return;
-                }
-                Navigator.of(ctx).pop(trimmed);
-              },
-              child: Text(l10n?.saveMix ?? 'Save Mix'),
-            ),
-          ],
-        ),
+      builder: (ctx) => _NameMixDialog(
+        initialName: 'Mix ${existing.length + 1}',
+        existingNamesLower:
+            existing.map((m) => m.name.toLowerCase()).toSet(),
       ),
     );
-    controller.dispose();
     if (name == null || !mounted) return;
 
     final mix = Mix(
@@ -768,6 +731,77 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
           },
         );
       },
+    );
+  }
+}
+
+/// Owns its [TextEditingController] via normal State lifecycle instead of a
+/// caller-managed one disposed right after `showDialog` returns — that
+/// return happens on `Navigator.pop`, before the dialog's exit transition
+/// actually finishes, so the still-animating TextField could rebuild against
+/// an already-disposed controller (crashed with "TextEditingController was
+/// used after being disposed", see bottom_player_bar history around the
+/// internet-radio Save Mix flow).
+class _NameMixDialog extends StatefulWidget {
+  final String initialName;
+  final Set<String> existingNamesLower;
+
+  const _NameMixDialog({
+    required this.initialName,
+    required this.existingNamesLower,
+  });
+
+  @override
+  State<_NameMixDialog> createState() => _NameMixDialogState();
+}
+
+class _NameMixDialogState extends State<_NameMixDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initialName);
+  String? _nameError;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n?.nameMix ?? 'Name your mix'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          hintText: l10n?.mixNameLabel ?? 'Mix name',
+          errorText: _nameError,
+        ),
+        onChanged: (_) {
+          if (_nameError != null) setState(() => _nameError = null);
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n?.cancel ?? 'Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final trimmed = _controller.text.trim();
+            if (trimmed.isEmpty) return;
+            if (widget.existingNamesLower.contains(trimmed.toLowerCase())) {
+              setState(() =>
+                  _nameError = l10n?.duplicateMixName ?? 'Name already in use');
+              return;
+            }
+            Navigator.of(context).pop(trimmed);
+          },
+          child: Text(l10n?.saveMix ?? 'Save Mix'),
+        ),
+      ],
     );
   }
 }
