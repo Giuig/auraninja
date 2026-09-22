@@ -122,8 +122,26 @@ class WrapperAudioHandler extends BaseAudioHandler
         MediaControl.stop,
       ],
       playing: playing,
-      processingState: AudioProcessingState.ready,
+      processingState: _processingState(playing),
     ));
+  }
+
+  /// The notification and lock-screen controls read this, so reporting a
+  /// hardcoded `ready` here is what let a dropped stream keep showing as
+  /// playing on the lock screen with nothing coming out. Buffering covers
+  /// both a first connect and a reconnect attempt, since both are "we are
+  /// trying to get audio" from the listener's point of view.
+  AudioProcessingState _processingState(bool playing) {
+    // Both of these only apply while nothing is actually audible. Sounds mix
+    // here, so a radio stream reconnecting behind a local sound that is still
+    // playing fine is not a buffering session — reporting it as one would put
+    // a spinner on the notification while audio is plainly coming out.
+    if (playing) return AudioProcessingState.ready;
+    if (_manager.isAnyLoading) return AudioProcessingState.buffering;
+    if (_manager.allControllers.any((c) => c.status == PlaybackStatus.error)) {
+      return AudioProcessingState.error;
+    }
+    return AudioProcessingState.ready;
   }
 
   void registerSounds(List<NinjaSound> sounds) {

@@ -48,6 +48,39 @@ class SoundController with ChangeNotifier {
   // any stop/pause/dispose) can cancel a stale one before it fires again.
   Timer? _justAudioFadeTimer;
 
+  // Bounded auto-reconnect for dropped streams. When a live stream dies
+  // mid-playback (network loss), ExoPlayer resets to idle but leaves
+  // playWhenReady true — so playerStateStream keeps reporting playing=true
+  // with nothing actually coming out, and without this the UI, the mix list
+  // and the media notification all keep claiming playback forever.
+  Timer? _reconnectTimer;
+  int _reconnectAttempt = 0;
+
+  // A failed attempt makes the player emit the same "dropped" shape again
+  // while _attemptReconnect is still awaiting, which would schedule a second
+  // backoff chain on top of the first and leave an orphaned timer running.
+  bool _reconnectInFlight = false;
+
+  // True from the moment a drop is detected until playback is genuinely
+  // re-established (or the backoff gives up). The OS media session issues its
+  // own play() at a dropped stream — independently of this backoff — so every
+  // route back into playback has to consult this rather than assume the
+  // player still holds a usable source.
+  bool _reconnecting = false;
+
+  /// Backoff schedule for a dropped stream. Exhausting it is what turns the
+  /// sound red (PlaybackStatus.error) rather than retrying indefinitely —
+  /// ~90s total. No jitter: jitter exists to spread load across many clients
+  /// hitting one server, which does not apply to a single device.
+  static const List<Duration> _reconnectDelays = [
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+    Duration(seconds: 8),
+    Duration(seconds: 16),
+    Duration(seconds: 30),
+    Duration(seconds: 30),
+  ];
+
   String _currentMetadata = '';
   Duration? _singleTrackDuration;
   bool _userPaused = false;
@@ -101,14 +134,46 @@ class SoundController with ChangeNotifier {
       PlaybackStatus newStatus;
 
       if (playing) {
-        newStatus = PlaybackStatus.playing;
+        // playing=true cannot be trusted on its own: after a load error the
+        // ExoPlayer resets to idle while playWhenReady stays true, so it
+        // reports "playing" for a stream that has actually stopped. Only
+        // treat it as a drop once real playback had been reached, so a first
+        // connect that never worked still fails fast via load()'s catch
+        // rather than retrying a bad URL for a minute and a half.
+        if (sound.isStream &&
+            processingState == just_audio.ProcessingState.idle &&
+            (_status == PlaybackStatus.playing ||
+                _status == PlaybackStatus.loading)) {
+          _handleStreamDropped();
+          return;
+        }
 
-        if (sound.isStream) {
-          // Use WebMetadataService on web, icyMetadataStream on native
-          if (kIsWeb && _webMetadataService == null) {
-            _startWebMetadataService();
-          } else if (!kIsWeb && _icyMetadataSubscription == null) {
-            _startIcyMetadataSubscription();
+        // playWhenReady stays true through a mid-stream rebuffer and through
+        // every reconnect attempt, so `playing` on its own is not evidence
+        // that audio is flowing: it reported "playing" across 14s of silence
+        // during a stall, and turned the card fully green on each retry.
+        // Audio only actually comes out at `ready`.
+        if (processingState == just_audio.ProcessingState.loading ||
+            processingState == just_audio.ProcessingState.buffering) {
+          newStatus = PlaybackStatus.loading;
+        } else {
+          newStatus = PlaybackStatus.playing;
+          // Only real playback clears the backoff. A retry reports
+          // playing=true with proc=loading moments before it fails again, and
+          // treating that as success reset the counter every cycle — the
+          // backoff never escalated past its first delay and the give-up path
+          // was unreachable.
+          if (processingState == just_audio.ProcessingState.ready) {
+            _cancelReconnect();
+          }
+
+          if (sound.isStream) {
+            // Use WebMetadataService on web, icyMetadataStream on native
+            if (kIsWeb && _webMetadataService == null) {
+              _startWebMetadataService();
+            } else if (!kIsWeb && _icyMetadataSubscription == null) {
+              _startIcyMetadataSubscription();
+            }
           }
         }
       } else {
@@ -133,10 +198,96 @@ class SoundController with ChangeNotifier {
         notifyListeners();
       }
     }, onError: (_) {
+      if (sound.isStream &&
+          !_userPaused &&
+          (_status == PlaybackStatus.playing ||
+              _status == PlaybackStatus.loading)) {
+        _handleStreamDropped();
+        return;
+      }
       _status = PlaybackStatus.error;
       notifyListeners();
       _stopIcyMetadataSubscription();
     });
+  }
+
+  /// A stream that was playing has stopped without the user asking. Starts the
+  /// backoff if one isn't already running; [_scheduleReconnect] is what
+  /// eventually gives up and reports the error.
+  void _handleStreamDropped() {
+    if (_userPaused || _reconnectTimer != null || _reconnectInFlight) return;
+    _reconnecting = true;
+    _scheduleReconnect();
+  }
+
+  /// Cancels a pending attempt without forgetting how many have been made —
+  /// used where playback is re-attempted through another route (a media
+  /// session play(), a load()), which must not silently restart the backoff
+  /// from zero and make it retry forever.
+  void _cancelReconnectTimer() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+  }
+
+  void _cancelReconnect() {
+    _cancelReconnectTimer();
+    _reconnectAttempt = 0;
+    _reconnecting = false;
+  }
+
+  void _scheduleReconnect() {
+    _reconnectTimer?.cancel();
+    if (_reconnectAttempt >= _reconnectDelays.length) {
+      _cancelReconnect();
+      _stopIcyMetadataSubscription();
+      if (_status != PlaybackStatus.error) {
+        _status = PlaybackStatus.error;
+        notifyListeners();
+      }
+      return;
+    }
+
+    final delay = _reconnectDelays[_reconnectAttempt];
+    _reconnectAttempt++;
+    debugPrint(
+        '[SC:${sound.name}] reconnect attempt $_reconnectAttempt in ${delay.inSeconds}s');
+
+    // Reuse `loading` rather than adding a status: it already means
+    // "connecting" everywhere in the UI (spinner on the card, 'Loading…' in
+    // the player bar) and already counts as an active sound, so the whole
+    // retry window renders correctly without touching any widget.
+    _stopIcyMetadataSubscription();
+    if (_status != PlaybackStatus.loading) {
+      _status = PlaybackStatus.loading;
+      notifyListeners();
+    }
+
+    _reconnectTimer = Timer(delay, _attemptReconnect);
+  }
+
+  Future<void> _attemptReconnect() async {
+    _reconnectTimer = null;
+    if (_userPaused || !sound.isStream) {
+      _cancelReconnect();
+      return;
+    }
+
+    _reconnectInFlight = true;
+    // Deliberately not load(): its catch reports error immediately, which is
+    // the very thing the backoff exists to defer until the retries run out.
+    try {
+      await player
+          .setAudioSource(just_audio.AudioSource.uri(Uri.parse(sound.path)));
+      await player.setLoopMode(just_audio.LoopMode.one);
+      await player.setVolume(_volume);
+      await player.play();
+      // Success is confirmed by playerStateStream reporting a real playing
+      // state, which resets _reconnectAttempt — not by this call returning.
+      _reconnectInFlight = false;
+    } catch (_) {
+      _reconnectInFlight = false;
+      if (!_userPaused) _scheduleReconnect();
+    }
   }
 
   void _startIcyMetadataSubscription() {
@@ -181,6 +332,7 @@ class SoundController with ChangeNotifier {
   }
 
   Future<void> load() async {
+    _cancelReconnectTimer();
     _status = PlaybackStatus.loading;
     notifyListeners();
 
@@ -243,6 +395,13 @@ class SoundController with ChangeNotifier {
 
       await player.setVolume(_volume);
     } catch (_) {
+      // Mid-reconnect this is just another failed attempt, not a verdict:
+      // going straight to error here would paint the sound red on the first
+      // retry instead of after the backoff is exhausted.
+      if (_reconnecting && sound.isStream && !_userPaused) {
+        _scheduleReconnect();
+        return;
+      }
       _status = PlaybackStatus.error;
       notifyListeners();
       _stopIcyMetadataSubscription();
@@ -302,10 +461,18 @@ class SoundController with ChangeNotifier {
     // For stream on web: player was stopped during pause (streams can't be
     // paused on web). Must reload before playing. For other sounds: reload
     // only if not initialized or in error.
+    // _reconnecting is in that list because a dropped stream leaves the
+    // player idle with a dead source while status is still `loading` — the
+    // media session issues its own play() at exactly that moment, and
+    // without a reload this plays a source that can only fail again.
     if (_status == PlaybackStatus.notInitialized ||
         _status == PlaybackStatus.error ||
+        _reconnecting ||
         (sound.isStream && kIsWeb)) {
       await load();
+      // load() handed this back to the backoff — let that timer own the
+      // retry instead of racing it with another play() on a dead source.
+      if (_reconnectTimer != null) return;
       if (_status == PlaybackStatus.error) return;
     }
 
@@ -316,11 +483,22 @@ class SoundController with ChangeNotifier {
       // Guard: pause() may have set _userPaused=true while player.play() was
       // pending (the JS Promise resolves after our pause() call). Don't
       // override the paused state in that case.
-      if (!_userPaused && _status != PlaybackStatus.playing) {
+      // Gated on the player actually being ready: claiming `playing` the
+      // moment play() returns paints the card green before a single byte has
+      // arrived, which on a slow or dead connection is simply untrue. When
+      // it is not ready the status stays `loading` and the state stream
+      // promotes it once audio really starts.
+      if (!_userPaused &&
+          _status != PlaybackStatus.playing &&
+          player.processingState == just_audio.ProcessingState.ready) {
         _status = PlaybackStatus.playing;
         notifyListeners();
       }
     } catch (_) {
+      if (_reconnecting && sound.isStream && !_userPaused) {
+        _scheduleReconnect();
+        return;
+      }
       _status = PlaybackStatus.error;
       notifyListeners();
       _stopIcyMetadataSubscription();
@@ -329,6 +507,7 @@ class SoundController with ChangeNotifier {
 
   Future<void> pause() async {
     debugPrint('[SC:${sound.name}] pause() status=$_status');
+    _cancelReconnect();
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {
@@ -374,6 +553,7 @@ class SoundController with ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _cancelReconnect();
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {
@@ -526,6 +706,7 @@ class SoundController with ChangeNotifier {
       return;
     }
 
+    _cancelReconnect();
     _playerStateSubscription?.cancel();
     _playerStateSubscription = null;
     _icyMetadataSubscription?.cancel();
@@ -543,6 +724,7 @@ class SoundController with ChangeNotifier {
 
   @override
   void dispose() {
+    _cancelReconnect();
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {

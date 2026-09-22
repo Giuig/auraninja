@@ -33,6 +33,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
   Timer? _marqueeInitialDelayTimer;
   bool _isAllPaused = true;
   bool _isLoading = false;
+  bool _networkLoading = false;
   bool _hadActiveSounds = false;
 
   String? _currentActiveNetworkSoundId;
@@ -78,6 +79,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
     // Snapshot previous state before any updates.
     final wasAllPaused = _isAllPaused;
     final wasLoading = _isLoading;
+    final wasNetworkLoading = _networkLoading;
     final hadActiveSounds = _hadActiveSounds;
 
     // Update derived state — must happen before any comparisons or early returns.
@@ -86,6 +88,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
 
     if (_isAllPaused != wasAllPaused ||
         _isLoading != wasLoading ||
+        _networkLoading != wasNetworkLoading ||
         hadActiveSounds != _hadActiveSounds) {
       // Pause state or active-sounds count changed — always rebuild.
       setState(() {});
@@ -144,6 +147,14 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
     // Loading: at least one sound buffering, none actually playing yet.
     _isLoading = statuses.any((s) => s == PlaybackStatus.loading) &&
         !statuses.any((s) => s == PlaybackStatus.playing);
+    // Tracked separately from [_isLoading], which is an all-sounds aggregate
+    // and goes false the moment any local sound plays — that hid a radio
+    // stream reconnecting behind a playing sound, both from the subtitle and
+    // (worse) from _onHandlerChanged's rebuild check, so the bar kept
+    // rendering the last track title of a stream that had already dropped.
+    final networkSound = _getActiveNetworkSound();
+    _networkLoading = networkSound != null &&
+        _audioHandler.allStatuses[networkSound.path] == PlaybackStatus.loading;
   }
 
   void _startMarqueeInitialDelay({bool resetMarqueeVisibility = true}) {
@@ -159,7 +170,8 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
   NinjaSound? _getActiveNetworkSound() {
     for (final controller in _audioHandler.allControllers) {
       if ((controller.status == PlaybackStatus.playing ||
-              controller.status == PlaybackStatus.paused) &&
+              controller.status == PlaybackStatus.paused ||
+              controller.status == PlaybackStatus.loading) &&
           controller.sound.isStream) {
         return controller.sound;
       }
@@ -427,7 +439,7 @@ class _BottomPlayerBarState extends State<BottomPlayerBar> {
                       height: subtitleH,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: _isLoading
+                        child: (_isLoading || _networkLoading)
                             ? Text('Loading…', style: subtitleStyle)
                             : _isAllPaused
                                 ? Text(
