@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Protect resources that are only ever named by a runtime STRING, never by an
+  R.* constant.
+
+  The release build runs `shrinkResources true` (android/app/build.gradle).
+  AAPT decides what to keep by looking for static references, and
+  `ic_stat_auraninja` has none: audio_service resolves the notification icon
+  with getResources().getIdentifier(name, type, pkg), and the only place the
+  name appears is a Dart string in lib/bootstrap.dart, compiled into
+  libapp.so where the shrinker cannot see it.
+
+  Without this file the drawable is stripped from the release APK. Verified
+  with `aapt2 dump resources`: 0 entries in release, 5 in debug. At runtime
+  getIdentifier then returns 0, setSmallIcon(0) produces a notification the
+  system cannot render, and Android 15+ kills the process with
+  BadNotificationException the moment playback starts (issue #46, Android 17
+  on a Pixel 8 Pro). Older releases such as API 28 tolerate it, which is why
+  an emulator check does not catch this.
+
+  Anything else addressed by name from Dart belongs in this list too.
+-->
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_auraninja" />
