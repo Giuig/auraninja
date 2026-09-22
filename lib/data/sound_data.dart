@@ -276,7 +276,8 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       path: 'assets/sounds/binaural/delta-2hz.ogg',
     ),
     NinjaSound(
-      name: hasContext ? projLocalization!.theDeepestSleep : 'The Deepest Sleep',
+      name:
+          hasContext ? projLocalization!.theDeepestSleep : 'The Deepest Sleep',
       category: SoundCategory.binaural,
       icon: '💤',
       path: 'assets/sounds/binaural/delta-1hz.ogg',
@@ -321,18 +322,52 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
   }
 
   if (kDebugMode) {
+    // Radio Mast's reference streams: built for player testing, royalty-free,
+    // 24/7, and free for personal and commercial use.
+    // https://www.radiomast.io/reference-streams
+    //
+    // Picked for CODEC COVERAGE, not for listening. Debug used to carry two
+    // MP3 stations, so the AAC, HE-AAC and Ogg decode paths were never
+    // exercised in development. One of those two was also a real community
+    // station (radio.plaza.one), i.e. someone else's bandwidth paying for our
+    // debug builds -- keep test traffic on endpoints that exist for it.
+    //
+    // Always use the canonical `streams.radiomast.io` host. It geo-redirects,
+    // and this list used to hardcode the edge it returns here
+    // (`audio-edge-cmc51.fra...`), which pinned every developer to Frankfurt.
     sounds.addAll([
       NinjaSound(
-        name: 'Sample Radio Mast',
+        name: 'Ref MP3 128k',
         category: SoundCategory.internetRadio,
         icon: '📻',
-        path: 'https://audio-edge-cmc51.fra.h.radiomast.io/ref-128k-mp3-stereo',
+        path: 'https://streams.radiomast.io/ref-128k-mp3-stereo',
       ),
       NinjaSound(
-        name: 'Plaza One',
+        name: 'Ref AAC-LC 128k',
         category: SoundCategory.internetRadio,
-        icon: '🐈‍⬛',
-        path: 'https://radio.plaza.one/mp3',
+        icon: '🎧',
+        path: 'https://streams.radiomast.io/ref-128k-aaclc-stereo',
+      ),
+      NinjaSound(
+        name: 'Ref Opus 64k',
+        category: SoundCategory.internetRadio,
+        icon: '🧊',
+        path: 'https://streams.radiomast.io/ref-64k-ogg-opus-stereo',
+      ),
+      NinjaSound(
+        name: 'Ref HE-AAC 24k mono',
+        category: SoundCategory.internetRadio,
+        icon: '📉',
+        path: 'https://streams.radiomast.io/ref-24k-heaacv1-mono',
+      ),
+      // DELIBERATELY BROKEN -- do not "fix" this URL. It is the only way to
+      // exercise the stream-failure and reconnect path on demand instead of
+      // waiting for a real stream to drop. Debug builds only.
+      NinjaSound(
+        name: 'Ref dead stream (error test)',
+        category: SoundCategory.internetRadio,
+        icon: '💀',
+        path: 'https://streams.radiomast.io/ref-does-not-exist',
       ),
     ]);
   }
