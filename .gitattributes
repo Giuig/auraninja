@@ -19,6 +19,12 @@
 *.kt text eol=lf
 *.java text eol=lf
 
+# A retired test kept for reference (sound_manager_test.dart.disabled). The
+# extension matches neither *.dart nor *.md above, so without this it falls
+# through to core.autocrlf and is checked out CRLF while stored LF -- the same
+# class of problem as the *.txt entry below.
+*.dart.disabled text eol=lf
+
 # Generated/plain text. `desiredFileName.txt` is rewritten by `flutter gen-l10n`
 # on every build and is always written with LF, so without this it flips to LF
 # while the checkout is CRLF and shows up as a modified file forever -- a diff
