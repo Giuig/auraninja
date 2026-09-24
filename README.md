@@ -35,11 +35,6 @@ Get the latest APK from the [Releases page](https://github.com/Giuig/auraninja/r
 | `auraninja-X.X.X-armeabi-v7a.apk` | Older 32-bit devices |
 | `auraninja-X.X.X-x86_64.apk` | Emulators |
 
-### Install via Google Play
-
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">](https://play.google.com/store/apps/details?id=io.github.giuig.auraninja)
-
-
 ### Install via Obtainium
 
 Add `https://github.com/Giuig/auraninja` in [Obtainium](https://github.com/ImranR98/Obtainium) to receive automatic updates. Use the APK filter `auraninja-\d` to select the universal build.
