@@ -1,0 +1,26 @@
+name: README Sync
+
+# Thin shim. README.md here is generated from readme_config.yml by
+# ninja_material's scripts/generate_readme.py, so the check lives in
+# ninja_material's shared readme-sync.yml alongside app-ci.yml / build-app.yml /
+# version-bump.yml / web-deploy.yml.
+#
+# On a pull request or a push to main this only verifies, never writes: it fails
+# if README.md no longer matches readme_config.yml. Run it from the Actions tab
+# (workflow_dispatch) to regenerate and commit the README instead — that is the
+# replacement for running the script on a laptop with all four repos checked out.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  readme:
+    uses: Giuig/ninja_material/.github/workflows/readme-sync.yml@main
+    with:
+      app-name: auraninja
