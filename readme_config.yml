@@ -1,6 +1,10 @@
 slug: auraninja
 name: auraninja
 github: https://github.com/Giuig/auraninja
+badges:
+  - release
+  - izzyondroid
+  - stars
 description: >
   Ambient sound and focus app built with Flutter. Mix nature sounds, binaural beats, white noise, and internet radio stations to create your perfect sound environment.
 web_url: https://giuig.github.io/auraninja/
@@ -16,7 +20,9 @@ features:
   - "**Custom Stations** — add radio streams by URL or search by name"
   - "**Station Logos** — automatic artwork fetched from Radio Browser"
   - "**Volume Per Sound** — independent volume slider on every card"
-  - "**Playback-aware Visualizer** — animated ribbons that react to what is playing"
+  - "**Sound Mixes** — save combinations of sounds as a mix, share it as a copy-paste code, import others'"
+  - "**Sleep Timer** — auto-stop your sounds after a set time, with a gentle fade-out"
+  - "**10 Visualizers** — ribbons, orbs, particles, mandalas, fireflies, and more, in fullscreen"
   - "**Lock Screen Controls** — media notification with track metadata"
   - "**Material You** — dynamic color theming, light and dark mode"
   - "**Google-Free** — no Google Play Services required, fully FOSS"

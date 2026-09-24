@@ -1,5 +1,9 @@
 # auraninja
 
+[![Release](https://img.shields.io/github/v/release/Giuig/auraninja)](https://github.com/Giuig/auraninja/releases/latest)
+[![IzzyOnDroid](https://img.shields.io/endpoint?url=https%3A%2F%2Fapt.izzysoft.de%2Ffdroid%2Fapi%2Fv1%2Fshield%2Fio.github.giuig.auraninja)](https://apt.izzysoft.de/fdroid/index/apk/io.github.giuig.auraninja)
+[![Stars](https://img.shields.io/github/stars/Giuig/auraninja)](https://github.com/Giuig/auraninja/stargazers)
+
 Ambient sound and focus app built with Flutter. Mix nature sounds, binaural beats, white noise, and internet radio stations to create your perfect sound environment.
 
 
@@ -65,7 +69,7 @@ flutter build web --base-href=/auraninja/ --release
 | App | Description |
 |---|---|
 | [tvninja](https://github.com/Giuig/tvninja) | IPTV / M3U8 player |
-| [decisioninja](https://github.com/Giuig/decisioninja) | Decision-making app - dice, coin flip, spinner |
+| [decisioninja](https://github.com/Giuig/decisioninja) | Decision maker with dice, pointer, and binary choices |
 | [ninja_material](https://github.com/Giuig/ninja_material) | Shared Flutter library powering all ninja apps |
 
 ## License
