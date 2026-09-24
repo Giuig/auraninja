@@ -1,0 +1,22 @@
+name: CI
+
+# Thin shim. The checks live in ninja_material's shared app-ci.yml, alongside
+# build-app.yml / version-bump.yml / web-deploy.yml, so there is one definition
+# of "is this green" for the whole fleet instead of one per repo.
+#
+# All inputs left at their defaults: `flutter analyze lib test` with infos
+# non-fatal (this app carries ~60 pre-existing ones), plus flutter test and a web
+# build. The scoped analyze path matters here more than anywhere else — a
+# whole-tree run picks up the vendored third_party/flutter_soloud and reports
+# ~124 errors that are not this app's code.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    uses: Giuig/ninja_material/.github/workflows/app-ci.yml@main
+    with:
+      app-name: auraninja
