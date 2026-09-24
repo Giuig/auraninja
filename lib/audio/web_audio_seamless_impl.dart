@@ -18,7 +18,6 @@ class WebAudioSeamlessPlayer {
   bool _isPlaying = false;
   String? _currentPath;
   bool _isNoise = false;
-  String _noiseType = 'white';
   // Overwritten by every play() call, which now receives the volume
   // explicitly from its caller (SoundController._volume) instead of relying
   // on this default.

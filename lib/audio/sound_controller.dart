@@ -82,7 +82,6 @@ class SoundController with ChangeNotifier {
   ];
 
   String _currentMetadata = '';
-  Duration? _singleTrackDuration;
   bool _userPaused = false;
 
   SoundController(this.sound);
@@ -384,12 +383,12 @@ class SoundController with ChangeNotifier {
       if (sound.isStream) {
         // Streams don't loop - just play
         source = just_audio.AudioSource.uri(Uri.parse(sound.path));
-        _singleTrackDuration = await player.setAudioSource(source);
+        await player.setAudioSource(source);
         await player.setLoopMode(just_audio.LoopMode.one);
       } else {
         // Native platforms: use LoopMode.one for seamless looping
         source = just_audio.AudioSource.asset(sound.path);
-        _singleTrackDuration = await player.setAudioSource(source);
+        await player.setAudioSource(source);
         await player.setLoopMode(just_audio.LoopMode.one);
       }
 

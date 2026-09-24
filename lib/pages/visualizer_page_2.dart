@@ -59,7 +59,7 @@ class _VisualizerPageState extends State<VisualizerPage>
       cs.secondary,
       cs.primaryContainer,
       cs.secondaryContainer,
-      cs.tertiary ?? cs.primary.withOpacity(0.7),
+      cs.tertiary,
       cs.error,
     ];
 

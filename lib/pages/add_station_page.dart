@@ -221,7 +221,6 @@ class _AddStationPageState extends State<AddStationPage>
                     itemCount: _searchResults.length,
                     itemBuilder: (context, i) {
                       final s = _searchResults[i];
-                      final favicon = (s['favicon'] as String?) ?? '';
                       final name = (s['name'] as String?) ?? '';
                       final country = (s['country'] as String?) ?? '';
                       final tags = (s['tags'] as String?) ?? '';

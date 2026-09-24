@@ -3,11 +3,18 @@ import 'package:auraninja/model/ninja_sound.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// ChangeNotifier.notifyListeners is both @protected and
+/// @visibleForTesting, so it can only be called from inside a subclass.
+/// A bare ChangeNotifier instance therefore cannot be told to fire.
+class _StationsNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
 class UserStationsService {
   static const _key = 'user_radio_stations';
 
   /// Fires whenever the station list changes (add or remove).
-  static final _notifier = ChangeNotifier();
+  static final _notifier = _StationsNotifier();
   static Listenable get listenable => _notifier;
 
   static Future<List<NinjaSound>> load() async {
@@ -43,6 +50,6 @@ class UserStationsService {
       _key,
       jsonEncode(stations.map((s) => s.toJson()).toList()),
     );
-    _notifier.notifyListeners();
+    _notifier.notify();
   }
 }
