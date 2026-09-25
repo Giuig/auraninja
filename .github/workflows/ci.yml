@@ -20,3 +20,6 @@ jobs:
     uses: Giuig/ninja_material/.github/workflows/app-ci.yml@main
     with:
       app-name: auraninja
+      # Verifies the themed-icon set from icon_config.yml stays consistent and
+      # that re-running flutter_launcher_icons reproduces the committed icons.
+      check-icons: true

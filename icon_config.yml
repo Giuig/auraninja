@@ -1,0 +1,12 @@
+# Inputs for ninja_material/scripts/generate_icons.py, which writes the app's
+# single-colour icon set (brand SVG, Android themed-icon layer, notification
+# icon) from one black-on-white drawing. Re-run it only when the artwork or the
+# colour icon changes; CI verifies the committed outputs stay consistent.
+#
+# No `artwork:` key: the committed SVG is the source, and outputs are rebuilt
+# from it. To re-trace from a new drawing, add `artwork: <path>` temporarily.
+reference_icon: assets/icons/auraninja_icon.png
+brand_color: "#3D7A3F"
+svg: assets/icons/auraninja_mono.svg
+monochrome_png: assets/icons/auraninja_monochrome.png
+notification_vector: android/app/src/main/res/drawable/ic_stat_auraninja.xml
