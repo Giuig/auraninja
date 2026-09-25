@@ -123,7 +123,20 @@ class _MixesPageState extends State<MixesPage> {
     }
 
     await handler.stopAll();
-    handler.registerSounds(resolved.values.toList());
+    await handler.registerSounds(resolved.values.toList());
+
+    // Apply the mix's per-sound volumes WITHOUT persisting, so playing a mix
+    // never overwrites the Sounds page's global per-sound volumes.
+    //
+    // BEFORE playback, not after: every backend starts at the controller's
+    // cached volume, and the Future.wait below takes up to its 4s timeout
+    // (a stream's play() does not complete while it is playing). Applied
+    // afterwards, a mix started first after launch played at each sound's
+    // global level (0.5 by default) until then; later starts only sounded
+    // right because the cache still held the previous run's mix volume.
+    for (final entry in resolved.entries) {
+      handler.setVolume(entry.key.path, entry.key.volume, persist: false);
+    }
 
     // Start every sound concurrently so the mix begins together instead of
     // fading in one-by-one. Time-box each so a single dead stream can't hang
@@ -145,13 +158,6 @@ class _MixesPageState extends State<MixesPage> {
         // A single failed/slow sound shouldn't abort the rest of the mix.
       }
     }));
-
-    // Apply the mix's per-sound volumes WITHOUT persisting, so playing a mix
-    // never overwrites the Sounds page's global per-sound volumes. Done after
-    // playback starts so it wins over registerSounds' async volume restore.
-    for (final entry in resolved.entries) {
-      handler.setVolume(entry.key.path, entry.key.volume, persist: false);
-    }
 
     handler.setActiveMix(resolved.isEmpty ? null : mix.id);
     if (!mounted) return;

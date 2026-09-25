@@ -37,6 +37,10 @@ class _NewMixSheetState extends State<NewMixSheet> {
   final Map<String, double> _volumes = {};
   final TextEditingController _nameController = TextEditingController();
   final Set<String> _soundsStartedHere = {};
+  // Per-path, bumped by every toggle of that sound (and by an exclusive
+  // sibling deselecting it), so a toggle-on resuming after its await can
+  // tell it has been superseded instead of restarting a stopped sound.
+  final Map<String, int> _toggleGeneration = {};
 
   // Snapshot of what was actually playing (path -> volume) before this sheet
   // touched anything. Live-preview toggling can stop a sound that was
@@ -206,9 +210,13 @@ class _NewMixSheetState extends State<NewMixSheet> {
     }
   }
 
+  int _bumpToggleGeneration(String path) =>
+      _toggleGeneration[path] = (_toggleGeneration[path] ?? 0) + 1;
+
   Future<void> _toggleSound(NinjaSound sound) async {
     final path = sound.path;
     final wasSelected = _selected[path] ?? false;
+    final generation = _bumpToggleGeneration(path);
 
     if (wasSelected) {
       setState(() => _selected[path] = false);
@@ -221,6 +229,7 @@ class _NewMixSheetState extends State<NewMixSheet> {
                 s.category == sound.category && (_selected[s.path] ?? false))
             .toList();
         for (final prev in previous) {
+          _bumpToggleGeneration(prev.path);
           _soundsStartedHere.remove(prev.path);
           unawaited(_handler.ninjaStop(prev.path));
           setState(() => _selected[prev.path] = false);
@@ -233,15 +242,21 @@ class _NewMixSheetState extends State<NewMixSheet> {
       });
 
       _soundsStartedHere.add(path);
-      _handler.registerSounds([sound]);
+      await _handler.registerSounds([sound]);
+      // Turned off again (directly or by an exclusive sibling), or the sheet
+      // closed, while awaiting: starting it now would resurrect a sound the
+      // user already stopped.
+      if (!mounted || _toggleGeneration[path] != generation) return;
+      // Contextual live-preview level only — must not overwrite the Sounds
+      // page's global per-sound volume. Set before playback so the preview
+      // never starts at the global level first; see _playMix in
+      // mixes_page.dart for the full rationale.
+      _handler.setVolume(path, _volumes[path]!, persist: false);
       if (sound.isStream) {
         unawaited(_handler.ninjaPlay(path));
       } else {
         await _handler.ninjaPlay(path);
       }
-      // Contextual live-preview level only — must not overwrite the Sounds
-      // page's global per-sound volume. Same rationale as mixes_page.dart:149-151.
-      _handler.setVolume(path, _volumes[path]!, persist: false);
     }
   }
 

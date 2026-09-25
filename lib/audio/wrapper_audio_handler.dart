@@ -144,27 +144,48 @@ class WrapperAudioHandler extends BaseAudioHandler
     return AudioProcessingState.ready;
   }
 
-  void registerSounds(List<NinjaSound> sounds) {
+  /// Tail of every persisted-volume restore issued so far, chained so it
+  /// completes only once all of them have landed.
+  Future<void> _pendingVolumeRestore = Future.value();
+
+  /// Completes once the persisted global volumes of every sound registered so
+  /// far — by this call or any earlier one — have been restored. A caller that
+  /// sets a contextual volume right after (mix playback, the mix editor's live
+  /// preview) must await this, or a restore can land on top of that volume and
+  /// the sound plays at its global level instead.
+  ///
+  /// Also returned when nothing new is registered: the Sounds page registers
+  /// every built-in sound fire-and-forget at startup, so for a mix the restore
+  /// that matters is usually one an earlier call started.
+  Future<void> registerSounds(List<NinjaSound> sounds) {
     final newSounds = sounds
         .where((sound) =>
             !_manager.allControllers.any((c) => c.sound.path == sound.path))
         .toList();
 
-    if (newSounds.isEmpty) {
-      return;
+    if (newSounds.isNotEmpty) {
+      _manager.registerSounds(newSounds);
+      _pendingVolumeRestore =
+          _pendingVolumeRestore.then((_) => _restoreVolumes(newSounds));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     }
+    return _pendingVolumeRestore;
+  }
 
-    _manager.registerSounds(newSounds);
-    // Restore persisted volumes for the newly registered sounds.
-    SharedPreferences.getInstance().then((prefs) {
-      for (final s in newSounds) {
+  // Never throws: a failed restore must not poison the chain, which would
+  // make every later registerSounds() await — and so mix playback — fail.
+  Future<void> _restoreVolumes(List<NinjaSound> sounds) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final s in sounds) {
         final saved = prefs.getDouble('vol_${s.path}');
         if (saved != null) _manager.setVolume(s.path, saved);
       }
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
-    });
+    } catch (e) {
+      debugPrint('[WH] volume restore failed: $e');
+    }
   }
 
   Future<void> _onControllerStatusChanged() async {
