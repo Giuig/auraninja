@@ -43,6 +43,11 @@ class SoundController with ChangeNotifier {
   StreamSubscription<Duration>? _recoveryWatchdog;
   WebMetadataService? _webMetadataService;
 
+  // Web streams only — see _watchWebStreamProgress.
+  Timer? _webStreamProgressTimer;
+  Duration _webStreamLastPosition = Duration.zero;
+  int _webStreamStillTicks = 0;
+
   // just_audio has no native volume-ramp API, unlike SoLoud/Web Audio, so
   // fadeTo() drives it with a plain Dart ticker. Tracked so a new fade (or
   // any stop/pause/dispose) can cancel a stale one before it fires again.
@@ -155,7 +160,13 @@ class SoundController with ChangeNotifier {
         if (processingState == just_audio.ProcessingState.loading ||
             processingState == just_audio.ProcessingState.buffering) {
           newStatus = PlaybackStatus.loading;
+          if (kIsWeb &&
+              sound.isStream &&
+              processingState == just_audio.ProcessingState.buffering) {
+            _watchWebStreamProgress();
+          }
         } else {
+          _stopWebStreamProgressWatch();
           newStatus = PlaybackStatus.playing;
           // Only real playback clears the backoff. A retry reports
           // playing=true with proc=loading moments before it fails again, and
@@ -208,6 +219,59 @@ class SoundController with ChangeNotifier {
       notifyListeners();
       _stopIcyMetadataSubscription();
     });
+  }
+
+  /// On web, `buffering` is not evidence that a stream is silent: just_audio_web
+  /// (0.4.16) moves to `ready` only on `canplaythrough`, which a live stream
+  /// does not fire again once `waiting`/`stalled` has put it in `buffering` —
+  /// so a radio that is audibly playing sits at `buffering` for good, and the
+  /// mapping above would show "Loading…" forever (shipped in 1.7.7).
+  ///
+  /// So on web, while just_audio says playing+buffering, decide from the
+  /// position instead: advancing means audio is coming out; still for ~1.5s
+  /// means a real stall. Position still moves in that state because
+  /// just_audio_web broadcasts the element's currentTime on every `progress`
+  /// event. This keeps the stall detection the mapping exists for, rather than
+  /// trusting `playing` blindly again.
+  void _watchWebStreamProgress() {
+    if (_webStreamProgressTimer != null) return;
+    _webStreamLastPosition = _player?.position ?? Duration.zero;
+    _webStreamStillTicks = 0;
+    _webStreamProgressTimer =
+        Timer.periodic(const Duration(milliseconds: 500), (_) {
+      final p = _player;
+      if (p == null ||
+          _userPaused ||
+          !p.playing ||
+          p.processingState != just_audio.ProcessingState.buffering) {
+        // Left the state this watch covers; the state listener owns it now.
+        _stopWebStreamProgressWatch();
+        return;
+      }
+      final position = p.position;
+      final advanced = position > _webStreamLastPosition;
+      _webStreamLastPosition = position;
+      if (advanced) {
+        _webStreamStillTicks = 0;
+        if (_status != PlaybackStatus.playing) {
+          debugPrint('[SC:${sound.name}] web stream advancing → playing');
+          _status = PlaybackStatus.playing;
+          notifyListeners();
+        }
+        _cancelReconnect();
+        if (_webMetadataService == null) _startWebMetadataService();
+      } else if (++_webStreamStillTicks >= 3 &&
+          _status == PlaybackStatus.playing) {
+        debugPrint('[SC:${sound.name}] web stream stalled → loading');
+        _status = PlaybackStatus.loading;
+        notifyListeners();
+      }
+    });
+  }
+
+  void _stopWebStreamProgressWatch() {
+    _webStreamProgressTimer?.cancel();
+    _webStreamProgressTimer = null;
   }
 
   /// A stream that was playing has stopped without the user asking. Starts the
@@ -337,6 +401,7 @@ class SoundController with ChangeNotifier {
 
     // Clean up any existing recovery watchdog
     _recoveryWatchdog?.cancel();
+    _stopWebStreamProgressWatch();
     _recoveryWatchdog = null;
 
     if (_useSoloud) {
@@ -711,6 +776,7 @@ class SoundController with ChangeNotifier {
     _icyMetadataSubscription?.cancel();
     _icyMetadataSubscription = null;
     _recoveryWatchdog?.cancel();
+    _stopWebStreamProgressWatch();
     _recoveryWatchdog = null;
     _webMetadataService?.dispose();
     _webMetadataService = null;
@@ -740,6 +806,7 @@ class SoundController with ChangeNotifier {
     _playerStateSubscription?.cancel();
     _icyMetadataSubscription?.cancel();
     _recoveryWatchdog?.cancel();
+    _stopWebStreamProgressWatch();
     _webMetadataService?.dispose();
     _player?.dispose();
     super.dispose();
