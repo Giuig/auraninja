@@ -7,6 +7,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/> 
     <uses-permission android:name="android.permission.WAKE_LOCK"/> 
+    <!-- Android 13+: without it the playback notification is hidden (media
+         controls still show, being exempt). Requested at runtime in MainActivity. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:label="Auraninja"
