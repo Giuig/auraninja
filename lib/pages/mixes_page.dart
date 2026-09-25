@@ -239,35 +239,10 @@ class _MixesPageState extends State<MixesPage> {
 
   Future<void> _importMix() async {
     final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
     final code = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n?.importMix ?? 'Import mix'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          minLines: 2,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText:
-                l10n?.importMixPrompt ?? 'Paste the mix code you received',
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n?.cancel ?? 'Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text),
-            child: Text(l10n?.importAction ?? 'Import'),
-          ),
-        ],
-      ),
+      builder: (_) => const _ImportMixDialog(),
     );
-    controller.dispose();
     if (code == null || code.trim().isEmpty) return;
 
     final mix = MixCodec.tryDecode(code);
@@ -452,6 +427,56 @@ class _MixesPageState extends State<MixesPage> {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Owns its [TextEditingController] so it is disposed with the dialog's
+/// State — after the route's exit animation — rather than the moment
+/// showDialog's future completes. Disposing it right after `await showDialog`
+/// tore it down while the closing dialog was still building its TextField,
+/// which failed a framework assertion on every Cancel.
+class _ImportMixDialog extends StatefulWidget {
+  const _ImportMixDialog();
+
+  @override
+  State<_ImportMixDialog> createState() => _ImportMixDialogState();
+}
+
+class _ImportMixDialogState extends State<_ImportMixDialog> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n?.importMix ?? 'Import mix'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        minLines: 2,
+        maxLines: 4,
+        decoration: InputDecoration(
+          hintText: l10n?.importMixPrompt ?? 'Paste the mix code you received',
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n?.cancel ?? 'Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: Text(l10n?.importAction ?? 'Import'),
         ),
       ],
     );
