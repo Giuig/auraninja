@@ -600,13 +600,19 @@ class _DotIndicator extends StatelessWidget {
                     : colorScheme.onSurface.withOpacity(0.25)),
           ),
         );
-        // Wrap each dot in a generously-sized tap target.
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onDotTap != null ? () => onDotTap!(i) : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: dot,
+        // Wrap each dot in a generously-sized tap target, with the click
+        // cursor on web whenever the dot actually does something.
+        return MouseRegion(
+          cursor: onDotTap != null
+              ? SystemMouseCursors.click
+              : MouseCursor.defer,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onDotTap != null ? () => onDotTap!(i) : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              child: dot,
+            ),
           ),
         );
       }),

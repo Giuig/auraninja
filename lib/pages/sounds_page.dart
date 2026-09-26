@@ -468,7 +468,13 @@ class _SoundsPageState extends State<SoundsPage> {
                                                     Positioned(
                                                       top: 4,
                                                       right: 4,
-                                                      child: GestureDetector(
+                                                      // Sits on top of the card, not inside
+                                                      // it, so it does not inherit the card's
+                                                      // click cursor: web showed an arrow here.
+                                                      child: MouseRegion(
+                                                        cursor: SystemMouseCursors
+                                                            .click,
+                                                        child: GestureDetector(
                                                         onTap: () =>
                                                             _deleteStation(
                                                                 sound),
@@ -495,6 +501,7 @@ class _SoundsPageState extends State<SoundsPage> {
                                                                 .onErrorContainer,
                                                           ),
                                                         ),
+                                                      ),
                                                       ),
                                                     ),
                                                 ],
