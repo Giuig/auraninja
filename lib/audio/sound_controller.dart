@@ -35,8 +35,24 @@ class SoundController with ChangeNotifier {
       debugPrint(
           '[SC:${sound.name}] _status→playing (userPaused=$_userPaused)\n${StackTrace.current}');
     }
+    // Reaching either end of a start — sound, or a verdict — ends it. Done
+    // here rather than at each of the error assignments so none can be missed.
+    if (v == PlaybackStatus.playing || v == PlaybackStatus.error) {
+      _startingStream = false;
+    }
     _statusValue = v;
   }
+
+  /// True from a stream play() until it is actually playing, fails, or is
+  /// paused or stopped.
+  ///
+  /// While it is set, the player's setup states are shown as `loading`. On
+  /// the way to playing, just_audio reports `idle` (the new source replacing
+  /// the old) and then `ready` with playing=false (loaded, before play()
+  /// runs), and the plain mapping turned those into "not started" and
+  /// "paused": every radio start flickered spinner → idle → spinner → paused →
+  /// playing, each flash ~0.1-0.2s (measured on a Pixel 4a, 2026-09-26).
+  bool _startingStream = false;
 
   StreamSubscription<just_audio.PlayerState>? _playerStateSubscription;
   StreamSubscription<just_audio.IcyMetadata?>? _icyMetadataSubscription;
@@ -200,6 +216,12 @@ class SoundController with ChangeNotifier {
           newStatus = PlaybackStatus.error;
           _stopIcyMetadataSubscription();
         }
+      }
+
+      if (_startingStream &&
+          (newStatus == PlaybackStatus.notInitialized ||
+              newStatus == PlaybackStatus.paused)) {
+        newStatus = PlaybackStatus.loading;
       }
 
       if (_status != newStatus) {
@@ -396,6 +418,11 @@ class SoundController with ChangeNotifier {
 
   Future<void> load() async {
     _cancelReconnectTimer();
+    // The manager loads a stream and then plays it (JASoundManager.play), so
+    // the start begins here, not in play(): the idle and paused flashes both
+    // come from the load. A start abandoned between the two is cleaned up by
+    // releasePlayer(), which the next stream calls on this one.
+    _startingStream = sound.isStream;
     _status = PlaybackStatus.loading;
     notifyListeners();
 
@@ -521,6 +548,9 @@ class SoundController with ChangeNotifier {
     }
 
     _userPaused = false;
+    // Only streams reach this path and walk through setup states on the way
+    // to playing; see _startingStream.
+    _startingStream = sound.isStream;
 
     // For stream on web: player was stopped during pause (streams can't be
     // paused on web). Must reload before playing. For other sounds: reload
@@ -571,6 +601,7 @@ class SoundController with ChangeNotifier {
 
   Future<void> pause() async {
     debugPrint('[SC:${sound.name}] pause() status=$_status');
+    _startingStream = false;
     _cancelReconnect();
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
@@ -617,6 +648,7 @@ class SoundController with ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _startingStream = false;
     _cancelReconnect();
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
@@ -744,6 +776,7 @@ class SoundController with ChangeNotifier {
   /// Disposes the underlying audio resource and resets all state, but keeps
   /// this SoundController alive. Resources will be lazily recreated on next play().
   Future<void> releasePlayer() async {
+    _startingStream = false;
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {
