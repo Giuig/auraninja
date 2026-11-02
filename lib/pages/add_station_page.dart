@@ -187,6 +187,7 @@ class _AddStationPageState extends State<AddStationPage>
                           )
                         : IconButton(
                             icon: const Icon(Icons.search),
+                            tooltip: l10n?.search ?? 'Search',
                             onPressed: _search,
                           ),
                   ],
@@ -254,6 +255,7 @@ class _AddStationPageState extends State<AddStationPage>
                             Icons.add_circle_outline,
                             color: colorScheme.primary,
                           ),
+                          tooltip: l10n?.addStation ?? 'Add Station',
                           onPressed: () => _addFromSearch(s),
                         ),
                       );
