@@ -423,4 +423,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String stationAdded(String name) {
     return 'Added \"$name\"';
   }
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get reorder => 'Reorder';
+
+  @override
+  String get dragToReorder => 'Drag to reorder';
+
+  @override
+  String reorderSection(String section) {
+    return 'Reorder $section';
+  }
 }
