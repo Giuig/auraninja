@@ -11,7 +11,7 @@ class WebAudioSeamlessPlayer {
   bool get isPlaying => false;
   double get volume => 0.5;
 
-  Future<void> loadAsset(String assetPath, {bool isNoise = false}) async {
+  Future<void> loadAsset(String assetPath) async {
     debugPrint('[WebAudioSeamless] Stub: loadAsset called on non-web platform');
   }
 
