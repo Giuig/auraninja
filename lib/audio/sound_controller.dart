@@ -509,7 +509,7 @@ class SoundController with ChangeNotifier {
       try {
         _webSeamlessPlayer ??=
             WebAudioSeamlessManager().getOrCreate(sound.path);
-        await _webSeamlessPlayer!.loadAsset(sound.path, isNoise: sound.isNoise);
+        await _webSeamlessPlayer!.loadAsset(sound.path);
         // Re-establish volume from the controller — parity with the
         // just_audio branch (line 234: player.setVolume(_volume)) and the
         // SoLoud branch (line 259: play(..., volume: _volume)). Without

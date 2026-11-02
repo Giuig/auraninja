@@ -1,5 +1,4 @@
 import 'dart:js_interop';
-import 'dart:math';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
@@ -8,16 +7,12 @@ class WebAudioSeamlessPlayer {
   web.AudioContext? _audioContext;
   web.AudioBuffer? _audioBuffer;
 
-  web.AudioBufferSourceNode? _noiseSource;
-  web.GainNode? _masterGain;
-
   // We keep track of the next start time using the AudioContext clock
   double _nextStartTime = 0.0;
   web.GainNode? _mainGainNode;
 
   bool _isPlaying = false;
   String? _currentPath;
-  bool _isNoise = false;
   // Overwritten by every play() call, which now receives the volume
   // explicitly from its caller (SoundController._volume) instead of relying
   // on this default.
@@ -40,24 +35,25 @@ class WebAudioSeamlessPlayer {
 
   bool get isPlaying => _isPlaying;
 
-  Future<void> loadAsset(String assetPath, {bool isNoise = false}) async {
+  // Noise colours load and loop their real asset like every other sound. Web
+  // used to synthesise 5 s of uniform white noise for all four colours
+  // instead, so brown, pink and green all played as white (and far louder
+  // than on Android, which always played the files).
+  Future<void> loadAsset(String assetPath) async {
     if (_currentPath == assetPath && _audioBuffer != null) return;
-    _isNoise = isNoise;
     _currentPath = assetPath;
 
     await stop();
     _audioContext ??= web.AudioContext();
 
-    if (!_isNoise) {
-      try {
-        final webPath = 'assets/$assetPath';
-        final response = await web.window.fetch(webPath.toJS).toDart;
-        final arrayBuffer = await response.arrayBuffer().toDart;
-        _audioBuffer = await _audioContext!.decodeAudioData(arrayBuffer).toDart;
-      } catch (e) {
-        debugPrint('[WebAudio] Load Error: $e');
-        rethrow;
-      }
+    try {
+      final webPath = 'assets/$assetPath';
+      final response = await web.window.fetch(webPath.toJS).toDart;
+      final arrayBuffer = await response.arrayBuffer().toDart;
+      _audioBuffer = await _audioContext!.decodeAudioData(arrayBuffer).toDart;
+    } catch (e) {
+      debugPrint('[WebAudio] Load Error: $e');
+      rethrow;
     }
   }
 
@@ -73,9 +69,7 @@ class WebAudioSeamlessPlayer {
     _activeLoopId++;
     _ensureVisibilityListener();
 
-    if (_isNoise) {
-      _playGeneratedNoise();
-    } else if (_audioBuffer != null) {
+    if (_audioBuffer != null) {
       final gainNode = ctx.createGain();
       _mainGainNode = gainNode;
       gainNode.gain.value = _volume;
@@ -161,32 +155,6 @@ class WebAudioSeamlessPlayer {
     }.toJS;
   }
 
-  void _playGeneratedNoise() {
-    final ctx = _audioContext;
-    if (ctx == null) return;
-
-    final buffer =
-        ctx.createBuffer(1, (ctx.sampleRate * 5).toInt(), ctx.sampleRate);
-    final data = buffer.getChannelData(0).toDart;
-    final rand = Random();
-    for (int i = 0; i < data.length; i++) {
-      data[i] = rand.nextDouble() * 2 - 1;
-    }
-
-    final source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.loop = true;
-    _noiseSource = source;
-
-    final gain = ctx.createGain();
-    gain.gain.value = _volume;
-    _masterGain = gain;
-
-    source.connect(gain);
-    gain.connect(ctx.destination);
-    source.start();
-  }
-
   Future<void> stop() async {
     _isPlaying = false;
     _activeLoopId++; // Invalidate previous loop
@@ -194,21 +162,14 @@ class WebAudioSeamlessPlayer {
   }
 
   void _stopAllSources() {
-    try {
-      _noiseSource?.stop();
-    } catch (_) {}
-    _noiseSource?.disconnect();
     _mainGainNode?.disconnect();
-    _masterGain?.disconnect();
     _mainGainNode = null;
-    _masterGain = null;
   }
 
   void setVolume(double volume) {
     _volume = volume.clamp(0.0, 1.0);
     final now = _audioContext?.currentTime ?? 0;
     _mainGainNode?.gain.setTargetAtTime(_volume, now, 0.02);
-    _masterGain?.gain.setTargetAtTime(_volume, now, 0.02);
   }
 
   /// Schedules a native, AudioContext-clock-driven ramp to [target] over
@@ -226,8 +187,8 @@ class WebAudioSeamlessPlayer {
     final now = ctx.currentTime;
     final seconds = duration.inMicroseconds / Duration.microsecondsPerSecond;
     final clampedTarget = target.clamp(0.0, 1.0);
-    for (final gain in [_mainGainNode?.gain, _masterGain?.gain]) {
-      if (gain == null) continue;
+    final gain = _mainGainNode?.gain;
+    if (gain != null) {
       // Cancel any pending automation (e.g. setVolume's setTargetAtTime)
       // and anchor the ramp at the param's current live value first, or
       // the ramp would jump from whatever was last scheduled instead of
