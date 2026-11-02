@@ -125,6 +125,24 @@ void main() {
       expect(find.byTooltip('Reset volume'), findsOneWidget);
     });
 
+    // A tooltip alone was not enough: on the S24U the visible reset icon had
+    // no node of its own in the accessibility tree, folded into the card.
+    testWidgets('is its own button for screen readers while visible',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await playingRadio(tester, 0.2);
+
+      expect(
+        tester.getSemantics(find.byIcon(Icons.refresh)),
+        isSemantics(
+          tooltip: 'Reset volume',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      semantics.dispose();
+    });
+
     testWidgets('is hidden from screen readers at the default volume',
         (tester) async {
       final semantics = tester.ensureSemantics();
