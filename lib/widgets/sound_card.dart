@@ -35,6 +35,7 @@ class SoundCard extends StatelessWidget {
     final localizedSound = localizedSoundMap[controller.sound.path];
     final localizedName = localizedSound?.name ?? controller.sound.name;
 
+    final bool showVolumeReset = (controller.volume - 0.5).abs() > 0.03;
     final bool isActive = controller.status == PlaybackStatus.playing ||
         controller.status == PlaybackStatus.loading ||
         controller.status == PlaybackStatus.paused;
@@ -169,20 +170,31 @@ class SoundCard extends StatelessWidget {
                           Positioned(
                             right: 0,
                             child: Opacity(
-                              opacity: (controller.volume - 0.5).abs() > 0.03
-                                  ? 1.0
-                                  : 0.0,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => handler.setVolume(
-                                    controller.sound.path, 0.5),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: Icon(
-                                    Icons.refresh,
-                                    size: 16,
-                                    color: colorScheme.onSurfaceVariant
-                                        .withValues(alpha: 0.7),
+                              opacity: showVolumeReset ? 1.0 : 0.0,
+                              // Labelled while visible; while hidden, kept out
+                              // of the accessibility tree so screen readers do
+                              // not land on an invisible control.
+                              child: ExcludeSemantics(
+                                excluding: !showVolumeReset,
+                                child: _maybeTooltip(
+                                  showVolumeReset
+                                      ? (AppLocalizations.of(context)
+                                              ?.resetVolume ??
+                                          'Reset volume')
+                                      : null,
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => handler.setVolume(
+                                        controller.sound.path, 0.5),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: Icon(
+                                        Icons.refresh,
+                                        size: 16,
+                                        color: colorScheme.onSurfaceVariant
+                                            .withValues(alpha: 0.7),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -244,4 +256,7 @@ class SoundCard extends StatelessWidget {
       ),
     );
   }
+
+  static Widget _maybeTooltip(String? message, Widget child) =>
+      message == null ? child : Tooltip(message: message, child: child);
 }

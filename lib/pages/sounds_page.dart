@@ -341,6 +341,9 @@ class _SoundsPageState extends State<SoundsPage> {
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear),
+                                tooltip:
+                                    AppLocalizations.of(context)?.clearSearch ??
+                                        'Clear search',
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');

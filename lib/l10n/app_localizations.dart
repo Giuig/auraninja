@@ -915,6 +915,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove station'**
   String get removeStation;
+
+  /// No description provided for @resetVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset volume'**
+  String get resetVolume;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
 }
 
 class _AppLocalizationsDelegate

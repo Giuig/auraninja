@@ -182,5 +182,7 @@
     },
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
-    "removeStation": "Remove station"
+    "removeStation": "Remove station",
+    "resetVolume": "Reset volume",
+    "clearSearch": "Clear search"
 }

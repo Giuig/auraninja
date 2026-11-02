@@ -14,7 +14,9 @@
     "reorderSection",
     "addToFavorites",
     "removeFromFavorites",
-    "removeStation"
+    "removeStation",
+    "resetVolume",
+    "clearSearch"
   ],
 
   "es": [
@@ -32,7 +34,9 @@
     "reorderSection",
     "addToFavorites",
     "removeFromFavorites",
-    "removeStation"
+    "removeStation",
+    "resetVolume",
+    "clearSearch"
   ],
 
   "fr": [
@@ -50,7 +54,9 @@
     "reorderSection",
     "addToFavorites",
     "removeFromFavorites",
-    "removeStation"
+    "removeStation",
+    "resetVolume",
+    "clearSearch"
   ],
 
   "it": [
@@ -68,7 +74,9 @@
     "reorderSection",
     "addToFavorites",
     "removeFromFavorites",
-    "removeStation"
+    "removeStation",
+    "resetVolume",
+    "clearSearch"
   ],
 
   "ja": [
@@ -86,6 +94,8 @@
     "reorderSection",
     "addToFavorites",
     "removeFromFavorites",
-    "removeStation"
+    "removeStation",
+    "resetVolume",
+    "clearSearch"
   ]
 }
