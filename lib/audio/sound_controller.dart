@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:just_audio/just_audio.dart' as just_audio;
 import 'package:auraninja/audio/fade_curve.dart';
@@ -69,6 +70,15 @@ class SoundController with ChangeNotifier {
   // any stop/pause/dispose) can cancel a stale one before it fires again.
   Timer? _justAudioFadeTimer;
 
+  // The stream player's volume as this controller last set it. just_audio's
+  // own audio-focus handling doubles the volume whenever another app's duck
+  // ends, but only halves it at the start for AndroidAudioUsage.game, so
+  // every notification or Duolingo sound pushed the radio louder until it hit
+  // max (issue #12). Restoring this value undoes that and nothing else: it
+  // also follows sleep-timer fades, so a faded-out radio stays silent.
+  double? _playerVolume;
+  StreamSubscription<AudioInterruptionEvent>? _interruptionSubscription;
+
   // Bounded auto-reconnect for dropped streams. When a live stream dies
   // mid-playback (network loss), ExoPlayer resets to idle but leaves
   // playWhenReady true — so playerStateStream keeps reporting playing=true
@@ -105,7 +115,17 @@ class SoundController with ChangeNotifier {
   String _currentMetadata = '';
   bool _userPaused = false;
 
-  SoundController(this.sound);
+  // Test seams: a fake stream player, and the audio-focus interruption events
+  // that would otherwise come from AudioSession on Android.
+  final just_audio.AudioPlayer Function() _createPlayer;
+  final Stream<AudioInterruptionEvent>? _interruptionEventsOverride;
+
+  SoundController(
+    this.sound, {
+    @visibleForTesting just_audio.AudioPlayer Function()? createPlayer,
+    @visibleForTesting Stream<AudioInterruptionEvent>? interruptionEvents,
+  })  : _createPlayer = createPlayer ?? just_audio.AudioPlayer.new,
+        _interruptionEventsOverride = interruptionEvents;
 
   /// True when this controller should use the SoLoud engine.
   /// Local asset sounds on native platforms only — not web, not HTTP streams.
@@ -120,8 +140,9 @@ class SoundController with ChangeNotifier {
   /// Only used for streams and web.
   just_audio.AudioPlayer get player {
     if (_player == null) {
-      _player = just_audio.AudioPlayer();
+      _player = _createPlayer();
       _listenToPlayerState();
+      _listenToInterruptions();
     }
     return _player!;
   }
@@ -138,6 +159,45 @@ class SoundController with ChangeNotifier {
   double get volume => _volume;
   bool get isPlaying => _status == PlaybackStatus.playing;
   String get currentMetadata => _currentMetadata;
+
+  /// Sets the stream player's volume and remembers it for [_listenToInterruptions].
+  Future<void> _setPlayerVolume(double v) {
+    _playerVolume = v;
+    return _player!.setVolume(v);
+  }
+
+  void _listenToInterruptions() {
+    final override = _interruptionEventsOverride;
+    if (override != null) {
+      _subscribeToInterruptions(override);
+      return;
+    }
+    // Ducking is an Android audio-focus event; there is nothing to undo elsewhere.
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    final forPlayer = _player;
+    AudioSession.instance.then((session) {
+      if (_player != forPlayer || forPlayer == null) return;
+      _subscribeToInterruptions(session.interruptionEventStream);
+    });
+  }
+
+  void _subscribeToInterruptions(Stream<AudioInterruptionEvent> events) {
+    _interruptionSubscription?.cancel();
+    _interruptionSubscription = events.listen((event) {
+      if (event.begin || event.type != AudioInterruptionType.duck) return;
+      // Restore on the next event-loop turn, after just_audio's own listener
+      // has doubled the volume. Listener order can't be relied on: for the
+      // first player after launch, just_audio's AudioSession.instance waits
+      // on a platform round trip while ours returns at once, so we hear the
+      // event first and an immediate restore would be overwritten.
+      Future(() {
+        final v = _playerVolume;
+        if (v == null || _player == null) return;
+        debugPrint('[SC:${sound.name}] duck ended: volume back to $v');
+        _player!.setVolume(v);
+      });
+    });
+  }
 
   void _listenToPlayerState() {
     _playerStateSubscription = _player!.playerStateStream.listen((playerState) {
@@ -364,7 +424,7 @@ class SoundController with ChangeNotifier {
       await player
           .setAudioSource(just_audio.AudioSource.uri(Uri.parse(sound.path)));
       await player.setLoopMode(just_audio.LoopMode.one);
-      await player.setVolume(_volume);
+      await _setPlayerVolume(_volume);
       await player.play();
       // Success is confirmed by playerStateStream reporting a real playing
       // state, which resets _reconnectAttempt — not by this call returning.
@@ -484,7 +544,7 @@ class SoundController with ChangeNotifier {
         await player.setLoopMode(just_audio.LoopMode.one);
       }
 
-      await player.setVolume(_volume);
+      await _setPlayerVolume(_volume);
     } catch (_) {
       // Mid-reconnect this is just another failed attempt, not a verdict:
       // going straight to error here would paint the sound red on the first
@@ -716,7 +776,7 @@ class SoundController with ChangeNotifier {
     } else if (_useWebSeamless) {
       _webSeamlessPlayer?.setVolume(v);
     } else if (hasPlayer) {
-      _player!.setVolume(v);
+      _setPlayerVolume(v);
     }
     if (changed) {
       notifyListeners();
@@ -765,7 +825,7 @@ class SoundController with ChangeNotifier {
           : elapsedMs / duration.inMilliseconds;
       final eased = fadeOutEase(t);
       final v = start + (target - start) * eased;
-      _player?.setVolume(v.clamp(0.0, 1.0));
+      if (_player != null) _setPlayerVolume(v.clamp(0.0, 1.0));
       if (t >= 1.0) {
         timer.cancel();
         _justAudioFadeTimer = null;
@@ -805,6 +865,8 @@ class SoundController with ChangeNotifier {
 
     _cancelReconnect();
     _playerStateSubscription?.cancel();
+    _interruptionSubscription?.cancel();
+    _interruptionSubscription = null;
     _playerStateSubscription = null;
     _icyMetadataSubscription?.cancel();
     _icyMetadataSubscription = null;
@@ -837,6 +899,8 @@ class SoundController with ChangeNotifier {
       _webSeamlessPlayer?.dispose();
     }
     _playerStateSubscription?.cancel();
+    _interruptionSubscription?.cancel();
+    _interruptionSubscription = null;
     _icyMetadataSubscription?.cancel();
     _recoveryWatchdog?.cancel();
     _stopWebStreamProgressWatch();
