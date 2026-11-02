@@ -415,4 +415,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String mixImported(String name) {
     return '\"$name\" importiert';
   }
+
+  @override
+  String get stationAddedTooltip => 'Added';
+
+  @override
+  String stationAdded(String name) {
+    return 'Added \"$name\"';
+  }
 }

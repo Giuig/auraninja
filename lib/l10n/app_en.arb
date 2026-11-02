@@ -163,5 +163,12 @@
         "placeholders": {
             "name": { "type": "String" }
         }
+    },
+    "stationAddedTooltip": "Added",
+    "stationAdded": "Added \"{name}\"",
+    "@stationAdded": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
     }
 }
