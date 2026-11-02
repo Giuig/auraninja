@@ -18,6 +18,10 @@
   <base href="$FLUTTER_BASE_HREF" />
 
   <meta charset="UTF-8" />
+  <!-- Send no Referer: some radio servers (SomaFM) refuse any stream request
+       that carries one, as hotlink protection, so their stations failed with
+       403 on web while Android, which sends none, played them fine. -->
+  <meta name="referrer" content="no-referrer" />
   <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
   <meta name="description" content="A new Flutter project." />
 
