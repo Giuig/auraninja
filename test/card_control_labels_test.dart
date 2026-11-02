@@ -132,8 +132,13 @@ void main() {
       final semantics = tester.ensureSemantics();
       await playingRadio(tester, 0.2);
 
+      final reset = tester.getSemantics(find.byIcon(Icons.refresh));
+      final card = tester.getSemantics(find.text('Test FM'));
+      // Its own node, not flags merged onto the card's node (which is what a
+      // Semantics without container: true produced on the S24U).
+      expect(reset.id, isNot(card.id));
       expect(
-        tester.getSemantics(find.byIcon(Icons.refresh)),
+        reset,
         isSemantics(
           tooltip: 'Reset volume',
           isButton: true,
