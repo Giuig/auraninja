@@ -436,4 +436,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String reorderSection(String section) {
     return 'Reorder $section';
   }
+
+  @override
+  String get addToFavorites => 'Add to favorites';
+
+  @override
+  String get removeFromFavorites => 'Remove from favorites';
+
+  @override
+  String get removeStation => 'Remove station';
 }

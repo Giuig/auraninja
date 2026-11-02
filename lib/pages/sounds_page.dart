@@ -99,9 +99,8 @@ class _SoundsPageState extends State<SoundsPage> {
             icon: _localizedSoundMap[c.sound.path]?.icon ?? c.sound.icon,
           ),
       ],
-      onChanged: categoryKey == '@favorites'
-          ? _saveFavoritesOrder
-          : _saveRadioOrder,
+      onChanged:
+          categoryKey == '@favorites' ? _saveFavoritesOrder : _saveRadioOrder,
     );
   }
 
@@ -227,8 +226,7 @@ class _SoundsPageState extends State<SoundsPage> {
                 name: m.name,
                 icon: m.icon,
                 createdAt: m.createdAt,
-                sounds:
-                    m.sounds.where((s) => s.path != sound.path).toList(),
+                sounds: m.sounds.where((s) => s.path != sound.path).toList(),
               ))
           .toList();
       await MixesService.save(updatedMixes);
@@ -464,12 +462,12 @@ class _SoundsPageState extends State<SoundsPage> {
                                   _searchQuery.isEmpty &&
                                   categorySounds.length >= 2)
                                 IconButton(
-                                  onPressed: () => _openReorder(
-                                      categoryKey, categorySounds),
+                                  onPressed: () =>
+                                      _openReorder(categoryKey, categorySounds),
                                   icon: const Icon(Icons.swap_vert),
-                                  tooltip: AppLocalizations.of(context)
-                                          ?.reorder ??
-                                      'Reorder',
+                                  tooltip:
+                                      AppLocalizations.of(context)?.reorder ??
+                                          'Reorder',
                                 ),
                               if (isRadioCategory && !isFavoritesCategory)
                                 IconButton.filled(
@@ -536,37 +534,47 @@ class _SoundsPageState extends State<SoundsPage> {
                                                       // Sits on top of the card, not inside
                                                       // it, so it does not inherit the card's
                                                       // click cursor: web showed an arrow here.
-                                                      child: MouseRegion(
-                                                        cursor: SystemMouseCursors
-                                                            .click,
-                                                        child: GestureDetector(
-                                                        onTap: () =>
-                                                            _deleteStation(
-                                                                sound),
-                                                        child: Container(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(3),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: colorScheme
-                                                                .errorContainer,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            border: Border.all(
-                                                              color: colorScheme
-                                                                  .error,
-                                                              width: 2,
+                                                      child: Tooltip(
+                                                        message: AppLocalizations
+                                                                    .of(context)
+                                                                ?.removeStation ??
+                                                            'Remove station',
+                                                        child: MouseRegion(
+                                                          cursor:
+                                                              SystemMouseCursors
+                                                                  .click,
+                                                          child:
+                                                              GestureDetector(
+                                                            onTap: () =>
+                                                                _deleteStation(
+                                                                    sound),
+                                                            child: Container(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(3),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: colorScheme
+                                                                    .errorContainer,
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                border:
+                                                                    Border.all(
+                                                                  color:
+                                                                      colorScheme
+                                                                          .error,
+                                                                  width: 2,
+                                                                ),
+                                                              ),
+                                                              child: Icon(
+                                                                Icons.close,
+                                                                size: 14,
+                                                                color: colorScheme
+                                                                    .onErrorContainer,
+                                                              ),
                                                             ),
                                                           ),
-                                                          child: Icon(
-                                                            Icons.close,
-                                                            size: 14,
-                                                            color: colorScheme
-                                                                .onErrorContainer,
-                                                          ),
                                                         ),
-                                                      ),
                                                       ),
                                                     ),
                                                 ],

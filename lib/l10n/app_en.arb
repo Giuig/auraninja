@@ -179,5 +179,8 @@
         "placeholders": {
             "section": { "type": "String" }
         }
-    }
+    },
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "removeStation": "Remove station"
 }

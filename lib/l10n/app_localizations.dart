@@ -897,6 +897,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reorder {section}'**
   String reorderSection(String section);
+
+  /// No description provided for @addToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get addToFavorites;
+
+  /// No description provided for @removeFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get removeFromFavorites;
+
+  /// No description provided for @removeStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove station'**
+  String get removeStation;
 }
 
 class _AppLocalizationsDelegate

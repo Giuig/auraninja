@@ -1,3 +1,4 @@
+import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/widgets/sound_icon.dart';
 import 'package:auraninja/widgets/volume_slider.dart';
@@ -198,29 +199,42 @@ class SoundCard extends StatelessWidget {
               Positioned(
                 top: 4,
                 left: 4,
-                child: GestureDetector(
-                  onTap: onFavoriteToggle,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: isFavorite
-                          ? colorScheme.primaryContainer
-                          : colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.85),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isFavorite
-                            ? colorScheme.primary
-                            : colorScheme.outlineVariant,
-                        width: 2,
+                // Icon-only, so the tooltip is also what screen readers
+                // announce; without it TalkBack could not reach the heart.
+                child: Tooltip(
+                  message: isFavorite
+                      ? (AppLocalizations.of(context)?.removeFromFavorites ??
+                          'Remove from favorites')
+                      : (AppLocalizations.of(context)?.addToFavorites ??
+                          'Add to favorites'),
+                  child: Semantics(
+                    button: true,
+                    toggled: isFavorite,
+                    child: GestureDetector(
+                      onTap: onFavoriteToggle,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: isFavorite
+                              ? colorScheme.primaryContainer
+                              : colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.85),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isFavorite
+                                ? colorScheme.primary
+                                : colorScheme.outlineVariant,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          size: 14,
+                          color: isFavorite
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    child: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      size: 14,
-                      color: isFavorite
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
