@@ -88,6 +88,25 @@ void main() {
     expect(find.byTooltip('Remove from favorites'), findsOneWidget);
   });
 
+  testWidgets('the heart is its own toggle button for screen readers',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app(card(false, () {}), WrapperAudioHandler()));
+
+    final heart = tester.getSemantics(find.byIcon(Icons.favorite_border));
+    expect(heart.id, isNot(tester.getSemantics(find.text('Light Rain')).id));
+    expect(
+      heart,
+      isSemantics(
+        tooltip: 'Add to favorites',
+        isButton: true,
+        hasToggledState: true,
+        hasTapAction: true,
+      ),
+    );
+    semantics.dispose();
+  });
+
   group('volume reset on a playing card', () {
     Future<SoundController> playingRadio(
         WidgetTester tester, double volume) async {
@@ -123,6 +142,29 @@ void main() {
       await playingRadio(tester, 0.2);
 
       expect(find.byTooltip('Reset volume'), findsOneWidget);
+    });
+
+    // A tooltip alone was not enough: on the S24U the visible reset icon had
+    // no node of its own in the accessibility tree, folded into the card.
+    testWidgets('is its own button for screen readers while visible',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await playingRadio(tester, 0.2);
+
+      final reset = tester.getSemantics(find.byIcon(Icons.refresh));
+      final card = tester.getSemantics(find.text('Test FM'));
+      // Its own node, not flags merged onto the card's node (which is what a
+      // Semantics without container: true produced on the S24U).
+      expect(reset.id, isNot(card.id));
+      expect(
+        reset,
+        isSemantics(
+          tooltip: 'Reset volume',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      semantics.dispose();
     });
 
     testWidgets('is hidden from screen readers at the default volume',
@@ -166,5 +208,36 @@ void main() {
 
     expect(find.text('Test FM'), findsOneWidget);
     expect(find.byTooltip('Remove station'), findsOneWidget);
+  });
+
+  testWidgets("a user station's remove button is a button for screen readers",
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    SharedPreferences.setMockInitialValues({
+      'user_radio_stations': jsonEncode([
+        {
+          'name': 'Test FM',
+          'category': '@internetRadio',
+          'icon': '',
+          'path': 'https://example.com/stream',
+          'isUserAdded': true,
+        }
+      ]),
+    });
+    await tester.pumpWidget(app(const SoundsPage(), WrapperAudioHandler()));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
+
+    final remove = tester.getSemantics(find.byIcon(Icons.close));
+    expect(remove.id, isNot(tester.getSemantics(find.text('Test FM')).id));
+    expect(
+      remove,
+      isSemantics(
+        tooltip: 'Remove station',
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    semantics.dispose();
   });
 }

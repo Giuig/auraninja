@@ -257,6 +257,13 @@ class SoundCard extends StatelessWidget {
     );
   }
 
-  static Widget _maybeTooltip(String? message, Widget child) =>
-      message == null ? child : Tooltip(message: message, child: child);
+  // container: true gives the control its own accessibility node. With only
+  // a tooltip, or Semantics(button) without container, it was folded into
+  // the card's node and TalkBack never saw it (S24U, 2026-11-02).
+  static Widget _maybeTooltip(String? message, Widget child) => Semantics(
+        container: true,
+        button: true,
+        child:
+            message == null ? child : Tooltip(message: message, child: child),
+      );
 }
