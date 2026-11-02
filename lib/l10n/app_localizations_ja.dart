@@ -408,4 +408,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String mixImported(String name) {
     return '「$name」をインポートしました';
   }
+
+  @override
+  String get stationAddedTooltip => 'Added';
+
+  @override
+  String stationAdded(String name) {
+    return 'Added \"$name\"';
+  }
 }

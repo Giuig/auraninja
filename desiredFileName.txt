@@ -5,7 +5,9 @@
     "copyManually",
     "close",
     "shareMixPrompt",
-    "nowPlaying"
+    "nowPlaying",
+    "stationAddedTooltip",
+    "stationAdded"
   ],
 
   "es": [
@@ -14,7 +16,9 @@
     "copyManually",
     "close",
     "shareMixPrompt",
-    "nowPlaying"
+    "nowPlaying",
+    "stationAddedTooltip",
+    "stationAdded"
   ],
 
   "fr": [
@@ -23,7 +27,9 @@
     "copyManually",
     "close",
     "shareMixPrompt",
-    "nowPlaying"
+    "nowPlaying",
+    "stationAddedTooltip",
+    "stationAdded"
   ],
 
   "it": [
@@ -32,7 +38,9 @@
     "copyManually",
     "close",
     "shareMixPrompt",
-    "nowPlaying"
+    "nowPlaying",
+    "stationAddedTooltip",
+    "stationAdded"
   ],
 
   "ja": [
@@ -41,6 +49,8 @@
     "copyManually",
     "close",
     "shareMixPrompt",
-    "nowPlaying"
+    "nowPlaying",
+    "stationAddedTooltip",
+    "stationAdded"
   ]
 }

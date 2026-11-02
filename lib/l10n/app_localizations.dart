@@ -861,6 +861,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Imported \"{name}\"'**
   String mixImported(String name);
+
+  /// No description provided for @stationAddedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get stationAddedTooltip;
+
+  /// No description provided for @stationAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added \"{name}\"'**
+  String stationAdded(String name);
 }
 
 class _AppLocalizationsDelegate

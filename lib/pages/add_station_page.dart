@@ -32,10 +32,37 @@ class _AddStationPageState extends State<AddStationPage>
   final _nameCtrl = TextEditingController();
   bool _adding = false;
 
+  // Stream URLs already in the user's station list, so search results can show
+  // which are added. The page stays open after each add (issue #13), and
+  // reports on the way back whether anything was added.
+  final Set<String> _savedPaths = {};
+  bool _addedAny = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    UserStationsService.load().then((stations) {
+      if (!mounted) return;
+      setState(() => _savedPaths.addAll(stations.map((s) => s.path)));
+    });
+  }
+
+  Future<void> _save(NinjaSound sound) async {
+    await UserStationsService.add(sound);
+    if (!mounted) return;
+    setState(() {
+      _savedPaths.add(sound.path);
+      _addedAny = true;
+    });
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content:
+            Text(l10n?.stationAdded(sound.name) ?? 'Added "${sound.name}"'),
+        duration: const Duration(seconds: 2),
+      ));
   }
 
   @override
@@ -106,7 +133,7 @@ class _AddStationPageState extends State<AddStationPage>
     final url = (station['url_resolved'] as String?) ??
         (station['url'] as String?) ??
         '';
-    if (url.isEmpty) return;
+    if (url.isEmpty || _savedPaths.contains(url)) return;
 
     final sound = NinjaSound(
       name: (station['name'] as String?) ?? 'Unknown Station',
@@ -116,8 +143,7 @@ class _AddStationPageState extends State<AddStationPage>
       isUserAdded: true,
     );
 
-    await UserStationsService.add(sound);
-    if (mounted) Navigator.of(context).pop(true);
+    await _save(sound);
   }
 
   Future<void> _addFromUrl() async {
@@ -134,10 +160,11 @@ class _AddStationPageState extends State<AddStationPage>
       isUserAdded: true,
     );
 
-    await UserStationsService.add(sound);
+    await _save(sound);
     if (mounted) {
       setState(() => _adding = false);
-      Navigator.of(context).pop(true);
+      _urlCtrl.clear();
+      _nameCtrl.clear();
     }
   }
 
@@ -151,166 +178,185 @@ class _AddStationPageState extends State<AddStationPage>
         _searchResults.isEmpty &&
         _searchError == null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n?.addRadioStation ?? 'Add Radio Station'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(icon: const Icon(Icons.search), text: l10n?.search ?? 'Search'),
-            Tab(icon: const Icon(Icons.link), text: l10n?.url ?? 'URL'),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) Navigator.of(context).pop(_addedAny);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n?.addRadioStation ?? 'Add Radio Station'),
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(
+                  icon: const Icon(Icons.search),
+                  text: l10n?.search ?? 'Search'),
+              Tab(icon: const Icon(Icons.link), text: l10n?.url ?? 'URL'),
+            ],
+          ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // ── Search tab ──────────────────────────────────────────────
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SearchBar(
-                  controller: _searchCtrl,
-                  hintText:
-                      l10n?.searchStationsHint ?? 'Search stations by name…',
-                  onChanged: _onSearchChanged,
-                  trailing: [
-                    _searching
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : IconButton(
-                            icon: const Icon(Icons.search),
-                            tooltip: l10n?.search ?? 'Search',
-                            onPressed: _search,
-                          ),
-                  ],
-                  onSubmitted: (_) {
-                    _debounce?.cancel();
-                    _search();
-                  },
-                ),
-              ),
-              if (_searchError != null)
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            // ── Search tab ──────────────────────────────────────────────
+            Column(
+              children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    _searchError!,
-                    style: TextStyle(color: colorScheme.error),
-                  ),
-                ),
-              if (showNoResults)
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      l10n?.noStationsFound ?? 'No stations found',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ),
-                )
-              else
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _searchResults.length,
-                    itemBuilder: (context, i) {
-                      final s = _searchResults[i];
-                      final name = (s['name'] as String?) ?? '';
-                      final country = (s['country'] as String?) ?? '';
-                      final tags = (s['tags'] as String?) ?? '';
-                      final subtitle = [
-                        if (country.isNotEmpty) country,
-                        if (tags.isNotEmpty) tags,
-                      ].join(' · ');
-
-                      return ListTile(
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            color: colorScheme.surfaceContainerHighest,
-                            alignment: Alignment.center,
-                            child: const Text('📻',
-                                style: TextStyle(fontSize: 22)),
-                          ),
-                        ),
-                        title: Text(name),
-                        subtitle: subtitle.isNotEmpty
-                            ? Text(
-                                subtitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              )
-                            : null,
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.add_circle_outline,
-                            color: colorScheme.primary,
-                          ),
-                          tooltip: l10n?.addStation ?? 'Add Station',
-                          onPressed: () => _addFromSearch(s),
-                        ),
-                      );
+                  padding: const EdgeInsets.all(16),
+                  child: SearchBar(
+                    controller: _searchCtrl,
+                    hintText:
+                        l10n?.searchStationsHint ?? 'Search stations by name…',
+                    onChanged: _onSearchChanged,
+                    trailing: [
+                      _searching
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.search),
+                              tooltip: l10n?.search ?? 'Search',
+                              onPressed: _search,
+                            ),
+                    ],
+                    onSubmitted: (_) {
+                      _debounce?.cancel();
+                      _search();
                     },
                   ),
                 ),
-            ],
-          ),
+                if (_searchError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      _searchError!,
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  ),
+                if (showNoResults)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        l10n?.noStationsFound ?? 'No stations found',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, i) {
+                        final s = _searchResults[i];
+                        final name = (s['name'] as String?) ?? '';
+                        final country = (s['country'] as String?) ?? '';
+                        final tags = (s['tags'] as String?) ?? '';
+                        final subtitle = [
+                          if (country.isNotEmpty) country,
+                          if (tags.isNotEmpty) tags,
+                        ].join(' · ');
 
-          // ── URL tab ─────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: _urlCtrl,
-                  decoration: InputDecoration(
-                    labelText: l10n?.streamUrl ?? 'Stream URL',
-                    hintText: l10n?.streamUrlHint ?? 'https://…',
-                    prefixIcon: const Icon(Icons.radio),
-                    border: const OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.url,
-                  autocorrect: false,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _nameCtrl,
-                  decoration: InputDecoration(
-                    labelText:
-                        l10n?.stationNameOptional ?? 'Station name (optional)',
-                    prefixIcon: const Icon(Icons.label_outline),
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                FilledButton.icon(
-                  onPressed: _adding ? null : _addFromUrl,
-                  icon: _adding
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                        return ListTile(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              color: colorScheme.surfaceContainerHighest,
+                              alignment: Alignment.center,
+                              child: const Text('📻',
+                                  style: TextStyle(fontSize: 22)),
+                            ),
                           ),
-                        )
-                      : const Icon(Icons.add),
-                  label: Text(l10n?.addStation ?? 'Add Station'),
-                ),
+                          title: Text(name),
+                          subtitle: subtitle.isNotEmpty
+                              ? Text(
+                                  subtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : null,
+                          trailing: _savedPaths
+                                  .contains(s['url_resolved'] ?? s['url'])
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.check_circle,
+                                    color: colorScheme.primary,
+                                  ),
+                                  tooltip: l10n?.stationAddedTooltip ?? 'Added',
+                                  onPressed: null,
+                                )
+                              : IconButton(
+                                  icon: Icon(
+                                    Icons.add_circle_outline,
+                                    color: colorScheme.primary,
+                                  ),
+                                  tooltip: l10n?.addStation ?? 'Add Station',
+                                  onPressed: () => _addFromSearch(s),
+                                ),
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
-          ),
-        ],
+
+            // ── URL tab ─────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _urlCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n?.streamUrl ?? 'Stream URL',
+                      hintText: l10n?.streamUrlHint ?? 'https://…',
+                      prefixIcon: const Icon(Icons.radio),
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n?.stationNameOptional ??
+                          'Station name (optional)',
+                      prefixIcon: const Icon(Icons.label_outline),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  FilledButton.icon(
+                    onPressed: _adding ? null : _addFromUrl,
+                    icon: _adding
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.add),
+                    label: Text(l10n?.addStation ?? 'Add Station'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
