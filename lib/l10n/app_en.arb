@@ -170,5 +170,14 @@
         "placeholders": {
             "name": { "type": "String" }
         }
+    },
+    "done": "Done",
+    "reorder": "Reorder",
+    "dragToReorder": "Drag to reorder",
+    "reorderSection": "Reorder {section}",
+    "@reorderSection": {
+        "placeholders": {
+            "section": { "type": "String" }
+        }
     }
 }

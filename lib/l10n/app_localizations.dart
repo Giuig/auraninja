@@ -873,6 +873,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added \"{name}\"'**
   String stationAdded(String name);
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @reorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder'**
+  String get reorder;
+
+  /// No description provided for @dragToReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get dragToReorder;
+
+  /// No description provided for @reorderSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder {section}'**
+  String reorderSection(String section);
 }
 
 class _AppLocalizationsDelegate

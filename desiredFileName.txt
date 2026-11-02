@@ -7,7 +7,11 @@
     "shareMixPrompt",
     "nowPlaying",
     "stationAddedTooltip",
-    "stationAdded"
+    "stationAdded",
+    "done",
+    "reorder",
+    "dragToReorder",
+    "reorderSection"
   ],
 
   "es": [
@@ -18,7 +22,11 @@
     "shareMixPrompt",
     "nowPlaying",
     "stationAddedTooltip",
-    "stationAdded"
+    "stationAdded",
+    "done",
+    "reorder",
+    "dragToReorder",
+    "reorderSection"
   ],
 
   "fr": [
@@ -29,7 +37,11 @@
     "shareMixPrompt",
     "nowPlaying",
     "stationAddedTooltip",
-    "stationAdded"
+    "stationAdded",
+    "done",
+    "reorder",
+    "dragToReorder",
+    "reorderSection"
   ],
 
   "it": [
@@ -40,7 +52,11 @@
     "shareMixPrompt",
     "nowPlaying",
     "stationAddedTooltip",
-    "stationAdded"
+    "stationAdded",
+    "done",
+    "reorder",
+    "dragToReorder",
+    "reorderSection"
   ],
 
   "ja": [
@@ -51,6 +67,10 @@
     "shareMixPrompt",
     "nowPlaying",
     "stationAddedTooltip",
-    "stationAdded"
+    "stationAdded",
+    "done",
+    "reorder",
+    "dragToReorder",
+    "reorderSection"
   ]
 }

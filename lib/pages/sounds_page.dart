@@ -3,7 +3,9 @@ import 'package:auraninja/data/sound_data.dart';
 import 'package:auraninja/l10n/app_localizations.dart';
 import 'package:auraninja/pages/add_station_page.dart';
 import 'package:auraninja/services/favorites_service.dart';
+import 'package:auraninja/services/section_order_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
+import 'package:auraninja/widgets/reorder_sheet.dart';
 import 'package:auraninja/widgets/sound_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +27,9 @@ class _SoundsPageState extends State<SoundsPage> {
   Map<String, NinjaSound> _localizedSoundMap = {};
   List<NinjaSound> _userStations = [];
   Set<String> _favorites = {};
+  // The user's Internet Radio order (issue #14); favourites keep theirs in
+  // the [_favorites] set itself, which preserves insertion order.
+  List<String> _radioOrder = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -72,6 +77,49 @@ class _SoundsPageState extends State<SoundsPage> {
     _loadUserStations();
     _loadCollapsedCategories();
     _loadFavorites();
+    _loadRadioOrder();
+  }
+
+  Future<void> _loadRadioOrder() async {
+    final order = await SectionOrderService.load('internetRadio');
+    if (mounted) setState(() => _radioOrder = order);
+  }
+
+  void _openReorder(String categoryKey, List<SoundController> shown) {
+    final l10n = AppLocalizations.of(context);
+    final section = _translateCategory(categoryKey);
+    showReorderSheet(
+      context,
+      title: l10n?.reorderSection(section) ?? 'Reorder $section',
+      entries: [
+        for (final c in shown)
+          ReorderEntry(
+            path: c.sound.path,
+            label: _localizedSoundMap[c.sound.path]?.name ?? c.sound.name,
+            icon: _localizedSoundMap[c.sound.path]?.icon ?? c.sound.icon,
+          ),
+      ],
+      onChanged: categoryKey == '@favorites'
+          ? _saveFavoritesOrder
+          : _saveRadioOrder,
+    );
+  }
+
+  /// [paths] is the new order of the favourites on screen; any others
+  /// (e.g. a favourited sound that no longer exists) keep their place after.
+  void _saveFavoritesOrder(List<String> paths) {
+    setState(() => _favorites = {...paths, ..._favorites});
+    FavoritesService.save(_favorites);
+  }
+
+  /// [paths] is the new order of the stations on screen; favourited stations,
+  /// shown in Favourites instead, keep their saved position after them.
+  void _saveRadioOrder(List<String> paths) {
+    setState(() => _radioOrder = [
+          ...paths,
+          ..._radioOrder.where((p) => !paths.contains(p)),
+        ]);
+    SectionOrderService.save('internetRadio', _radioOrder);
   }
 
   Future<void> _loadFavorites() async {
@@ -215,8 +263,10 @@ class _SoundsPageState extends State<SoundsPage> {
 
     // Add Favorites category first if there are favorites (only when not searching)
     if (_favorites.isNotEmpty && _searchQuery.isEmpty) {
-      final favControllers =
-          controllers.where((c) => _favorites.contains(c.sound.path)).toList();
+      final favControllers = orderByPaths(
+          controllers.where((c) => _favorites.contains(c.sound.path)).toList(),
+          _favorites.toList(),
+          (SoundController c) => c.sound.path);
       if (favControllers.isNotEmpty) {
         orderedCategories.add(MapEntry('@favorites', favControllers));
       }
@@ -250,11 +300,15 @@ class _SoundsPageState extends State<SoundsPage> {
     for (final entry in sortedCategories) {
       // When searching, show all matching sounds including favorites
       // When not searching, exclude favorites from their original categories
-      final filteredSounds = _searchQuery.isEmpty
+      var filteredSounds = _searchQuery.isEmpty
           ? entry.value
               .where((c) => !_favorites.contains(c.sound.path))
               .toList()
           : entry.value;
+      if (entry.key == '@internetRadio') {
+        filteredSounds = orderByPaths(
+            filteredSounds, _radioOrder, (SoundController c) => c.sound.path);
+      }
       // Internet Radio stays visible even with zero un-favorited stations:
       // it's the only place the "+ add station" button lives, so favoriting
       // the last station would otherwise remove the only way to add another.
@@ -406,6 +460,17 @@ class _SoundsPageState extends State<SoundsPage> {
                                   ),
                                 ),
                               ),
+                              if ((isFavoritesCategory || isRadioCategory) &&
+                                  _searchQuery.isEmpty &&
+                                  categorySounds.length >= 2)
+                                IconButton(
+                                  onPressed: () => _openReorder(
+                                      categoryKey, categorySounds),
+                                  icon: const Icon(Icons.swap_vert),
+                                  tooltip: AppLocalizations.of(context)
+                                          ?.reorder ??
+                                      'Reorder',
+                                ),
                               if (isRadioCategory && !isFavoritesCategory)
                                 IconButton.filled(
                                   onPressed: _openAddStation,
