@@ -439,4 +439,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get removeStation => 'Remove station';
+
+  @override
+  String get resetVolume => 'Reset volume';
+
+  @override
+  String get clearSearch => 'Clear search';
 }
