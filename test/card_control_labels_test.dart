@@ -88,6 +88,25 @@ void main() {
     expect(find.byTooltip('Remove from favorites'), findsOneWidget);
   });
 
+  testWidgets('the heart is its own toggle button for screen readers',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app(card(false, () {}), WrapperAudioHandler()));
+
+    final heart = tester.getSemantics(find.byIcon(Icons.favorite_border));
+    expect(heart.id, isNot(tester.getSemantics(find.text('Light Rain')).id));
+    expect(
+      heart,
+      isSemantics(
+        tooltip: 'Add to favorites',
+        isButton: true,
+        hasToggledState: true,
+        hasTapAction: true,
+      ),
+    );
+    semantics.dispose();
+  });
+
   group('volume reset on a playing card', () {
     Future<SoundController> playingRadio(
         WidgetTester tester, double volume) async {
@@ -189,5 +208,36 @@ void main() {
 
     expect(find.text('Test FM'), findsOneWidget);
     expect(find.byTooltip('Remove station'), findsOneWidget);
+  });
+
+  testWidgets("a user station's remove button is a button for screen readers",
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    SharedPreferences.setMockInitialValues({
+      'user_radio_stations': jsonEncode([
+        {
+          'name': 'Test FM',
+          'category': '@internetRadio',
+          'icon': '',
+          'path': 'https://example.com/stream',
+          'isUserAdded': true,
+        }
+      ]),
+    });
+    await tester.pumpWidget(app(const SoundsPage(), WrapperAudioHandler()));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
+
+    final remove = tester.getSemantics(find.byIcon(Icons.close));
+    expect(remove.id, isNot(tester.getSemantics(find.text('Test FM')).id));
+    expect(
+      remove,
+      isSemantics(
+        tooltip: 'Remove station',
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    semantics.dispose();
   });
 }

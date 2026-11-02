@@ -537,43 +537,47 @@ class _SoundsPageState extends State<SoundsPage> {
                                                       // Sits on top of the card, not inside
                                                       // it, so it does not inherit the card's
                                                       // click cursor: web showed an arrow here.
-                                                      child: Tooltip(
-                                                        message: AppLocalizations
-                                                                    .of(context)
-                                                                ?.removeStation ??
-                                                            'Remove station',
-                                                        child: MouseRegion(
-                                                          cursor:
-                                                              SystemMouseCursors
-                                                                  .click,
-                                                          child:
-                                                              GestureDetector(
-                                                            onTap: () =>
-                                                                _deleteStation(
-                                                                    sound),
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(3),
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                color: colorScheme
-                                                                    .errorContainer,
-                                                                shape: BoxShape
-                                                                    .circle,
-                                                                border:
-                                                                    Border.all(
-                                                                  color:
-                                                                      colorScheme
-                                                                          .error,
-                                                                  width: 2,
+                                                      child: Semantics(
+                                                        // Its own button node, so TalkBack reads it as "Remove station, button".
+                                                        container: true,
+                                                        button: true,
+                                                        child: Tooltip(
+                                                          message: AppLocalizations
+                                                                      .of(context)
+                                                                  ?.removeStation ??
+                                                              'Remove station',
+                                                          child: MouseRegion(
+                                                            cursor:
+                                                                SystemMouseCursors
+                                                                    .click,
+                                                            child:
+                                                                GestureDetector(
+                                                              onTap: () =>
+                                                                  _deleteStation(
+                                                                      sound),
+                                                              child: Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .all(3),
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: colorScheme
+                                                                      .errorContainer,
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                  border: Border
+                                                                      .all(
+                                                                    color: colorScheme
+                                                                        .error,
+                                                                    width: 2,
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                              child: Icon(
-                                                                Icons.close,
-                                                                size: 14,
-                                                                color: colorScheme
-                                                                    .onErrorContainer,
+                                                                child: Icon(
+                                                                  Icons.close,
+                                                                  size: 14,
+                                                                  color: colorScheme
+                                                                      .onErrorContainer,
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
