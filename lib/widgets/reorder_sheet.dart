@@ -18,8 +18,9 @@ class ReorderEntry {
 }
 
 /// Lets the user reorder a Sounds-page section (issue #14). Rows move by an
-/// explicit drag handle, the same way with touch, mouse and keyboard, rather
-/// than by long-pressing cards in the grid. [onChanged] gets the full new
+/// explicit drag handle (touch or mouse) rather than by long-pressing cards in
+/// the grid; screen readers get ReorderableListView's built-in move actions.
+/// The handle is not focusable, so there is no keyboard-only way to move a row. [onChanged] gets the full new
 /// order of paths after every move, so the section behind the sheet updates
 /// live and nothing is lost if the sheet is dismissed instead of closed.
 Future<void> showReorderSheet(
