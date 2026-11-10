@@ -356,7 +356,7 @@ q = 0
 # Automatic start wraps at a 2.9 dB level step (limit 2.2). Starting at 27.59 s puts the wrap in
 # steady room tone (0.00 dB); the loop is still the 90 s cap.
 loop_start_s = 27.59
-# Body rule kept at offset 0: SDR is 5.2 dB, and -1/-2/-3 dB give 4.5/4.2/4.4 (still heavily
+# Body rule kept at offset 0: SDR is 4.1 dB, and -1/-2/-3 dB give 4.5/4.2/4.4 (still heavily
 # limited; the room-tone body is far below its peaks).
 level_offset_db = 0.0
 
