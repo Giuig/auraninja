@@ -26,13 +26,13 @@ def test_one_row_per_pubspec_sound_asset():
 def test_sources_are_pinned_and_hashed():
     m = sources.load_manifest()
     assert re.fullmatch(r"[0-9a-f]{40}", m["meta"]["moodist_commit"])
-    kinds = {"moodist": 0, "git": 0, "synth": 0}
+    kinds = {"moodist": 0, "synth": 0}
     for r in m["sound"]:
         kind = r["source"].split(":", 1)[0]
         kinds[kind] += 1
-        if kind in ("moodist", "git"):
+        if kind == "moodist":
             assert re.fullmatch(r"[0-9a-f]{64}", r["sha256"]), r["key"]
-    assert kinds == {"moodist": 41, "git": 6, "synth": 1}
+    assert kinds == {"moodist": 41, "synth": 7}  # 41 recordings, green noise, 6 binaurals
 
 
 def test_rules_and_body_set():
@@ -42,10 +42,25 @@ def test_rules_and_body_set():
     binaural = [r for r in m["sound"] if r["rule"] == "binaural"]
     assert len(binaural) == 6
     assert all(r["asset"].startswith("assets/sounds/binaural/") for r in binaural)
-    assert all(r["source"].startswith("git:891d256:assets/sounds/binaural/") for r in binaural)
+    # binaurals are synthesised from carriers (DECISIONS 14), L/R in whole Hz, 10 s
+    carriers = {r["key"]: (r["synth"]["left_hz"], r["synth"]["right_hz"]) for r in binaural}
+    assert carriers == {
+        "alpha-8hz": (200, 208), "delta-1hz": (100, 101), "delta-2hz": (100, 102),
+        "focus-10hz": (200, 210), "theta-4hz": (150, 154), "theta-5hz": (200, 205)}
+    for r in binaural:
+        assert r["source"] == "synth:binaural" and r["synth"]["seconds"] == 10 and r["q"] == 8
     for r in m["sound"]:
         assert r["rule"] in ("integrated", "body", "binaural")
-        assert r.get("q", 0) in (0, 1, 2)
+        assert 0 <= r.get("q", 0) <= 10
+
+
+def test_per_sound_quality_per_decisions_13():
+    m = sources.load_manifest()
+    q1 = {"clock", "fire", "walk-in-snow", "light-rain", "thunder", "rain-on-umbrella",
+          "droplets", "frog", "birds", "crickets", "whale"}
+    for r in m["sound"]:
+        want = 8 if r["rule"] == "binaural" else 1 if r["key"] in q1 else 0
+        assert r["q"] == want, (r["key"], r["q"], want)
 
 
 def test_tampered_source_is_rejected():

@@ -55,3 +55,22 @@ def test_spectrum_follows_the_target_band_shape_within_2db():
 def test_deterministic_for_fixed_seed():
     assert np.array_equal(make(1), make(1))
     assert not np.array_equal(make(1), make(2))
+
+
+def test_binaural_is_exact_sines_with_integer_cycles_per_channel():
+    x = synth.binaural(200, 208, seconds=10, rate=RATE)
+    assert x.shape == (10 * RATE, 2)
+    t = np.arange(10 * RATE) / RATE
+    assert np.allclose(x[:, 0], np.sin(2 * np.pi * 200 * t), atol=1e-12)
+    assert np.allclose(x[:, 1], np.sin(2 * np.pi * 208 * t), atol=1e-12)
+    # looping: the sample after the last one continues the sine (the step across the wrap
+    # equals the interior step), which is what integer cycles buy
+    for c in (0, 1):
+        wrap = abs(x[0, c] - x[-1, c])
+        assert wrap <= np.max(np.abs(np.diff(x[:, c]))) + 1e-12
+
+
+def test_binaural_channels_are_separated_by_more_than_the_40db_gate():
+    from lib import measure
+    x = synth.binaural(100, 101, seconds=10, rate=RATE)
+    assert measure.binaural_separation_db(x, RATE) >= 60

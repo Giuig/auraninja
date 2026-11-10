@@ -39,3 +39,17 @@ def test_binaural_rule_keeps_stereo_untouched_apart_from_gain(tmp_path):
                                ceiling_db=-1.0, tmp_dir=tmp_path)
     assert abs(out.lufs - (-24.0)) <= 0.5
     assert out.channels == 2 and out.N == len(x)
+
+
+def test_large_post_decode_overshoot_converges_within_eight_iterations(tmp_path):
+    # fire-like: quiet bed, pops ~30 dB above it. After clipping, the decoded file overshoots
+    # the ceiling by several dB, so the ceiling has to be pulled far down.
+    rng = np.random.default_rng(7)
+    x = 0.01 * periodic_noise(30, 5)
+    for pos in rng.integers(RATE, len(x) - RATE, 60):
+        x[pos:pos + 25] += rng.uniform(-0.6, 0.6, 25) * np.hanning(25)
+    out = build.process_signal(x, RATE, rule="body", target=None, q=1, ceiling_db=-1.0,
+                               tmp_dir=tmp_path, reference_st=-24.0, offset_db=0.0)
+    assert out.iterations <= 8
+    assert out.tp <= -1.0
+    assert out.ceiling_db < -2.0  # the pre-encode ceiling really did have to drop

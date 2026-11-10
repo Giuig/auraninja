@@ -42,13 +42,13 @@ def scale_to_lufs(x, target, rate=RATE):
 
 
 def periodic_noise(seconds, seed=1, rate=RATE, channels=1):
-    """Exactly periodic pink-ish noise (random-phase inverse FFT), peak-normalised."""
+    """Exactly periodic ambient-like noise (random-phase inverse FFT), peak-normalised."""
     n = int(round(seconds * rate))
     rng = np.random.default_rng(seed)
     out = []
     for _ in range(channels):
         f = np.fft.rfftfreq(n, 1 / rate)
-        mag = 1 / np.sqrt(np.maximum(f, 20.0))
+        mag = 1 / np.sqrt(np.maximum(f, 300.0))  # flat below 300 Hz, pink above
         mag[0] = 0
         ph = rng.uniform(0, 2 * np.pi, len(f))
         x = np.fft.irfft(mag * np.exp(1j * ph), n)
