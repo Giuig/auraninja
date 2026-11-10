@@ -22,6 +22,10 @@ class SoundController with ChangeNotifier {
   // SoLoud path: used for local asset sounds on native platforms.
   SoloudSource? _soloudSource;
   SoloudVoice? _soloudHandle;
+  // Bumped by every stop/release/dispose. A load() that was started before the
+  // bump and finishes after it holds a source nobody wants any more and must
+  // dispose it instead of keeping it.
+  int _soloudLoadGeneration = 0;
 
   // Web Audio API path: used for local assets on web (seamless looping).
   WebAudioSeamlessPlayer? _webSeamlessPlayer;
@@ -495,8 +499,16 @@ class SoundController with ChangeNotifier {
       try {
         // Reuse the source if already loaded; otherwise load from asset.
         if (_soloudSource == null) {
+          final generation = _soloudLoadGeneration;
           final sw = Stopwatch()..start();
           final src = await SoloudEngine.current.loadAsset(sound.path);
+          if (generation != _soloudLoadGeneration) {
+            // stop()/releasePlayer()/dispose() ran while the asset was still
+            // loading: the late source would never be freed, and the status
+            // has already been set by whoever stopped us.
+            await SoloudEngine.current.disposeSource(src);
+            return;
+          }
           _soloudSource = src;
           sw.stop();
           // Diagnostic only: a failure to read the length must never turn a
@@ -578,6 +590,8 @@ class SoundController with ChangeNotifier {
           _status == PlaybackStatus.error) {
         await load();
         if (_status == PlaybackStatus.error) return;
+        // A stop() during the load discarded the source: nothing to play.
+        if (_soloudSource == null) return;
       }
       try {
         // Stop any existing handle before creating a new one.
@@ -725,10 +739,9 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {
-      if (_soloudHandle != null) {
-        await SoloudEngine.current.stop(_soloudHandle!);
-        _soloudHandle = null;
-      }
+      // Free the decoded audio, not just the voice: the source otherwise stays
+      // in RAM until the app is killed. The next play() reloads it.
+      await _releaseSoloud();
       if (_status != PlaybackStatus.notInitialized) {
         _status = PlaybackStatus.notInitialized;
         notifyListeners();
@@ -845,6 +858,24 @@ class SoundController with ChangeNotifier {
     });
   }
 
+  /// Stops the voice and disposes the SoLoud source. Idempotent: the fields are
+  /// cleared before awaiting, so overlapping or repeated calls (stop, then
+  /// releasePlayer, then dispose) dispose each source exactly once. Also
+  /// invalidates any load() still in flight.
+  Future<void> _releaseSoloud() async {
+    _soloudLoadGeneration++;
+    final handle = _soloudHandle;
+    final source = _soloudSource;
+    _soloudHandle = null;
+    _soloudSource = null;
+    if (handle != null) {
+      await SoloudEngine.current.stop(handle);
+    }
+    if (source != null) {
+      await SoloudEngine.current.disposeSource(source);
+    }
+  }
+
   /// Disposes the underlying audio resource and resets all state, but keeps
   /// this SoundController alive. Resources will be lazily recreated on next play().
   Future<void> releasePlayer() async {
@@ -852,14 +883,7 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {
-      if (_soloudHandle != null) {
-        await SoloudEngine.current.stop(_soloudHandle!);
-        _soloudHandle = null;
-      }
-      if (_soloudSource != null) {
-        await SoloudEngine.current.disposeSource(_soloudSource!);
-        _soloudSource = null;
-      }
+      await _releaseSoloud();
       _status = PlaybackStatus.notInitialized;
       _currentMetadata = '';
       notifyListeners();
@@ -900,12 +924,7 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer?.cancel();
     _justAudioFadeTimer = null;
     if (_useSoloud) {
-      if (_soloudHandle != null) {
-        SoloudEngine.current.stop(_soloudHandle!);
-      }
-      if (_soloudSource != null) {
-        SoloudEngine.current.disposeSource(_soloudSource!);
-      }
+      unawaited(_releaseSoloud());
     }
     if (_useWebSeamless) {
       _webSeamlessPlayer?.dispose();
