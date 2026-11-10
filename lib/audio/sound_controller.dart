@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:just_audio/just_audio.dart' as just_audio;
 import 'package:auraninja/audio/fade_curve.dart';
+import 'package:auraninja/audio/soloud_engine.dart';
 import 'package:auraninja/model/ninja_sound.dart';
 import 'package:auraninja/audio/web_audio_seamless.dart';
 import 'package:auraninja/services/web_metadata_service.dart';
@@ -20,8 +20,8 @@ class SoundController with ChangeNotifier {
   final NinjaSound sound;
 
   // SoLoud path: used for local asset sounds on native platforms.
-  AudioSource? _soloudSource;
-  SoundHandle? _soloudHandle;
+  SoloudSource? _soloudSource;
+  SoloudVoice? _soloudHandle;
 
   // Web Audio API path: used for local assets on web (seamless looping).
   WebAudioSeamlessPlayer? _webSeamlessPlayer;
@@ -494,7 +494,19 @@ class SoundController with ChangeNotifier {
     if (_useSoloud) {
       try {
         // Reuse the source if already loaded; otherwise load from asset.
-        _soloudSource ??= await SoLoud.instance.loadAsset(sound.path);
+        if (_soloudSource == null) {
+          final sw = Stopwatch()..start();
+          final src = await SoloudEngine.current.loadAsset(sound.path);
+          _soloudSource = src;
+          sw.stop();
+          // Diagnostic only: a failure to read the length must never turn a
+          // successful load into an error state.
+          try {
+            final lenMs = SoloudEngine.current.getLength(src).inMilliseconds;
+            debugPrint('[SC:${sound.name}] loaded in ${sw.elapsedMilliseconds}'
+                ' ms (len $lenMs ms)');
+          } catch (_) {}
+        }
         _status = PlaybackStatus.paused;
         notifyListeners();
       } catch (_) {
@@ -570,10 +582,10 @@ class SoundController with ChangeNotifier {
       try {
         // Stop any existing handle before creating a new one.
         if (_soloudHandle != null) {
-          await SoLoud.instance.stop(_soloudHandle!);
+          await SoloudEngine.current.stop(_soloudHandle!);
           _soloudHandle = null;
         }
-        _soloudHandle = await SoLoud.instance.play(
+        _soloudHandle = await SoloudEngine.current.play(
           _soloudSource!,
           looping: true,
           volume: _volume,
@@ -667,7 +679,7 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
-        await SoLoud.instance.stop(_soloudHandle!);
+        await SoloudEngine.current.stop(_soloudHandle!);
         _soloudHandle = null;
       }
       if (_status != PlaybackStatus.paused) {
@@ -714,7 +726,7 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
-        await SoLoud.instance.stop(_soloudHandle!);
+        await SoloudEngine.current.stop(_soloudHandle!);
         _soloudHandle = null;
       }
       if (_status != PlaybackStatus.notInitialized) {
@@ -771,7 +783,7 @@ class SoundController with ChangeNotifier {
     _volume = v;
     if (_useSoloud) {
       if (_soloudHandle != null) {
-        SoLoud.instance.setVolume(_soloudHandle!, v);
+        SoloudEngine.current.setVolume(_soloudHandle!, v);
       }
     } else if (_useWebSeamless) {
       _webSeamlessPlayer?.setVolume(v);
@@ -801,7 +813,7 @@ class SoundController with ChangeNotifier {
 
     if (_useSoloud) {
       if (_soloudHandle != null) {
-        SoLoud.instance.fadeVolume(_soloudHandle!, target, duration);
+        SoloudEngine.current.fadeVolume(_soloudHandle!, target, duration);
       }
       return;
     }
@@ -841,11 +853,11 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
-        await SoLoud.instance.stop(_soloudHandle!);
+        await SoloudEngine.current.stop(_soloudHandle!);
         _soloudHandle = null;
       }
       if (_soloudSource != null) {
-        await SoLoud.instance.disposeSource(_soloudSource!);
+        await SoloudEngine.current.disposeSource(_soloudSource!);
         _soloudSource = null;
       }
       _status = PlaybackStatus.notInitialized;
@@ -889,10 +901,10 @@ class SoundController with ChangeNotifier {
     _justAudioFadeTimer = null;
     if (_useSoloud) {
       if (_soloudHandle != null) {
-        SoLoud.instance.stop(_soloudHandle!);
+        SoloudEngine.current.stop(_soloudHandle!);
       }
       if (_soloudSource != null) {
-        SoLoud.instance.disposeSource(_soloudSource!);
+        SoloudEngine.current.disposeSource(_soloudSource!);
       }
     }
     if (_useWebSeamless) {
