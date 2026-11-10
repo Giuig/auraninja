@@ -168,7 +168,8 @@ asset = "assets/sounds/nature/frog.ogg"
 source = "moodist:public/sounds/animals/frog.mp3"
 sha256 = "c41fbbbfbe896a11fd19c0f8dc9185a000462239ff971625ac8eaedd05480b8c"
 rule = "integrated"
-q = 1
+# q2 (DECISIONS 13 optional upgrade): the real arm64 APK left 1,072,119 bytes under 30,000,000.
+q = 2
 
 [[sound]]
 key = "howling-wind"
@@ -226,7 +227,8 @@ asset = "assets/sounds/nature/walk-in-snow.ogg"
 source = "moodist:public/sounds/nature/walk-in-snow.mp3"
 sha256 = "11d89616a1fff14d3c8c57efd88d8d1f66189a2105b13b22b63d886e10e8308c"
 rule = "integrated"
-q = 1
+# q2 (DECISIONS 13 optional upgrade): the real arm64 APK left 1,072,119 bytes under 30,000,000.
+q = 2
 # Automatic start (0 s) wraps from a footstep into a gap (10.7 dB level step). Starting at 0.49 s
 # puts the wrap between steps (0.03 dB); found by scanning the wrap point.
 loop_start_s = 0.49
