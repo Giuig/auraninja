@@ -4,8 +4,23 @@ import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
 
 class WebAudioSeamlessPlayer {
-  web.AudioContext? _audioContext;
+  WebAudioSeamlessPlayer();
+
+  /// Builds a player on an existing context and buffer, so tests can render
+  /// the real graph into an `OfflineAudioContext`. The caller owns [context]:
+  /// the player never resumes or closes it.
+  @visibleForTesting
+  WebAudioSeamlessPlayer.withContext(
+      web.BaseAudioContext context, web.AudioBuffer buffer)
+      : _audioContext = context,
+        _audioBuffer = buffer,
+        _ownsContext = false;
+
+  // A live AudioContext in production, an OfflineAudioContext in tests; the
+  // graph code only needs what BaseAudioContext offers.
+  web.BaseAudioContext? _audioContext;
   web.AudioBuffer? _audioBuffer;
+  bool _ownsContext = true;
 
   // We keep track of the next start time using the AudioContext clock
   double _nextStartTime = 0.0;
@@ -45,12 +60,13 @@ class WebAudioSeamlessPlayer {
 
     await stop();
     _audioContext ??= web.AudioContext();
+    final ctx = _audioContext!;
 
     try {
       final webPath = 'assets/$assetPath';
       final response = await web.window.fetch(webPath.toJS).toDart;
       final arrayBuffer = await response.arrayBuffer().toDart;
-      _audioBuffer = await _audioContext!.decodeAudioData(arrayBuffer).toDart;
+      _audioBuffer = await ctx.decodeAudioData(arrayBuffer).toDart;
     } catch (e) {
       debugPrint('[WebAudio] Load Error: $e');
       rethrow;
@@ -62,7 +78,9 @@ class WebAudioSeamlessPlayer {
     final ctx = _audioContext;
     if (ctx == null) return;
 
-    if (ctx.state == 'suspended') await ctx.resume().toDart;
+    if (_ownsContext && ctx.state == 'suspended') {
+      await (ctx as web.AudioContext).resume().toDart;
+    }
 
     _stopAllSources();
     _isPlaying = true;
@@ -126,7 +144,7 @@ class WebAudioSeamlessPlayer {
     );
   }
 
-  void _playOneShot(web.AudioBuffer buffer, web.AudioContext ctx,
+  void _playOneShot(web.AudioBuffer buffer, web.BaseAudioContext ctx,
       web.GainNode mainGain, double time) {
     final source = ctx.createBufferSource();
     source.buffer = buffer;
@@ -201,7 +219,9 @@ class WebAudioSeamlessPlayer {
 
   void dispose() {
     stop();
-    _audioContext?.close();
+    if (_ownsContext) {
+      (_audioContext as web.AudioContext?)?.close();
+    }
   }
 }
 
