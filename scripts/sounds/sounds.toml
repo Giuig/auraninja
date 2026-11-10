@@ -1,0 +1,470 @@
+# Sound manifest: one row per shipped sound asset (48). Read by build.py and check.py.
+#
+# source kinds
+#   moodist:<path>   original recording in github.com/remvze/moodist at the pinned commit below.
+#                    Never committed (redistribution of the Pixabay-sourced originals is a grey
+#                    area); fetched on demand, or taken from --src-dir, and verified by sha256.
+#   synth:<name>     generated here (see lib/synth.py): green noise, and the binaural pairs
+#                    (pure sines, whole-Hz carriers, 10 s, so the loop is exact). Parameters
+#                    live in [sound.synth]. No original is read for these.
+#
+# rule
+#   integrated  integrated loudness = target_lufs (-20), true peak <= ceiling
+#   binaural    integrated loudness = binaural_lufs (-24), no trim/cap/crossfade, stereo
+#   body        level from the steady body of the sound: median short-term loudness =
+#               R + level_offset_db, R = median over the integrated-rule sounds of their
+#               median short-term loudness; rare pops are soft-clipped. Used for the five
+#               transient sounds only (fire, office, keyboard, typewriter, clock).
+#
+# Optional per-row fields: loop_start_s / loop_end_s (loop points, seconds into the decoded
+# original at 44.1 kHz; when set they replace the automatic head/tail trim; for binaural
+# rows they only slice), xfade_s (default: 2.0, or 0.5 when the loop is under 15 s),
+# cap_s, q (Vorbis quality: 1 for the eleven sounds with codec-sensitive content, 8 for the
+# binaural pure tones, 0 otherwise; see QUALITY.md / DECISIONS 13), q default 0, level_offset_db (default 0),
+# max_quiet_s (longest allowed quiet stretch, default 2.0; an override needs a comment).
+
+[meta]
+moodist_repo = "remvze/moodist"
+moodist_commit = "11c0be2200116a3635880d600fd6953899cc51a3"
+sample_rate = 44100
+target_lufs = -20.0
+binaural_lufs = -24.0
+tolerance_lu = 0.5
+true_peak_ceiling_dbtp = -1.0
+size_budget_bytes = 16000000
+binaural_min_separation_db = 40.0
+
+[defaults]
+cap_s = 90.0
+q = 0
+level_offset_db = 0.0
+max_quiet_s = 2.0
+
+[[sound]]
+key = "alpha-8hz"
+asset = "assets/sounds/binaural/alpha-8hz.ogg"
+source = "synth:binaural"
+rule = "binaural"
+q = 8
+
+[sound.synth]
+left_hz = 200
+right_hz = 208
+seconds = 10
+
+[[sound]]
+key = "delta-1hz"
+asset = "assets/sounds/binaural/delta-1hz.ogg"
+source = "synth:binaural"
+rule = "binaural"
+q = 8
+
+[sound.synth]
+left_hz = 100
+right_hz = 101
+seconds = 10
+
+[[sound]]
+key = "delta-2hz"
+asset = "assets/sounds/binaural/delta-2hz.ogg"
+source = "synth:binaural"
+rule = "binaural"
+q = 8
+
+[sound.synth]
+left_hz = 100
+right_hz = 102
+seconds = 10
+
+[[sound]]
+key = "focus-10hz"
+asset = "assets/sounds/binaural/focus-10hz.ogg"
+source = "synth:binaural"
+rule = "binaural"
+q = 8
+
+[sound.synth]
+left_hz = 200
+right_hz = 210
+seconds = 10
+
+[[sound]]
+key = "theta-4hz"
+asset = "assets/sounds/binaural/theta-4hz.ogg"
+source = "synth:binaural"
+rule = "binaural"
+q = 8
+
+[sound.synth]
+left_hz = 150
+right_hz = 154
+seconds = 10
+
+[[sound]]
+key = "theta-5hz"
+asset = "assets/sounds/binaural/theta-5hz.ogg"
+source = "synth:binaural"
+rule = "binaural"
+q = 8
+
+[sound.synth]
+left_hz = 200
+right_hz = 205
+seconds = 10
+
+[[sound]]
+key = "birds"
+asset = "assets/sounds/nature/birds.ogg"
+source = "moodist:public/sounds/animals/birds.mp3"
+sha256 = "f9b022ed2df9f727a8e84e614b25965112dfe2bbb30cdf8c3db0442ae1eed489"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "cat"
+asset = "assets/sounds/nature/cat.ogg"
+source = "moodist:public/sounds/animals/cat-purring.mp3"
+sha256 = "a779a2a3fe77b08722517e2e1a4f8ecbfb59a6282a74e46f0e9244d6cfdf230e"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "crickets"
+asset = "assets/sounds/nature/crickets.ogg"
+source = "moodist:public/sounds/animals/crickets.mp3"
+sha256 = "126bf1620193fa43a711d3cf6658a06f9fef5bd4eb42bf2ae48da0da1b73605c"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "droplets"
+asset = "assets/sounds/nature/droplets.ogg"
+source = "moodist:public/sounds/nature/droplets.mp3"
+sha256 = "d21f0af60663a03b477739a425ddc59be394ff60ddd1a877bff280b352a57d77"
+rule = "integrated"
+q = 1
+
+# transient sound: level from its steady body (decision 4)
+[[sound]]
+key = "fire"
+asset = "assets/sounds/nature/fire.ogg"
+source = "moodist:public/sounds/nature/campfire.mp3"
+sha256 = "9625b15c7f6a4a2d16db937f0e1042762421f9a3ab74f60235bd63654bba13db"
+rule = "body"
+q = 1
+# Hand-picked loop start: with the automatic start the wrap lands on a pop (9.5 dB level
+# step at the seam). 0.2 s puts it between pops (0.36 dB). Found by scanning starts 0-8 s.
+loop_start_s = 0.2
+level_offset_db = 0.0
+
+[[sound]]
+key = "frog"
+asset = "assets/sounds/nature/frog.ogg"
+source = "moodist:public/sounds/animals/frog.mp3"
+sha256 = "c41fbbbfbe896a11fd19c0f8dc9185a000462239ff971625ac8eaedd05480b8c"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "howling-wind"
+asset = "assets/sounds/nature/howling-wind.ogg"
+source = "moodist:public/sounds/nature/howling-wind.mp3"
+sha256 = "dd00c875c58c033d2f3b94e247d2b5a366ed529a659cc2d19e00dd84ad0e464d"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "jungle"
+asset = "assets/sounds/nature/jungle.ogg"
+source = "moodist:public/sounds/nature/jungle.mp3"
+sha256 = "a0ac0b48a8e28d3dde17203e386a722afafe057d1b5d1fb5d13918175a440335"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "owl"
+asset = "assets/sounds/nature/owl.ogg"
+source = "moodist:public/sounds/animals/owl.mp3"
+sha256 = "7fcd61d5953f564930220bc2579d6071068977f92c7bf5ed6117a57112c55a82"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "river"
+asset = "assets/sounds/nature/river.ogg"
+source = "moodist:public/sounds/nature/river.mp3"
+sha256 = "b0360cd39425a23f7957a152ec61113226f423a9e2e08071d5f37200357e6289"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "thunder"
+asset = "assets/sounds/nature/thunder.ogg"
+source = "moodist:public/sounds/rain/thunder.mp3"
+sha256 = "c96dde1068d5c96a40ad47cccc767a88d907b3d3fdcb84819e18b81dcd6bd2bd"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "walk-in-snow"
+asset = "assets/sounds/nature/walk-in-snow.ogg"
+source = "moodist:public/sounds/nature/walk-in-snow.mp3"
+sha256 = "11d89616a1fff14d3c8c57efd88d8d1f66189a2105b13b22b63d886e10e8308c"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "walk-on-gravel"
+asset = "assets/sounds/nature/walk-on-gravel.ogg"
+source = "moodist:public/sounds/nature/walk-on-gravel.mp3"
+sha256 = "0029d593b2803f035912a4695b499df60d23333e2781f848b243a0b35f5dc16e"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "walk-on-leaves"
+asset = "assets/sounds/nature/walk-on-leaves.ogg"
+source = "moodist:public/sounds/nature/walk-on-leaves.mp3"
+sha256 = "a7f49dc2253c7ce58399865d518f947e377fcf6e78e0d53b270c3497d4021c52"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "waterfall"
+asset = "assets/sounds/nature/waterfall.ogg"
+source = "moodist:public/sounds/nature/waterfall.mp3"
+sha256 = "46d0848f5876d0f461e8439f812464742710f5f6d236baa977f382d794c60b0a"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "waves"
+asset = "assets/sounds/nature/waves.ogg"
+source = "moodist:public/sounds/nature/waves.mp3"
+sha256 = "40c670e678b5ee19ff67a8c322490b1f7d2d53124cf9e8b07efd329138aaa8f8"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "whale"
+asset = "assets/sounds/nature/whale.ogg"
+source = "moodist:public/sounds/animals/whale.mp3"
+sha256 = "e88047b74a6566e07994454d5d6c5ab5ca400485d61d0ee74a5218184187dc17"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "wind-in-trees"
+asset = "assets/sounds/nature/wind-in-trees.ogg"
+source = "moodist:public/sounds/nature/wind-in-trees.mp3"
+sha256 = "b29f775dda9789004aaceee392e124eaa35c0386d27f99b93a639185d98f6b4b"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "wind"
+asset = "assets/sounds/nature/wind.ogg"
+source = "moodist:public/sounds/nature/wind.mp3"
+sha256 = "556ec1d90038aa92f754de84d58e8973693836b1e0358834536ca7824f40c973"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "brown-noise"
+asset = "assets/sounds/noise/brown-noise.ogg"
+source = "moodist:public/sounds/noise/brown-noise.wav"
+sha256 = "b7e4209f2bb4c2ca37e7cf0b21393e2264703d43bea36b4b5c837b8496bbe578"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "green"
+asset = "assets/sounds/noise/green.ogg"
+source = "synth:green"
+rule = "integrated"
+q = 0
+
+# Band shape measured once from the old green.ogg (power spectrum, dB relative to the peak
+# at ~415 Hz); the file itself is never read again.
+[sound.synth]
+seed = 1
+seconds = 10
+shape = [[50, -38.0], [100, -23.4], [150, -12.5], [200, -9.5], [300, -2.8], [415, 0.0],
+         [600, -4.6], [800, -10.5], [1000, -11.6], [1200, -13.0], [1600, -24.9],
+         [2000, -29.2], [3000, -48.4], [4000, -59.0]]
+
+[[sound]]
+key = "pink-noise"
+asset = "assets/sounds/noise/pink-noise.ogg"
+source = "moodist:public/sounds/noise/pink-noise.wav"
+sha256 = "075eecefd60c4103da3ec8672db1c96ba54f073f8a5bc4e7cc1b587c96854fb4"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "white-noise"
+asset = "assets/sounds/noise/white-noise.ogg"
+source = "moodist:public/sounds/noise/white-noise.wav"
+sha256 = "02ccb2013118b57c76607f7e3e5d9d479e5a9aaa7868e1a07194cde77c0ea6dd"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "cafe"
+asset = "assets/sounds/places/cafe.ogg"
+source = "moodist:public/sounds/places/cafe.mp3"
+sha256 = "04b818f9e7c31d57c7f0d522bcf7d9f708c728f046d009953e4fbc18723a0300"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "library"
+asset = "assets/sounds/places/library.ogg"
+source = "moodist:public/sounds/places/library.mp3"
+sha256 = "95095ef77ed7f1d1c2550b6f39d95cde31f72b37d8023c1dfd7c22931d84fe05"
+rule = "integrated"
+q = 0
+
+# transient sound: level from its steady body (decision 4)
+[[sound]]
+key = "office"
+asset = "assets/sounds/places/office.ogg"
+source = "moodist:public/sounds/places/office.mp3"
+sha256 = "32691ad3d1f0cd6175a4e648ad15c5fd354ad0e59a3ce0b246fd7cf89d9a4169"
+rule = "body"
+q = 0
+level_offset_db = 0.0
+
+[[sound]]
+key = "plane"
+asset = "assets/sounds/places/plane.ogg"
+source = "moodist:public/sounds/transport/airplane.mp3"
+sha256 = "170fcd68d60ebe89ac26425a0c38c437b70071cc4919419bbb0cbc92a3cb5af8"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "train"
+asset = "assets/sounds/places/train.ogg"
+source = "moodist:public/sounds/transport/train.mp3"
+sha256 = "ee81ed9e0ce6bfc14ce21209615e6f7156384c8213f8c80b5fae3665005ef788"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "underwater"
+asset = "assets/sounds/places/underwater.ogg"
+source = "moodist:public/sounds/places/underwater.mp3"
+sha256 = "addd91f799f3b77d8032c32745a0c039804502eb1c65039790dae66428e27164"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "heavy-rain"
+asset = "assets/sounds/rain/heavy-rain.ogg"
+source = "moodist:public/sounds/rain/heavy-rain.mp3"
+sha256 = "6910161b347a4f616bc42d0b3118982c243d149fe45e55fef74c9a9e1aa08560"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "light-rain"
+asset = "assets/sounds/rain/light-rain.ogg"
+source = "moodist:public/sounds/rain/light-rain.mp3"
+sha256 = "967eab5ddc2b84808a05fea757460d51461e9dc56e72a3d1490bbb58e7bc6578"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "rain-on-car-roof"
+asset = "assets/sounds/rain/rain-on-car-roof.ogg"
+source = "moodist:public/sounds/rain/rain-on-car-roof.mp3"
+sha256 = "5e16d3e97c97a3a130d13a1300d5ccdd3ed8b7788dc9f76262ead0e4eb8a07d7"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "rain-on-umbrella"
+asset = "assets/sounds/rain/rain-on-umbrella.ogg"
+source = "moodist:public/sounds/rain/rain-on-umbrella.mp3"
+sha256 = "f31a565bdf853fbf6baba8495fdfed91f161c55756540819ee13dbbca98ab8c0"
+rule = "integrated"
+q = 1
+
+[[sound]]
+key = "rain-on-window"
+asset = "assets/sounds/rain/rain-on-window.ogg"
+source = "moodist:public/sounds/rain/rain-on-window.mp3"
+sha256 = "781add053a83a0a9ac2a6ee2ccc937fed24872d479830c0c98cd70ed03689fe9"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "boiling-water"
+asset = "assets/sounds/things/boiling-water.ogg"
+source = "moodist:public/sounds/things/boiling-water.mp3"
+sha256 = "9c2e35cbd002c0b13aa82301781878654c6fe651325de8be971721ccb95128a1"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "bubbles"
+asset = "assets/sounds/things/bubbles.ogg"
+source = "moodist:public/sounds/things/bubbles.mp3"
+sha256 = "96f743156f8f9402f1fa7341415d3d9a4bc09316fe94e27c07ce45d211a18c5b"
+rule = "integrated"
+q = 0
+
+[[sound]]
+key = "ceiling-fan"
+asset = "assets/sounds/things/ceiling-fan.ogg"
+source = "moodist:public/sounds/things/ceiling-fan.mp3"
+sha256 = "c2c009912df561236cc3ca2fb428384ae63f5f869d5178b0a62aabe856df86fb"
+rule = "integrated"
+q = 0
+
+# transient sound: level from its steady body (decision 4)
+[[sound]]
+key = "clock"
+asset = "assets/sounds/things/clock.ogg"
+source = "moodist:public/sounds/things/clock.mp3"
+sha256 = "45283d30ccc1ccebab2ddb84dbaaaedf5265275c33cb7c4c8defce9451059160"
+rule = "body"
+q = 1
+level_offset_db = 0.0
+
+# transient sound: level from its steady body (decision 4)
+[[sound]]
+key = "keyboard"
+asset = "assets/sounds/things/keyboard.ogg"
+source = "moodist:public/sounds/things/keyboard.mp3"
+sha256 = "2499954ba838ce1b32b79560a2ab273209ae350bb9988490738ed2e2b23f82ae"
+rule = "body"
+q = 0
+level_offset_db = 0.0
+
+[[sound]]
+key = "singing-bowl"
+asset = "assets/sounds/things/singing-bowl.ogg"
+source = "moodist:public/sounds/things/singing-bowl.mp3"
+sha256 = "9b86534b01679a113a26da201f6160d604c9408ddd6effb00e38c5be78f0192e"
+rule = "integrated"
+q = 0
+
+# transient sound: level from its steady body (decision 4)
+[[sound]]
+key = "typewriter"
+asset = "assets/sounds/things/typewriter.ogg"
+source = "moodist:public/sounds/things/typewriter.mp3"
+sha256 = "0d56f3a9482e7edad9a6e58130d733883c89f36f51e1c8dd9fde7a3b5cf276b8"
+rule = "body"
+q = 0
+level_offset_db = 0.0
+
+[[sound]]
+key = "wind-chimes"
+asset = "assets/sounds/things/wind-chimes.ogg"
+source = "moodist:public/sounds/things/wind-chimes.mp3"
+sha256 = "212558c58fdb5b8f490b9c1d9b6f3c7469d025b4feff4df4014bff60d0422cf9"
+rule = "integrated"
+q = 0

@@ -1,0 +1,7 @@
+# Pinned for reproducible sound builds. Python 3.11+ (tomllib is used).
+# ffmpeg with libvorbis is also required (see BUILDING.md).
+numpy==2.5.4
+scipy==1.18.1
+soundfile==0.14.0
+pyloudnorm==0.2.0
+pytest==9.1.1
