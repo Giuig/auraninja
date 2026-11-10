@@ -155,7 +155,12 @@ q = 1
 # Hand-picked loop start: with the automatic start the wrap lands on a pop (9.5 dB level
 # step at the seam). 0.2 s puts it between pops (0.36 dB). Found by scanning starts 0-8 s.
 loop_start_s = 0.2
-level_offset_db = 0.0
+# Candidate B (shipped): body rule at R - 20 dB. The body rule as built (offset 0, candidate A)
+# clips the pops so hard that SDR against plain gain is 1.5 dB; at -20 dB SDR is 13.3 dB (the
+# closed loop is not monotonic: -17 dB gives 8.3, -18 gives 10.7, -19 gives 10.9). Integrated
+# loudness then lands near -36 LUFS, far below the other sounds: the owner picks by ear in
+# P5 between this and A (offset 0.0; the files are in C:/Temp/sound-pass-p3/fire-candidates).
+level_offset_db = -20.0
 
 [[sound]]
 key = "frog"
@@ -163,7 +168,8 @@ asset = "assets/sounds/nature/frog.ogg"
 source = "moodist:public/sounds/animals/frog.mp3"
 sha256 = "c41fbbbfbe896a11fd19c0f8dc9185a000462239ff971625ac8eaedd05480b8c"
 rule = "integrated"
-q = 1
+# q2 (DECISIONS 13 optional upgrade): the real arm64 APK left 1,072,119 bytes under 30,000,000.
+q = 2
 
 [[sound]]
 key = "howling-wind"
@@ -188,6 +194,11 @@ source = "moodist:public/sounds/animals/owl.mp3"
 sha256 = "7fcd61d5953f564930220bc2579d6071068977f92c7bf5ed6117a57112c55a82"
 rule = "integrated"
 q = 0
+# Loop starts 2.57 s into the 12.9 s original (after the quiet lead-in; found by scanning the
+# wrap point for the smallest level step, 0.03-0.3 dB). The 2.5-2.75 s pause between hoots is
+# the content, not a defect, so the quiet-run limit is raised for this row only.
+loop_start_s = 2.57
+max_quiet_s = 3.0
 
 [[sound]]
 key = "river"
@@ -204,6 +215,11 @@ source = "moodist:public/sounds/rain/thunder.mp3"
 sha256 = "c96dde1068d5c96a40ad47cccc767a88d907b3d3fdcb84819e18b81dcd6bd2bd"
 rule = "integrated"
 q = 1
+# Loop starts 1.74 s in (smallest wrap step, 0.02 dB; the automatic start gave a 3.75 s quiet
+# run only because of the pauses). The 3-3.75 s pauses between rumbles are the content, so the
+# quiet-run limit is raised for this row only.
+loop_start_s = 1.74
+max_quiet_s = 4.0
 
 [[sound]]
 key = "walk-in-snow"
@@ -211,7 +227,11 @@ asset = "assets/sounds/nature/walk-in-snow.ogg"
 source = "moodist:public/sounds/nature/walk-in-snow.mp3"
 sha256 = "11d89616a1fff14d3c8c57efd88d8d1f66189a2105b13b22b63d886e10e8308c"
 rule = "integrated"
-q = 1
+# q2 (DECISIONS 13 optional upgrade): the real arm64 APK left 1,072,119 bytes under 30,000,000.
+q = 2
+# Automatic start (0 s) wraps from a footstep into a gap (10.7 dB level step). Starting at 0.49 s
+# puts the wrap between steps (0.03 dB); found by scanning the wrap point.
+loop_start_s = 0.49
 
 [[sound]]
 key = "walk-on-gravel"
@@ -333,6 +353,11 @@ source = "moodist:public/sounds/places/office.mp3"
 sha256 = "32691ad3d1f0cd6175a4e648ad15c5fd354ad0e59a3ce0b246fd7cf89d9a4169"
 rule = "body"
 q = 0
+# Automatic start wraps at a 2.9 dB level step (limit 2.2). Starting at 27.59 s puts the wrap in
+# steady room tone (0.00 dB); the loop is still the 90 s cap.
+loop_start_s = 27.59
+# Body rule kept at offset 0: SDR is 4.1 dB, and -1/-2/-3 dB give 4.5/4.2/4.4 (still heavily
+# limited; the room-tone body is far below its peaks).
 level_offset_db = 0.0
 
 [[sound]]
@@ -366,6 +391,8 @@ source = "moodist:public/sounds/rain/heavy-rain.mp3"
 sha256 = "6910161b347a4f616bc42d0b3118982c243d149fe45e55fef74c9a9e1aa08560"
 rule = "integrated"
 q = 0
+# Automatic start wraps at a 1.5 dB step (limit 1.2); 0.87 s gives 0.01 dB.
+loop_start_s = 0.87
 
 [[sound]]
 key = "light-rain"
@@ -398,6 +425,8 @@ source = "moodist:public/sounds/rain/rain-on-window.mp3"
 sha256 = "781add053a83a0a9ac2a6ee2ccc937fed24872d479830c0c98cd70ed03689fe9"
 rule = "integrated"
 q = 0
+# Automatic start wraps at a 1.8 dB step (limit 1.5); 1.0 s gives 0.01 dB.
+loop_start_s = 1.0
 
 [[sound]]
 key = "boiling-water"
@@ -441,6 +470,8 @@ source = "moodist:public/sounds/things/keyboard.mp3"
 sha256 = "2499954ba838ce1b32b79560a2ab273209ae350bb9988490738ed2e2b23f82ae"
 rule = "body"
 q = 0
+# Body rule kept at offset 0: SDR is 7.1 dB, and an offset of up to -3 dB only reaches 9.8
+# (-1: 8.4, -2: 8.6), still under 12.
 level_offset_db = 0.0
 
 [[sound]]
@@ -450,6 +481,12 @@ source = "moodist:public/sounds/things/singing-bowl.mp3"
 sha256 = "9b86534b01679a113a26da201f6160d604c9408ddd6effb00e38c5be78f0192e"
 rule = "integrated"
 q = 0
+# Automatic start gives a click ratio of 3.3 at the wrap (limit 2.5): the wrap cut a bowl
+# partial mid-cycle. Starting at 3.86 s keeps the wrap inside a sustained ring (0.08 dB step,
+# click ratio 1.05 on the decoded file). The click metric on a near-pure tone depends on the
+# codec's edge noise, so the start was chosen by encoding and decoding each candidate: 1.46 s
+# looked clean before encoding and decoded to 4.3.
+loop_start_s = 3.86
 
 # transient sound: level from its steady body (decision 4)
 [[sound]]
@@ -459,7 +496,9 @@ source = "moodist:public/sounds/things/typewriter.mp3"
 sha256 = "0d56f3a9482e7edad9a6e58130d733883c89f36f51e1c8dd9fde7a3b5cf276b8"
 rule = "body"
 q = 0
-level_offset_db = 0.0
+# R - 3 dB: SDR against plain gain goes from 6.7 dB (offset 0) to 14.6 dB. Offsets -1 and -2
+# gave 6.8 and 8.0, so -3 is the smallest whole-dB step that clears 12.
+level_offset_db = -3.0
 
 [[sound]]
 key = "wind-chimes"
@@ -468,3 +507,6 @@ source = "moodist:public/sounds/things/wind-chimes.mp3"
 sha256 = "212558c58fdb5b8f490b9c1d9b6f3c7469d025b4feff4df4014bff60d0422cf9"
 rule = "integrated"
 q = 0
+# Automatic start wraps at a 4.6 dB step (limit 3.9); 6.49 s gives 0.09 dB. Pauses stay under
+# 0.5 s here, so no quiet-run override.
+loop_start_s = 6.49

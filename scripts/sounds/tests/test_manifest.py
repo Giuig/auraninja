@@ -56,10 +56,13 @@ def test_rules_and_body_set():
 
 def test_per_sound_quality_per_decisions_13():
     m = sources.load_manifest()
-    q1 = {"clock", "fire", "walk-in-snow", "light-rain", "thunder", "rain-on-umbrella",
-          "droplets", "frog", "birds", "crickets", "whale"}
+    q1 = {"clock", "fire", "light-rain", "thunder", "rain-on-umbrella",
+          "droplets", "birds", "crickets", "whale"}
+    # DECISIONS 13's optional upgrade, applied in P3: the arm64 APK left over 1 MB under 30 MB.
+    q2 = {"frog", "walk-in-snow"}
     for r in m["sound"]:
-        want = 8 if r["rule"] == "binaural" else 1 if r["key"] in q1 else 0
+        want = (8 if r["rule"] == "binaural" else 2 if r["key"] in q2
+                else 1 if r["key"] in q1 else 0)
         assert r["q"] == want, (r["key"], r["q"], want)
 
 
