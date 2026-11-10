@@ -196,6 +196,8 @@ def _run(rows, sounds_dir, meta, header, opts, mode):
     budget = opts.budget_bytes or header.get("budget_bytes") or meta["size_budget_bytes"]
     total = sum(r.bytes for r in result.reports)
     result.notes.append(f"total {total:,} bytes (budget {budget:,})")
+    result.notes.append("loudness: mono files are measured as played on both channels "
+                        "(+3.01 dB vs a 1-channel BS.1770 reading; see lib/measure.MONO_CONVENTION)")
     if total > budget and "size" not in opts.skip:
         result.failures.append(Finding("*", "size", f"{total:,} bytes > budget {budget:,}"))
     return result
