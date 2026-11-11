@@ -87,7 +87,7 @@ class WebAudioSeamlessPlayer {
     // what the old look-ahead scheduler and its 15 ms overlap worked around.
     final source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.loop = true;
+    source.loop = false;
     source.loopStart = 0;
     source.loopEnd = buffer.duration;
     source.connect(gainNode);
