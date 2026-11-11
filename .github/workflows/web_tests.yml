@@ -60,8 +60,9 @@ jobs:
 
       - name: Browser tests
         run: |
-          flutter test --platform chrome test/web/ --reporter expanded > web-test.txt 2>&1
-          s=$?
+          # The shell runs with -e: capture the status instead of letting it end the step early.
+          s=0
+          flutter test --platform chrome test/web/ --reporter expanded > web-test.txt 2>&1 || s=$?
           cat web-test.txt
           exit $s
 
