@@ -130,9 +130,6 @@ Future<void> _coldStartMix(WidgetTester tester) async {
       reason: "the stream's player is not at the mix level");
   expect(rain.volume, closeTo(0.6, 0.001));
 
-  // Audio really moves, not only the status.
-  await expectAdvancing(stream, 'radio_mix');
-
   // The Mixes page shows the mix as running (its play button became stop).
   await _pumpUntil(
     tester,
@@ -143,6 +140,12 @@ Future<void> _coldStartMix(WidgetTester tester) async {
     timeout: const Duration(seconds: 15),
     what: 'the mix card to show the stop button',
   );
+
+  // Audio really moves, not only the status. Measured once the mix has finished
+  // starting (the page's 4 s start window is over): right after the start the
+  // position moved only 1502-1687 ms over 2 s on the CI emulator, against a
+  // 1500 ms gate.
+  await expectAdvancing(stream, 'radio_mix');
 
   await handler.stopAll().timeout(const Duration(seconds: 15));
   await _pumpUntil(
