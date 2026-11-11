@@ -9,7 +9,7 @@ set -u
 
 OUT=e2e-out
 DEVICE=${E2E_DEVICE:-emulator-5554}
-FILES=${E2E_FILES:-smoke_test.dart}
+FILES=${E2E_FILES:-smoke_test.dart a1_assets_load_test.dart memory_frees_test.dart stress_test.dart}
 PKG=io.github.giuig.auraninja
 APK=build/app/outputs/flutter-apk/app-debug.apk
 
@@ -83,7 +83,7 @@ fi
 
 # Evidence for the emulator audio option: what the engine said about itself.
 grep -iE 'soloud|miniaudio|aaudio|opensl|audiotrack' "$OUT/logcat.txt" | head -150 > "$OUT/audio_lines.txt" 2>&1 || true
-grep -h 'E2E_METRIC\|E2E_INIT' "$OUT"/*_test.dart.txt > "$OUT/metrics.txt" 2>&1 || true
+grep -h 'E2E_METRIC' "$OUT"/*_test.dart.txt > "$OUT/metrics.txt" 2>&1 || true
 
 {
   echo '```'
