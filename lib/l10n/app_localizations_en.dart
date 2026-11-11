@@ -217,6 +217,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walkOnLeaves => 'Walk on Leaves';
 
   @override
+  String get walkOnGravel => 'Walk on Gravel';
+
+  @override
   String get droplets => 'Droplets';
 
   @override

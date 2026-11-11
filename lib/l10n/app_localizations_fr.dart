@@ -218,6 +218,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walkOnLeaves => 'Marcher sur les feuilles';
 
   @override
+  String get walkOnGravel => 'Marcher sur le gravier';
+
+  @override
   String get droplets => 'Gouttes';
 
   @override

@@ -112,6 +112,12 @@ List<NinjaSound> buildLocalizedSounds(BuildContext? context) {
       path: 'assets/sounds/nature/walk-on-leaves.ogg',
     ),
     NinjaSound(
+      name: hasContext ? projLocalization!.walkOnGravel : 'Walk on Gravel',
+      category: SoundCategory.nature,
+      icon: '🪨',
+      path: 'assets/sounds/nature/walk-on-gravel.ogg',
+    ),
+    NinjaSound(
       name: hasContext ? projLocalization!.jungle : 'Jungle',
       category: SoundCategory.nature,
       icon: '🌴',

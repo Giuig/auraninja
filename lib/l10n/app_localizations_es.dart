@@ -218,6 +218,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get walkOnLeaves => 'Caminar en hojas';
 
   @override
+  String get walkOnGravel => 'Caminar sobre grava';
+
+  @override
   String get droplets => 'Gotas';
 
   @override

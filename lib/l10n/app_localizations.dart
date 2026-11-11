@@ -502,6 +502,12 @@ abstract class AppLocalizations {
   /// **'Walk on Leaves'**
   String get walkOnLeaves;
 
+  /// No description provided for @walkOnGravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk on Gravel'**
+  String get walkOnGravel;
+
   /// No description provided for @droplets.
   ///
   /// In en, this message translates to:
