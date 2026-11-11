@@ -326,14 +326,24 @@ await check('F5', 'Stop All stops every source', async () => {
 // ------------------------------------------------------------ radio
 const streamUrl = STREAM + '/stream';
 const deadUrl = STREAM + '/dead';
+// Flutter keeps the real text input in a separate editing element that takes focus after the
+// click, so locator.fill() (which sets the value of the semantics node) is lost. Click, let the
+// focus move, type with real key events, then check what the focused input holds.
+async function typeInto(locator, text) {
+  await locator.click({ timeout: 10000 });
+  await until(() => page.evaluate(() => document.activeElement && document.activeElement.tagName === 'INPUT'), 10000, 'the text field has focus');
+  await sleep(300);
+  await page.keyboard.type(text);
+  await until(() => page.evaluate((t) => document.activeElement.value === t, text), 10000, `the field holds "${text}"`);
+}
 async function addStation(name, url) {
   const step = async (what, fn) => {
     try { await fn(); } catch (e) { throw new Error(`add "${name}": ${what}: ${String(e.message).split('\n')[0]}`); }
   };
   await step('open the add page', () => page.getByRole('button', { name: 'Add radio station' }).click({ timeout: 10000 }));
   await step('URL tab', () => page.getByRole('tab', { name: /URL/ }).click({ timeout: 10000 }));
-  await step('fill the stream URL', () => page.getByRole('textbox', { name: /Stream URL/ }).fill(url, { timeout: 10000 }));
-  await step('fill the name', () => page.getByRole('textbox', { name: /Station name/ }).fill(name, { timeout: 10000 }));
+  await step('type the stream URL', () => typeInto(page.getByRole('textbox', { name: /Stream URL/ }), url));
+  await step('type the name', () => typeInto(page.getByRole('textbox', { name: /Station name/ }), name));
   await step('press Add Station', () => page.getByRole('button', { name: 'Add Station' }).click({ timeout: 10000 }));
   await step('confirmation', () => page.getByText(`Added "${name}"`).first().waitFor({ timeout: 10000 }));
   await step('back to the list', () => page.getByRole('button', { name: /^Back/ }).click({ timeout: 10000 }));
