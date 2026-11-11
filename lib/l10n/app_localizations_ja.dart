@@ -211,6 +211,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get walkOnLeaves => '落ち葉の上を歩く';
 
   @override
+  String get walkOnGravel => '砂利の上を歩く';
+
+  @override
   String get droplets => '水滴';
 
   @override
