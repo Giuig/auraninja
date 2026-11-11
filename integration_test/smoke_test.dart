@@ -9,7 +9,6 @@ import 'package:auraninja/main.dart' as app;
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 // ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
 
@@ -36,7 +35,7 @@ Future<void> _pumpUntil(
 }
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  initE2eBinding();
 
   testWidgets('app boots, SoLoud is up, one sound loads, plays and stops',
       (tester) async {

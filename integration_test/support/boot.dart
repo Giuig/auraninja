@@ -11,6 +11,22 @@ import 'package:auraninja/bootstrap.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+
+/// First line of every test file's `main()`: initialises the binding with an
+/// unthrottled `debugPrint`.
+///
+/// The binding makes the `debugPrint` it finds at start-up the one the test
+/// framework reports failures through, and the default one throttles to 12 kB
+/// per second. The app's `[WH]` lines are long, so on the runner the backlog
+/// ran seconds behind the test, and the process ended before the framework's
+/// own failure dump left the queue: a red test said only "See exception logs
+/// above" and the log stopped at an arbitrary, older card (run 43020801834).
+/// Synchronous printing has no queue, so nothing can be lost or lag.
+IntegrationTestWidgetsFlutterBinding initE2eBinding() {
+  debugPrint = debugPrintSynchronously;
+  return IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+}
 
 Future<WrapperAudioHandler>? _booted;
 
@@ -23,7 +39,8 @@ Future<WrapperAudioHandler> _boot() async {
 }
 
 /// Collects every `debugPrint` line (the app's `[SC:...]` lines) while still
-/// forwarding it to the original callback. [restore] must run in a `finally`:
+/// forwarding it, unchanged, to the original callback (a tee: nothing a test
+/// or the framework prints is swallowed). [restore] must run in a `finally`:
 /// flutter_test fails a test that leaves `debugPrint` replaced.
 class DebugPrintCapture {
   DebugPrintCapture._(this._original) {
@@ -76,17 +93,20 @@ void metric(String name, Object value) =>
 const int kMemoryMarginKb = 60 * 1024;
 
 /// Polls until [done] holds. No frames are pumped: these tests have no widget
-/// tree, only the audio handler.
+/// tree, only the audio handler. [stateNow] is read when the wait times out
+/// (not when it starts), so the failure says what the state was at the end.
 Future<void> waitUntil(
   bool Function() done, {
   required Duration timeout,
   required String what,
+  String Function()? stateNow,
   Duration poll = const Duration(milliseconds: 50),
 }) async {
   final sw = Stopwatch()..start();
   while (!done()) {
     if (sw.elapsed > timeout) {
-      fail('Timed out after ${timeout.inSeconds} s waiting for: $what');
+      fail('Timed out after ${timeout.inSeconds} s waiting for: $what'
+          '${stateNow == null ? '' : ' (${stateNow()})'}');
     }
     await Future<void>.delayed(poll);
   }
@@ -100,8 +120,8 @@ Future<void> waitForStatus(
     waitUntil(
       () => controller.status == status,
       timeout: timeout,
-      what: '${controller.sound.name} to reach ${status.name} '
-          '(status ${controller.status.name})',
+      what: '${controller.sound.name} to reach ${status.name}',
+      stateNow: () => 'status ${controller.status.name}',
     );
 
 /// Starts [path] through the real handler and waits until it reads `playing`.
