@@ -32,7 +32,30 @@ def test_sources_are_pinned_and_hashed():
         kinds[kind] += 1
         if kind == "moodist":
             assert re.fullmatch(r"[0-9a-f]{64}", r["sha256"]), r["key"]
-    assert kinds == {"moodist": 41, "synth": 7}  # 41 recordings, green noise, 6 binaurals
+    # 38 recordings; synthesised: the four noise colours and the 6 binaurals
+    assert kinds == {"moodist": 38, "synth": 10}
+
+
+NOISE_COLOURS = ("brown-noise", "green", "pink-noise", "white-noise")
+
+
+def test_noise_colours_are_generated_in_the_repo():
+    m = sources.load_manifest()
+    rows = {r["key"]: r for r in m["sound"] if r["key"] in NOISE_COLOURS}
+    assert set(rows) == set(NOISE_COLOURS)
+    for key, r in rows.items():
+        name = key.removesuffix("-noise")
+        assert r["source"] == f"synth:{name}", key
+        assert "sha256" not in r, key              # no original to hash
+        assert r["asset"] == f"assets/sounds/noise/{key}.ogg"
+        assert r["rule"] == "integrated" and r["q"] == 0
+        sp = r["synth"]
+        assert sp["seconds"] == 10 and isinstance(sp["seed"], int)
+        assert len(sp["shape"]) >= 3 and all(len(p) == 2 for p in sp["shape"]), key
+        freqs = [p[0] for p in sp["shape"]]
+        assert freqs == sorted(freqs), key
+    seeds = [r["synth"]["seed"] for r in rows.values()]
+    assert len(set(seeds)) == len(seeds)           # independent noise instances per colour
 
 
 def test_rules_and_body_set():

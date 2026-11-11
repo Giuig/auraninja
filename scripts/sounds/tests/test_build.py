@@ -53,3 +53,17 @@ def test_large_post_decode_overshoot_converges_within_eight_iterations(tmp_path)
     assert out.iterations <= 8
     assert out.tp <= -1.0
     assert out.ceiling_db < -2.0  # the pre-encode ceiling really did have to drop
+
+
+def test_prepare_signal_generates_every_noise_colour_without_an_original():
+    """brown/green/pink/white come from synth.noise with the manifest's shape and seed; the
+    build must not look for (or need) a recording for them."""
+    from lib import sources, synth
+    m = sources.load_manifest()
+    for key in ("brown-noise", "green", "pink-noise", "white-noise"):
+        row = next(r for r in m["sound"] if r["key"] == key)
+        sp = row["synth"]
+        x, rate, src_sha = build.prepare_signal(row, m["meta"], src_dir="does-not-exist",
+                                                cache_dir="does-not-exist")
+        assert rate == RATE and src_sha is None
+        assert np.array_equal(x, synth.noise(sp["shape"], sp["seed"], RATE, sp["seconds"])), key

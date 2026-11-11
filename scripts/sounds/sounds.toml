@@ -4,9 +4,11 @@
 #   moodist:<path>   original recording in github.com/remvze/moodist at the pinned commit below.
 #                    Never committed (redistribution of the Pixabay-sourced originals is a grey
 #                    area); fetched on demand, or taken from --src-dir, and verified by sha256.
-#   synth:<name>     generated here (see lib/synth.py): green noise, and the binaural pairs
-#                    (pure sines, whole-Hz carriers, 10 s, so the loop is exact). Parameters
-#                    live in [sound.synth]. No original is read for these.
+#   synth:<name>     generated here (see lib/synth.py): the four noise colours (green, brown,
+#                    pink, white: random-phase inverse FFT shaped to a stored band, 10 s, exactly
+#                    periodic) and the binaural pairs (pure sines, whole-Hz carriers, 10 s, so the
+#                    loop is exact). Parameters live in [sound.synth]. No original is read for
+#                    these. 10 synth rows + 38 moodist rows = 48 assets.
 #
 # rule
 #   integrated  integrated loudness = target_lufs (-20), true peak <= ceiling
@@ -292,10 +294,20 @@ q = 0
 [[sound]]
 key = "brown-noise"
 asset = "assets/sounds/noise/brown-noise.ogg"
-source = "moodist:public/sounds/noise/brown-noise.wav"
-sha256 = "b7e4209f2bb4c2ca37e7cf0b21393e2264703d43bea36b4b5c837b8496bbe578"
+source = "synth:brown"
 rule = "integrated"
 q = 0
+
+# Band shape measured once from the old brown-noise.ogg (decoded, mono, Welch power spectrum with
+# 32768-sample segments; mean power density in 1/3-octave bands every 1/6 octave from 20 Hz to
+# 13 kHz, dB relative to the peak; reduced to the points below by piecewise-linear
+# simplification on (log f, dB) with a 1 dB tolerance). The old file's hard band limit just above
+# 15 kHz is kept (last point, then the floor) so the colour does not change; below 20 Hz the
+# shape floors, so there is no DC or sub-sonic build-up. The file itself is never read again.
+[sound.synth]
+seed = 2
+seconds = 10
+shape = [[20, 0.0], [1437, -37.3], [12902, -53.7], [14900, -54.6]]
 
 [[sound]]
 key = "green"
@@ -316,18 +328,39 @@ shape = [[50, -38.0], [100, -23.4], [150, -12.5], [200, -9.5], [300, -2.8], [415
 [[sound]]
 key = "pink-noise"
 asset = "assets/sounds/noise/pink-noise.ogg"
-source = "moodist:public/sounds/noise/pink-noise.wav"
-sha256 = "075eecefd60c4103da3ec8672db1c96ba54f073f8a5bc4e7cc1b587c96854fb4"
+source = "synth:pink"
 rule = "integrated"
 q = 0
+
+# Band shape measured once from the old pink-noise.ogg (decoded, mono, Welch power spectrum with
+# 32768-sample segments; mean power density in 1/3-octave bands every 1/6 octave from 20 Hz to
+# 13 kHz, dB relative to the peak; reduced to the points below by piecewise-linear
+# simplification on (log f, dB) with a 1 dB tolerance). The old file's hard band limit just above
+# 15 kHz is kept (last point, then the floor) so the colour does not change; below 20 Hz the
+# shape floors, so there is no DC or sub-sonic build-up. The file itself is never read again.
+[sound.synth]
+seed = 3
+seconds = 10
+shape = [[20, 0.0], [45, -4.8], [127, -8.3], [180, -11.1], [12902, -28.7],
+         [14900, -28.9]]
 
 [[sound]]
 key = "white-noise"
 asset = "assets/sounds/noise/white-noise.ogg"
-source = "moodist:public/sounds/noise/white-noise.wav"
-sha256 = "02ccb2013118b57c76607f7e3e5d9d479e5a9aaa7868e1a07194cde77c0ea6dd"
+source = "synth:white"
 rule = "integrated"
 q = 0
+
+# Band shape measured once from the old white-noise.ogg (decoded, mono, Welch power spectrum with
+# 32768-sample segments; mean power density in 1/3-octave bands every 1/6 octave from 20 Hz to
+# 13 kHz, dB relative to the peak; reduced to the points below by piecewise-linear
+# simplification on (log f, dB) with a 1 dB tolerance). The old file's hard band limit just above
+# 15 kHz is kept (last point, then the floor) so the colour does not change; below 20 Hz the
+# shape floors, so there is no DC or sub-sonic build-up. The file itself is never read again.
+[sound.synth]
+seed = 4
+seconds = 10
+shape = [[20, -1.2], [1280, -2.0], [12902, 0.0], [14900, -0.2]]
 
 [[sound]]
 key = "cafe"
