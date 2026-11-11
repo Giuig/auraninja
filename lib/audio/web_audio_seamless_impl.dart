@@ -22,8 +22,9 @@ class WebAudioSeamlessPlayer {
   web.AudioBuffer? _audioBuffer;
   bool _ownsContext = true;
 
+  // We keep track of the next start time using the AudioContext clock
+  double _nextStartTime = 0.0;
   web.GainNode? _mainGainNode;
-  web.AudioBufferSourceNode? _source;
 
   bool _isPlaying = false;
   String? _currentPath;
@@ -31,6 +32,19 @@ class WebAudioSeamlessPlayer {
   // explicitly from its caller (SoundController._volume) instead of relying
   // on this default.
   double _volume = 0.5;
+
+  // To prevent multiple scheduling loops running at once
+  int _activeLoopId = 0;
+
+  // How far ahead we keep buffers queued, and how often we top that up.
+  // Backgrounded tabs get their JS timers throttled by the browser (commonly
+  // clamped to ~1/s), which would starve the old 100ms/50ms margins the
+  // instant a tab lost focus — audio would then go silent once whatever was
+  // already scheduled ran out, without the controller ever finding out.
+  // Several seconds of look-ahead absorbs that throttling; the visibility
+  // listener below is the safety net for anything that outlasts it.
+  static const double _lookAheadSeconds = 3.0;
+  static const Duration _checkInterval = Duration(milliseconds: 500);
 
   bool _visibilityListenerAdded = false;
 
@@ -70,35 +84,53 @@ class WebAudioSeamlessPlayer {
 
     _stopAllSources();
     _isPlaying = true;
+    _activeLoopId++;
     _ensureVisibilityListener();
 
-    final buffer = _audioBuffer;
-    if (buffer == null) return;
+    if (_audioBuffer != null) {
+      final gainNode = ctx.createGain();
+      _mainGainNode = gainNode;
+      gainNode.gain.value = _volume;
+      gainNode.connect(ctx.destination);
 
-    final gainNode = ctx.createGain();
-    _mainGainNode = gainNode;
-    gainNode.gain.value = _volume;
-    gainNode.connect(ctx.destination);
-
-    // One native looping source per play(). The loops are baked to an exact
-    // length with their seam crossfaded in the file (scripts/sounds), so the
-    // browser's own wrap is gapless. The loop runs on the audio thread, with
-    // no JS timer to throttle when the tab is in the background, which is
-    // what the old look-ahead scheduler and its 15 ms overlap worked around.
-    final source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.loop = true;
-    source.loopStart = 0;
-    source.loopEnd = buffer.duration;
-    source.connect(gainNode);
-    source.start();
-    _source = source;
+      // Initialize start time to "now" plus a tiny safety buffer
+      _nextStartTime = ctx.currentTime + 0.05;
+      _scheduleLoop(_activeLoopId);
+    }
   }
 
-  /// Registered once per player. Browsers suspend a context the page did not
-  /// start in a gesture, and iOS interrupts it (phone call, silent switch):
-  /// when the tab is visible again, resume it if it is not running. The loop
-  /// itself needs no help.
+  /// THE PRO FIX: Recursive scheduling with high-precision look-ahead
+  void _scheduleLoop(int loopId) {
+    final ctx = _audioContext;
+    final buffer = _audioBuffer;
+    final mainGain = _mainGainNode;
+
+    if (!_isPlaying ||
+        ctx == null ||
+        buffer == null ||
+        mainGain == null ||
+        loopId != _activeLoopId) return;
+
+    // Look-ahead: schedule buffers up to _lookAheadSeconds before they're
+    // actually needed, so a throttled recheck timer (background tab) still
+    // finds several seconds of already-queued audio instead of running dry.
+    while (_nextStartTime < ctx.currentTime + _lookAheadSeconds) {
+      _playOneShot(buffer, ctx, mainGain, _nextStartTime);
+
+      // Increment the next start time by buffer duration minus crossfade
+      // We use a 15ms crossfade (0.015) to hide OGG encoder gaps.
+      const crossfade = 0.015;
+      _nextStartTime += (buffer.duration - crossfade);
+    }
+
+    // Check again to see if we need to schedule more.
+    Future.delayed(_checkInterval, () => _scheduleLoop(loopId));
+  }
+
+  /// Registered once per player: when the tab regains visibility, immediately
+  /// top up scheduling instead of waiting for the next (possibly still
+  /// throttled) periodic check. Catches any gap the look-ahead margin above
+  /// wasn't wide enough to cover.
   void _ensureVisibilityListener() {
     if (_visibilityListenerAdded) return;
     _visibilityListenerAdded = true;
@@ -106,42 +138,48 @@ class WebAudioSeamlessPlayer {
       'visibilitychange',
       (web.Event e) {
         if (_isPlaying && web.document.visibilityState == 'visible') {
-          _resumeIfNotRunning();
+          _scheduleLoop(_activeLoopId);
         }
       }.toJS,
     );
   }
 
-  Future<void> _resumeIfNotRunning() async {
-    final ctx = _audioContext;
-    if (!_ownsContext || ctx == null) {
-      return;
-    }
-    final state = ctx.state;
-    if (state == 'running' || state == 'closed') {
-      return;
-    }
-    try {
-      await (ctx as web.AudioContext).resume().toDart;
-    } catch (e) {
-      debugPrint('[WebAudio] Resume Error: $e');
-    }
+  void _playOneShot(web.AudioBuffer buffer, web.BaseAudioContext ctx,
+      web.GainNode mainGain, double time) {
+    final source = ctx.createBufferSource();
+    source.buffer = buffer;
+
+    final sliceGain = ctx.createGain();
+    const crossfade = 0.015;
+
+    source.connect(sliceGain);
+    sliceGain.connect(mainGain);
+
+    // Fade In at the start of THIS specific slice
+    sliceGain.gain.setValueAtTime(0, time);
+    sliceGain.gain.linearRampToValueAtTime(1.0, time + crossfade);
+
+    // Fade Out at the end of THIS specific slice
+    final duration = buffer.duration;
+    sliceGain.gain.setValueAtTime(1.0, time + duration - crossfade);
+    sliceGain.gain.linearRampToValueAtTime(0, time + duration);
+
+    source.start(time);
+
+    // Clean up nodes after they finish playing to save memory
+    source.onended = (web.Event e) {
+      source.disconnect();
+      sliceGain.disconnect();
+    }.toJS;
   }
 
   Future<void> stop() async {
     _isPlaying = false;
+    _activeLoopId++; // Invalidate previous loop
     _stopAllSources();
   }
 
-  /// A looping source never ends on its own, so it has to be stopped, not
-  /// just disconnected, or it would keep running (and being mixed) forever.
   void _stopAllSources() {
-    final source = _source;
-    _source = null;
-    if (source != null) {
-      source.stop();
-      source.disconnect();
-    }
     _mainGainNode?.disconnect();
     _mainGainNode = null;
   }
