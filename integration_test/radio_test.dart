@@ -35,9 +35,11 @@ void main() {
     await handler.registerSounds([dead]);
     final controller = controllerFor(handler, dead.path);
 
+    final started = Stopwatch()..start();
     startWithoutAwaiting(handler.ninjaPlay(dead.path), 'play dead stream');
     await waitForStatus(controller, PlaybackStatus.error,
         timeout: const Duration(seconds: 15));
+    metric('radio_dead_error_after_ms', started.elapsedMilliseconds);
     expect(controller.status, PlaybackStatus.error);
 
     await handler.ninjaStop(dead.path);
