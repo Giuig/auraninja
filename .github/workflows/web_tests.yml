@@ -1,0 +1,82 @@
+name: Web tests
+
+# Browser-only tests (test/web/, @TestOn('browser')) run by `flutter test --platform
+# chrome`. The shared app-ci.yml runs plain VM tests, which skip these, so this app
+# owns its own workflow (underscore = this repo's own trigger).
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Lower bound for the passed-test count; raise it when a browser test is added.
+  EXPECTED_MIN_TESTS: 4
+
+jobs:
+  web-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.5'
+          channel: stable
+          cache: true
+
+      - name: Check for Chrome
+        id: chrome
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            google-chrome --version
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "google-chrome not found on this runner image"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Chrome (runner image has none)
+        if: steps.chrome.outputs.present != 'true'
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2.1.2
+        with:
+          chrome-version: stable
+
+      - name: Point Flutter at Chrome
+        if: steps.chrome.outputs.present != 'true'
+        run: echo "CHROME_EXECUTABLE=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
+
+      - run: flutter pub get
+
+      - name: Browser tests
+        run: |
+          flutter test --platform chrome test/web/ --reporter expanded > web-test.txt 2>&1
+          s=$?
+          cat web-test.txt
+          exit $s
+
+      - name: Count guard
+        run: |
+          # A skipped run or "No tests ran" must not go green.
+          n=$(grep -oE '\+[0-9]+: All tests passed' web-test.txt | tail -1 | grep -oE '[0-9]+' | head -1)
+          echo "passed tests: ${n:-none} (expected at least $EXPECTED_MIN_TESTS)"
+          if [ -z "$n" ] || [ "$n" -lt "$EXPECTED_MIN_TESTS" ]; then
+            echo "::error::expected 'All tests passed' with at least $EXPECTED_MIN_TESTS tests"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-test-output
+          path: web-test.txt
