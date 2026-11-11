@@ -1,0 +1,20 @@
+{
+  "favorites": [
+    "assets/sounds/nature/thunder.ogg",
+    "assets/sounds/rain/light-rain.ogg",
+    "https://radio.example.org/live.mp3"
+  ],
+  "mixes": [
+    "{\"id\":\"mix-1\",\"name\":\"Rainy Radio\",\"icon\":\"🌧️\",\"sounds\":[{\"path\":\"assets/sounds/rain/light-rain.ogg\",\"volume\":0.6},{\"path\":\"https://yumicoradio.net/stream\",\"volume\":0.3}],\"createdAt\":\"2026-10-20T18:30:00.000Z\"}",
+    "{\"id\":\"mix-2\",\"name\":\"Desk Focus\",\"icon\":\"☕\",\"sounds\":[{\"path\":\"assets/sounds/nature/wind.ogg\",\"volume\":0.45},{\"path\":\"assets/sounds/nature/thunder.ogg\",\"volume\":0.2},{\"path\":\"https://radio.example.org/live.mp3\",\"volume\":0.7}],\"createdAt\":\"2026-10-28T09:05:00.000Z\"}"
+  ],
+  "section_order_internetRadio": [
+    "https://radio.example.org/live.mp3",
+    "https://yumicoradio.net/stream"
+  ],
+  "sound_volumes": "{\"assets/sounds/rain/light-rain.ogg\":0.35,\"assets/sounds/nature/wind.ogg\":0.8,\"assets/sounds/nature/thunder.ogg\":0.15}",
+  "user_radio_stations": "[{\"name\":\"Example FM\",\"category\":\"@internetRadio\",\"icon\":\"📻\",\"path\":\"https://radio.example.org/live.mp3\",\"isUserAdded\":true}]",
+  "vol_assets/sounds/nature/thunder.ogg": 0.15,
+  "vol_assets/sounds/nature/wind.ogg": 0.8,
+  "vol_assets/sounds/rain/light-rain.ogg": 0.35
+}
