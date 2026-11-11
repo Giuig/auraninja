@@ -315,7 +315,12 @@ await check('F4', 'no page error while the sounds start', async () => {
 await check('F5', 'Stop All stops every source', async () => {
   if (!started.length) throw new Error('no sources were started');
   await page.getByRole('button', { name: 'Stop All' }).first().click({ timeout: 10000 });
-  await until(async () => (await hook()).sources.every((s) => s.ended), 10000, 'every source ended');
+  try {
+    await until(async () => (await hook()).sources.every((s) => s.ended), 10000, 'every source ended');
+  } catch (e) {
+    const h = await hook();
+    throw new Error(`${h.sources.filter((s) => !s.ended).length} of ${h.sources.length} sources still playing, ${h.stopCalls} stop() calls`);
+  }
   const h = await hook();
   const notStopped = h.sources.filter((s) => !s.stopped || !s.ended);
   if (notStopped.length) throw new Error(`${notStopped.length} sources not stopped`);
