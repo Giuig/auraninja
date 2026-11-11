@@ -20,6 +20,8 @@ jobs:
     uses: Giuig/ninja_material/.github/workflows/app-ci.yml@main
     with:
       app-name: auraninja
+      # The emulator tests live in integration_test/; the default is `lib test`.
+      analyze-paths: 'lib test integration_test'
       # Verifies the themed-icon set from icon_config.yml stays consistent and
       # that re-running flutter_launcher_icons reproduces the committed icons.
       check-icons: true

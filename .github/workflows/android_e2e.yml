@@ -1,0 +1,127 @@
+name: Android E2E
+
+# Emulator tests (integration_test/) on an API 34 x86_64 image with the real SoLoud
+# engine. This app owns the workflow (underscore = this repo's own trigger).
+#
+# Never runs on ordinary pull requests: only on manual dispatch, on a PR carrying the
+# `e2e` label, on release tags, and on the `trigger-build` dispatch that
+# version-bump.yml sends after it pushes a tag (a tag pushed with GITHUB_TOKEN
+# starts no workflow by itself). To gate a release, label the version-bump PR.
+on:
+  workflow_dispatch:
+    inputs:
+      audio:
+        description: 'Emulator audio option (a: default, b: QEMU_AUDIO_DRV=none, c: -noaudio)'
+        type: choice
+        options: [a, b, c]
+        default: a
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    tags:
+      - 'v*'
+  repository_dispatch:
+    types: [trigger-build]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    # A pull request runs only with the `e2e` label; every other trigger always runs.
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'e2e')
+    name: emulator (audio ${{ matrix.audio }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Spike: every audio option on its own runner; a manual dispatch runs one.
+        audio: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.audio) || '["a","b","c"]') }}
+    env:
+      E2E_FILES: smoke_test.dart
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Pinned like build-app.yml: the runner image's default Java moves under us.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.5'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Patch vendored packages
+        run: bash scripts/patch_soloud.sh
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties', 'pubspec.lock') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # Built before the emulator boots so the native x86_64 build does not run
+      # against the emulator's clock; the test step installs it with
+      # `adb install -g` to keep the notification permission.
+      - name: Build debug APK
+        env:
+          GRADLE_OPTS: '-Xmx3G'
+        run: flutter build apk --debug --target-platform android-x64
+
+      - name: Emulator options for audio ${{ matrix.audio }}
+        id: audio
+        run: |
+          base='-no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim'
+          case "${{ matrix.audio }}" in
+            a) opts="$base" ;;
+            b) opts="$base"; echo 'QEMU_AUDIO_DRV=none' >> "$GITHUB_ENV" ;;
+            c) opts="$base -noaudio" ;;
+            *) echo "unknown audio option: ${{ matrix.audio }}"; exit 1 ;;
+          esac
+          echo "options=$opts" >> "$GITHUB_OUTPUT"
+          echo "emulator options: $opts"
+
+      - name: Emulator tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: ${{ steps.audio.outputs.options }}
+          script: bash scripts/ci/run_android_e2e.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Android E2E, audio option ${{ matrix.audio }}"
+            if [ -f e2e-out/summary.md ]; then cat e2e-out/summary.md; else echo "no summary (the emulator step did not reach the script)"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-out-${{ matrix.audio }}
+          path: e2e-out/
+          if-no-files-found: warn
