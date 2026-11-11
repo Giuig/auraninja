@@ -14,7 +14,6 @@ import 'package:auraninja/services/mixes_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 // ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
 // ignore: depend_on_referenced_packages
@@ -158,7 +157,7 @@ Future<void> _coldStartMix(WidgetTester tester) async {
 }
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  initE2eBinding();
 
   testWidgets(
       'radio in a mix, first start after a cold launch, plays at the '

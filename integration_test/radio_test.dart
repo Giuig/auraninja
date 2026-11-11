@@ -10,13 +10,12 @@
 // The built-in Yumi Co. Radio runs separately, in radio_third_party_test.dart.
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 import 'support/boot.dart';
 import 'support/radio.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  initE2eBinding();
 
   testWidgets('local station: plays, pauses, resumes and stops',
       timeout: const Timeout(Duration(minutes: 3)), (tester) async {
@@ -31,17 +30,36 @@ void main() {
   testWidgets('dead station: ends in error, not stuck on loading',
       timeout: const Timeout(Duration(minutes: 2)), (tester) async {
     final handler = await ensureBooted();
-    final dead = radioStation('CI dead stream', kDeadStreamUrl);
-    await handler.registerSounds([dead]);
-    final controller = controllerFor(handler, dead.path);
+    // The previous test just stopped its station, and Android's SystemUI can
+    // answer that with a media-session Stop a moment later; audio_service then
+    // runs the handler's stop() -> stopAll(), which would cancel a start that
+    // is in flight. Let that settle before starting.
+    await Future<void>.delayed(const Duration(seconds: 3));
 
-    final started = Stopwatch()..start();
-    startWithoutAwaiting(handler.ninjaPlay(dead.path), 'play dead stream');
-    await waitForStatus(controller, PlaybackStatus.error,
-        timeout: const Duration(seconds: 15));
-    metric('radio_dead_error_after_ms', started.elapsedMilliseconds);
-    expect(controller.status, PlaybackStatus.error);
+    final capture = captureDebugPrint();
+    try {
+      final dead = radioStation('CI dead stream', kDeadStreamUrl);
+      await handler.registerSounds([dead]);
+      final controller = controllerFor(handler, dead.path);
 
-    await handler.ninjaStop(dead.path);
+      final started = Stopwatch()..start();
+      startWithoutAwaiting(handler.ninjaPlay(dead.path), 'play dead stream');
+      try {
+        await waitForStatus(controller, PlaybackStatus.error,
+            timeout: const Duration(seconds: 15));
+      } on TestFailure catch (e) {
+        final raced =
+            capture.lines.any((l) => l.startsWith('[WH] stop() OVERRIDE'));
+        fail(raced
+            ? '$e (an external media-session stop() ran during the wait)'
+            : '$e');
+      }
+      metric('radio_dead_error_after_ms', started.elapsedMilliseconds);
+      expect(controller.status, PlaybackStatus.error);
+
+      await handler.ninjaStop(dead.path);
+    } finally {
+      capture.restore();
+    }
   });
 }

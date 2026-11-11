@@ -7,13 +7,12 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 import 'support/boot.dart';
 import 'support/radio.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  initE2eBinding();
 
   testWidgets('Yumi Co. Radio: plays, pauses, resumes and stops',
       timeout: const Timeout(Duration(minutes: 3)), (tester) async {
