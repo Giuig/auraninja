@@ -1,11 +1,11 @@
-"""Synthesised sounds. Only green noise today."""
+"""Synthesised sounds: the four noise colours (green, brown, pink, white) and the binaural pairs."""
 import numpy as np
 
 FLOOR_DB = -60.0
 
 
-def green(shape, seed, rate=44100, seconds=10):
-    """Green noise: random-phase inverse FFT shaped to `shape`.
+def noise(shape, seed, rate=44100, seconds=10):
+    """Coloured noise (green, brown, pink, white): random-phase inverse FFT shaped to `shape`.
 
     shape: [[frequency_hz, relative_dB], ...] (power spectrum, dB relative to its peak),
     interpolated linearly in dB over log-frequency and floored at -60 dB outside the listed
@@ -23,6 +23,9 @@ def green(shape, seed, rate=44100, seconds=10):
     phase = np.random.default_rng(seed).uniform(0.0, 2 * np.pi, len(freqs))
     x = np.fft.irfft(mag * np.exp(1j * phase), n)
     return x * (0.1 / np.sqrt(np.mean(x ** 2)))
+
+
+green = noise  # the original name, kept so existing callers keep working
 
 
 def binaural(left_hz, right_hz, seconds=10, rate=44100):

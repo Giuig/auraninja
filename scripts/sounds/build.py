@@ -136,8 +136,8 @@ def prepare_signal(row, meta, src_dir=None, cache_dir=None):
     kind = row["source"].split(":", 1)[0]
     if kind == "synth":
         name, sp = row["source"].split(":", 1)[1], row["synth"]
-        if name == "green":
-            return synth.green(sp["shape"], sp["seed"], rate, sp["seconds"]), rate, None
+        if name in ("green", "brown", "pink", "white"):
+            return synth.noise(sp["shape"], sp["seed"], rate, sp["seconds"]), rate, None
         if name == "binaural":
             return synth.binaural(sp["left_hz"], sp["right_hz"], sp["seconds"], rate), rate, None
         raise BuildError(f"{row['key']}: unknown synth source {name}")

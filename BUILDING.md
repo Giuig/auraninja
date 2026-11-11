@@ -56,8 +56,8 @@ How it works:
   loop points. Originals come from [Moodist](https://github.com/remvze/moodist) at the commit pinned
   in the file and are verified by sha256. They are never committed: they are downloaded into
   `build/sound_src/` (gitignored), or taken from a folder given with `--src-dir` (files named
-  `<category>__<name>.<ext>`, e.g. `nature__fire.mp3`). Green noise and the six binaural beats are
-  generated, not recorded.
+  `<category>__<name>.<ext>`, e.g. `nature__fire.mp3`). The four noise colours (brown, green, pink,
+  white) and the six binaural beats are generated, not recorded.
 - Each sound is resampled to 44.1 kHz, trimmed, capped at 90 s and baked into a seamless loop
   (equal-power crossfade), then levelled: -20 LUFS integrated (binaural beats -24), or, for the five
   transient sounds (fire, office, keyboard, typewriter, clock), from the median short-term loudness
