@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      E2E_FILES: smoke_test.dart
+      E2E_FILES: smoke_test.dart a1_assets_load_test.dart memory_frees_test.dart stress_test.dart
       # Chosen by the spike: all three options passed the smoke test; the first, in
       # the order a, b, c, that passed twice in a row is the default.
       AUDIO: ${{ inputs.audio || 'a' }}
