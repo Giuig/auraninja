@@ -34,16 +34,14 @@ jobs:
   e2e:
     # A pull request runs only with the `e2e` label; every other trigger always runs.
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'e2e')
-    name: emulator (audio ${{ matrix.audio }})
+    name: emulator
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        # Spike: every audio option on its own runner; a manual dispatch runs one.
-        audio: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.audio) || '["a","b","c"]') }}
     env:
       E2E_FILES: smoke_test.dart
+      # Chosen by the spike: all three options passed the smoke test; the first, in
+      # the order a, b, c, that passed twice in a row is the default.
+      AUDIO: ${{ inputs.audio || 'a' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -87,15 +85,15 @@ jobs:
           GRADLE_OPTS: '-Xmx3G'
         run: flutter build apk --debug --target-platform android-x64
 
-      - name: Emulator options for audio ${{ matrix.audio }}
+      - name: Emulator options for audio ${{ env.AUDIO }}
         id: audio
         run: |
           base='-no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim'
-          case "${{ matrix.audio }}" in
+          case "$AUDIO" in
             a) opts="$base" ;;
             b) opts="$base"; echo 'QEMU_AUDIO_DRV=none' >> "$GITHUB_ENV" ;;
             c) opts="$base -noaudio" ;;
-            *) echo "unknown audio option: ${{ matrix.audio }}"; exit 1 ;;
+            *) echo "unknown audio option: $AUDIO"; exit 1 ;;
           esac
           echo "options=$opts" >> "$GITHUB_OUTPUT"
           echo "emulator options: $opts"
@@ -115,13 +113,13 @@ jobs:
         if: always()
         run: |
           {
-            echo "### Android E2E, audio option ${{ matrix.audio }}"
+            echo "### Android E2E, audio option $AUDIO"
             if [ -f e2e-out/summary.md ]; then cat e2e-out/summary.md; else echo "no summary (the emulator step did not reach the script)"; fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: e2e-out-${{ matrix.audio }}
+          name: e2e-out
           path: e2e-out/
           if-no-files-found: warn

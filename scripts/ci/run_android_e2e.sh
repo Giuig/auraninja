@@ -42,6 +42,16 @@ adb -s "$DEVICE" install -g -r "$APK" > "$OUT/install.txt" 2>&1 || s=$?
 echo "install -g exit=$s" >> "$OUT/status.txt"
 adb -s "$DEVICE" shell dumpsys package "$PKG" > "$OUT/package_before.txt" 2>&1 || true
 
+# `flutter test` reinstalls the app and removes it afterwards, so the grant is
+# sampled while the tests run (a record, not a gate).
+(
+  while true; do
+    echo "$(date +%T) $(adb -s "$DEVICE" shell dumpsys package "$PKG" | grep -m1 'POST_NOTIFICATIONS: granted' | tr -d '\r')"
+    sleep 4
+  done
+) > "$OUT/post_notifications_samples.txt" 2>&1 &
+sampler_pid=$!
+
 for f in $FILES; do
   s=0
   flutter test "integration_test/$f" -d "$DEVICE" --reporter expanded > "$OUT/$f.txt" 2>&1 || s=$?
@@ -56,6 +66,7 @@ for f in $FILES; do
   fi
 done
 
+kill "$sampler_pid" 2>/dev/null || true
 sleep 3
 kill "$logcat_pid" 2>/dev/null || true
 wait "$logcat_pid" 2>/dev/null || true
