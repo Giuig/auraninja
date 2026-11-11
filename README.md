@@ -77,3 +77,5 @@ flutter build web --base-href=/auraninja/ --release
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
 
 This project is licensed under the [GNU General Public License v3.0](./LICENSE).
+
+<!-- path filter check -->
