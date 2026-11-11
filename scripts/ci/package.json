@@ -1,0 +1,9 @@
+{
+  "name": "web-e2e",
+  "private": true,
+  "description": "Browser end-to-end check of the built web app (scripts/ci/web_e2e.mjs)",
+  "type": "module",
+  "dependencies": {
+    "playwright-core": "1.65.0"
+  }
+}

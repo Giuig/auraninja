@@ -1,0 +1,160 @@
+name: Web e2e
+
+# The BUILT web app (flutter build web --release), served locally and driven in headless Chrome
+# through its accessibility tree: every bundled sound decodes, ten sounds start as looping Web
+# Audio sources and Stop All stops them, a custom radio station plays / pauses / resumes / stops
+# against a local stream, a dead URL ends in an error. Script: scripts/ci/web_e2e.mjs.
+# This app owns the workflow (underscore = this repo's own trigger); app-ci.yml stays shared.
+#
+# Path-filtered: a change that cannot alter the built app (docs, tests, other workflows) does
+# not run it. If more than 1 run in 10 is red for no code reason, move it behind the `e2e`
+# label like android_e2e.yml.
+on:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'web/**'
+      - 'third_party/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'scripts/sounds/levels.json'
+      - 'scripts/ci/web_e2e.mjs'
+      - 'scripts/ci/loop_stream.py'
+      - 'scripts/ci/package.json'
+      - 'scripts/ci/package-lock.json'
+      - '.github/workflows/web_e2e.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'web/**'
+      - 'third_party/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'scripts/sounds/levels.json'
+      - 'scripts/ci/web_e2e.mjs'
+      - 'scripts/ci/loop_stream.py'
+      - 'scripts/ci/package.json'
+      - 'scripts/ci/package-lock.json'
+      - '.github/workflows/web_e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Lower bound for the number of blocking checks that must pass; raise it when the script gains one.
+  EXPECTED_MIN_CHECKS: 16
+
+jobs:
+  web-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.5'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build web (release)
+        run: |
+          # Same flag as the shared build and the deploy: the icon tree-shaker is off fleet-wide.
+          s=0
+          flutter build web --release --no-tree-shake-icons > web-build.txt 2>&1 || s=$?
+          tail -n 15 web-build.txt
+          exit $s
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.20.2'
+          cache: npm
+          cache-dependency-path: scripts/ci/package-lock.json
+
+      # playwright-core only: no browser download, the runner's Chrome is used.
+      - name: Install the test driver (pinned in package-lock.json)
+        working-directory: scripts/ci
+        run: npm ci --no-audit --no-fund
+
+      - name: Check for Chrome
+        id: chrome
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            google-chrome --version
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "google-chrome not found on this runner image"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Chrome (runner image has none)
+        if: steps.chrome.outputs.present != 'true'
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2.1.2
+        with:
+          chrome-version: stable
+
+      - name: Point the driver at Chrome
+        if: steps.chrome.outputs.present != 'true'
+        run: echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
+
+      - name: Serve the build and run the checks
+        run: |
+          # The shell runs with -e: capture statuses instead of letting one end the step early.
+          mkdir -p web-e2e-out
+          python3 -m http.server 8787 --bind 127.0.0.1 --directory build/web > web-e2e-out/http.log 2>&1 &
+          app_pid=$!
+          python3 scripts/ci/loop_stream.py --host 127.0.0.1 --port 8099 --log web-e2e-out/stream.log > /dev/null 2>&1 &
+          stream_pid=$!
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8787/ && curl -s -o /dev/null http://127.0.0.1:8099/dead; then ready=1; break; fi
+            sleep 1
+          done
+          s=0
+          if [ "$ready" != 1 ]; then
+            echo "::error::the local servers did not come up"
+            s=1
+          else
+            node scripts/ci/web_e2e.mjs > web-e2e-out/run.txt 2>&1 || s=$?
+            cat web-e2e-out/run.txt
+          fi
+          kill "$app_pid" "$stream_pid" 2>/dev/null || true
+          exit $s
+
+      - name: Result guard
+        run: |
+          # Fails closed: a missing results file, a failed check or too few passed checks must not go green.
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("web-e2e-out/results.json", "utf8"));
+            const min = Number(process.env.EXPECTED_MIN_CHECKS);
+            console.log(`passed blocking checks: ${r.passedBlocking} (expected at least ${min}), failed: ${r.failed}`);
+            if (r.failed !== 0 || r.passedBlocking < min) {
+              console.log("::error::web e2e: " + r.failed + " failed, " + r.passedBlocking + " passed, expected at least " + min);
+              process.exit(1);
+            }
+          '
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f web-e2e-out/summary.md ]; then cat web-e2e-out/summary.md >> "$GITHUB_STEP_SUMMARY"; else echo "web e2e produced no summary" >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-e2e-out
+          path: |
+            web-e2e-out/
+            web-build.txt
