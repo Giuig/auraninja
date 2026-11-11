@@ -7,7 +7,6 @@ import 'dart:math';
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 import 'support/assets.dart';
 import 'support/boot.dart';
@@ -27,7 +26,7 @@ const _steps = 15;
 const _stepSeconds = 10;
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  initE2eBinding();
 
   testWidgets('150 s of toggling and volume changes: no error, memory returns',
       timeout: const Timeout(Duration(minutes: 10)), (tester) async {
@@ -45,7 +44,9 @@ void main() {
       final handler = await ensureBooted();
       await handler.registerSounds(
           localSounds().where((s) => _paths.contains(s.path)).toList());
-      expect(handler.allControllers.length, _paths.length);
+      expect(handler.allControllers.length, _paths.length,
+          reason: 'registered controllers: '
+              '${handler.allControllers.map((c) => c.sound.name)}');
 
       await releaseAll(handler);
       final idle = await settledIdlePssKb();
@@ -96,11 +97,15 @@ void main() {
       expect(errors, isEmpty, reason: errors.join('\n'));
       final errorLines =
           capture.lines.where((l) => RegExp(r'status: .* → error').hasMatch(l));
-      expect(errorLines, isEmpty, reason: 'a controller went to error');
+      expect(errorLines, isEmpty,
+          reason: 'a controller went to error: ${errorLines.join(' | ')}');
       for (final c in handler.allControllers) {
-        expect(c.status, isNot(PlaybackStatus.error), reason: c.sound.name);
+        expect(c.status, isNot(PlaybackStatus.error),
+            reason: '${c.sound.name} (${c.sound.path}) ended in error');
       }
-      expect(after, greaterThan(0), reason: 'the process is still readable');
+      expect(after, greaterThan(0),
+          reason: 'the process is not readable after the stress run '
+              '(PSS $after kB)');
       expect(after, lessThanOrEqualTo(idle + kMemoryMarginKb),
           reason: 'after Stop All: idle $idle kB, after $after kB, delta '
               '${after - idle} kB, margin $kMemoryMarginKb kB');

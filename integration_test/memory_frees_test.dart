@@ -16,7 +16,6 @@
 // next test's idle reading.
 import 'package:auraninja/audio/sound_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 import 'support/assets.dart';
 import 'support/boot.dart';
@@ -30,7 +29,7 @@ const _stopAllPaths = [
 ];
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  initE2eBinding();
 
   testWidgets('A4: playing and stopping the 10 largest sounds frees memory',
       timeout: const Timeout(Duration(minutes: 10)), (tester) async {
@@ -130,7 +129,8 @@ void main() {
       metric('stopall_after_kb', after);
       metric('stopall_delta_kb', after - idle);
 
-      expect(stopAllCalls, 1, reason: 'one "[WH] stopAll() called" line');
+      expect(stopAllCalls, 1,
+          reason: 'one "[WH] stopAll() called" line, got $stopAllCalls');
       expect(playingPss, greaterThanOrEqualTo(idle + decodedKb * 8 ~/ 10),
           reason: 'vacuity guard: PSS with the five sounds playing '
               '($playingPss kB) is not above idle ($idle kB) by 0.8 x their '
