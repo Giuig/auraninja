@@ -139,7 +139,6 @@ class WebAudioSeamlessPlayer {
     final source = _source;
     _source = null;
     if (source != null) {
-      source.stop();
       source.disconnect();
     }
     _mainGainNode?.disconnect();
