@@ -9,13 +9,16 @@ set -u
 
 OUT=e2e-out
 DEVICE=${E2E_DEVICE:-emulator-5554}
-FILES=${E2E_FILES:-smoke_test.dart a1_assets_load_test.dart memory_frees_test.dart stress_test.dart}
+FILES=${E2E_FILES:-smoke_test.dart a1_assets_load_test.dart memory_frees_test.dart stress_test.dart radio_test.dart radio_mix_cold_start_test.dart}
+# Run after FILES in their own calls; their result is reported, never gating.
+THIRD_PARTY_FILES=${E2E_THIRD_PARTY_FILES:-radio_third_party_test.dart}
 PKG=io.github.giuig.auraninja
 APK=build/app/outputs/flutter-apk/app-debug.apk
 
 mkdir -p "$OUT"
 : > "$OUT/status.txt"
 failed=0
+stream_pid=""
 
 adb -s "$DEVICE" wait-for-device
 for _ in $(seq 1 90); do
@@ -52,6 +55,20 @@ adb -s "$DEVICE" shell dumpsys package "$PKG" > "$OUT/package_before.txt" 2>&1 |
 ) > "$OUT/post_notifications_samples.txt" 2>&1 &
 sampler_pid=$!
 
+# The radio files stream from a local stand-in station on the runner; the emulator
+# reaches it as 10.0.2.2:8099. Its request log shows the emulator's `GET /stream`.
+case " $FILES $THIRD_PARTY_FILES " in
+  *radio*)
+    python3 scripts/ci/loop_stream.py --log "$OUT/stream_server.log" > "$OUT/stream_server.out" 2>&1 &
+    stream_pid=$!
+    for _ in $(seq 1 20); do
+      (exec 3<>/dev/tcp/127.0.0.1/8099) 2>/dev/null && break
+      sleep 0.5
+    done
+    echo "stream server pid=$stream_pid" >> "$OUT/status.txt"
+    ;;
+esac
+
 for f in $FILES; do
   s=0
   flutter test "integration_test/$f" -d "$DEVICE" --reporter expanded > "$OUT/$f.txt" 2>&1 || s=$?
@@ -65,6 +82,26 @@ for f in $FILES; do
     failed=1
   fi
 done
+
+# Third-party files: the result goes to the summary and never fails the job.
+: > "$OUT/third_party.txt"
+for f in $THIRD_PARTY_FILES; do
+  s=0
+  flutter test "integration_test/$f" -d "$DEVICE" --reporter expanded > "$OUT/$f.txt" 2>&1 || s=$?
+  cat "$OUT/$f.txt"
+  if [ "$s" -eq 0 ] && grep -q 'All tests passed' "$OUT/$f.txt"; then
+    echo "$f: passed (third party, not gating)" >> "$OUT/third_party.txt"
+  else
+    echo "$f: FAILED exit=$s (third party, not gating)" >> "$OUT/third_party.txt"
+  fi
+done
+
+if [ -n "$stream_pid" ]; then
+  kill "$stream_pid" 2>/dev/null || true
+  wait "$stream_pid" 2>/dev/null || true
+  echo '--- stream server log (requests from the emulator) ---'
+  cat "$OUT/stream_server.log"
+fi
 
 kill "$sampler_pid" 2>/dev/null || true
 sleep 3
@@ -89,8 +126,13 @@ grep -h 'E2E_METRIC' "$OUT"/*_test.dart.txt > "$OUT/metrics.txt" 2>&1 || true
   echo '```'
   cat "$OUT/device.txt"
   cat "$OUT/status.txt"
+  cat "$OUT/third_party.txt"
   cat "$OUT/metrics.txt"
   echo '```'
+  if [ -f "$OUT/stream_server.log" ]; then
+    echo
+    echo "stream server log: $(grep -c 'GET /stream' "$OUT/stream_server.log") GET /stream, $(grep -c 'GET /dead' "$OUT/stream_server.log") GET /dead"
+  fi
   echo
   echo "audio_lines.txt: $(wc -l < "$OUT/audio_lines.txt") engine lines in logcat"
   head -20 "$OUT/audio_lines.txt"
