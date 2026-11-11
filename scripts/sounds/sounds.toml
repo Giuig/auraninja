@@ -157,12 +157,12 @@ q = 1
 # Hand-picked loop start: with the automatic start the wrap lands on a pop (9.5 dB level
 # step at the seam). 0.2 s puts it between pops (0.36 dB). Found by scanning starts 0-8 s.
 loop_start_s = 0.2
-# Candidate B (shipped): body rule at R - 20 dB. The body rule as built (offset 0, candidate A)
-# clips the pops so hard that SDR against plain gain is 1.5 dB; at -20 dB SDR is 13.3 dB (the
-# closed loop is not monotonic: -17 dB gives 8.3, -18 gives 10.7, -19 gives 10.9). Integrated
-# loudness then lands near -36 LUFS, far below the other sounds: the owner picks by ear in
-# P5 between this and A (offset 0.0; the files are in C:/Temp/sound-pass-p3/fire-candidates).
-level_offset_db = -20.0
+# Body rule at R - 8 dB ("middle 1", picked by the owner by ear on 2026-11-11 from A = offset 0
+# at -20 LUFS, -8 at -27, -12 at -31 and B = -20 at -36). Offset 0 clips the pops so hard that
+# SDR against plain gain is 1.5 dB; -8 gives about 3.2 dB and lands near -27 LUFS, about 4 dB
+# under the 1.7.10 file (-22.9) and 7 dB under the other sounds, so fire sits as a background
+# crackle. -20 (SDR 13.3 dB) was the cleanest but about 13.5 dB quieter than 1.7.10.
+level_offset_db = -8.0
 
 [[sound]]
 key = "frog"
