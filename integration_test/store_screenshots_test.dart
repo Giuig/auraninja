@@ -21,6 +21,7 @@ import 'package:auraninja/audio/sound_controller.dart';
 import 'package:auraninja/audio/wrapper_audio_handler.dart';
 import 'package:auraninja/main.dart' as app;
 import 'package:auraninja/model/mix.dart';
+import 'package:auraninja/pages/visualizer_page.dart';
 import 'package:auraninja/services/mixes_service.dart';
 import 'package:auraninja/services/user_stations_service.dart';
 import 'package:flutter/material.dart';
@@ -113,7 +114,7 @@ Future<void> _stage() async {
   await prefs.setBool('useMaterialYou', false);
 
   await prefs.setStringList('favorites', [_rain, _fire, _cafe, _waves]);
-  await prefs.setInt('selected_visualizer_index', 7); // Aurora
+  await prefs.setInt('selected_visualizer_index', 0); // Liquid Ribbons
 
   // The station-logo cache is read from `logo_<name>` keys; an empty value
   // means "looked up, nothing found" and keeps the plain radio emoji.
@@ -299,6 +300,13 @@ Future<void> _shots(WidgetTester tester) async {
   // 5. Visualizer tab, the station still playing.
   await tester.tap(_tab('Visualizer'));
   await _shot(tester, '05_visualizer', settle: const Duration(seconds: 3));
+
+  // Swipe to Particle Drift (index 3) for the fullscreen picture.
+  for (var i = 0; i < 3; i++) {
+    await tester.fling(
+        find.byType(VisualizerPage), const Offset(-300, 0), 1500);
+    await _pumpFor(tester, const Duration(milliseconds: 900));
+  }
 
   // 6. Fullscreen visualizer with the track information. Its overlay hides
   // itself 3 s after opening, so the picture is taken right away.

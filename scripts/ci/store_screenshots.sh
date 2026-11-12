@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Takes the store screenshots. Called by store_screenshots.yml while the emulator is up.
 #
-# 1. SystemUI demo mode: fixed clock (12:00), full battery, full signal, no
+# 1. SystemUI demo mode: fixed clock (the platform default, 14:00 on Android 14), full battery, full signal, no
 #    notification icons. The state it replaces is recorded first and put back at
 #    the end.
 # 2. `flutter drive` runs integration_test/store_screenshots_test.dart in the
@@ -62,13 +62,28 @@ adb_ shell cmd uimode night yes
 prev_demo=$(adb_ shell settings get global sysui_demo_allowed | tr -d '\r')
 echo "sysui_demo_allowed before: $prev_demo" >> "$LOGS/demo.txt"
 
-# The commands are re-sent until the status bar's own clock reads 12:00: right
+# The commands are re-sent until the status bar's own clock shows the demo time: right
 # after boot SystemUI may not be ready for them, and a first attempt that came
-# too early left the real clock frozen on screen (run 43189625331: "9:20").
+# too early left the real clock frozen on screen (run 43189625331: the real "9:20").
+# The clock is Android's own System UI demo-mode default: AOSP's DemoModeFragment
+# uses the platform major version as the hour ("%02d00"), "1010" when it cannot
+# tell, so Android 14 shows 14:00. It is derived from the device, not hard-coded.
+release=$(adb_ shell getprop ro.build.version.release | tr -d '[:space:]')
+major=${release%%.*}
+case "$major" in
+  ''|*[!0-9]*) DEMO_HHMM=1010 ;;
+  *) DEMO_HHMM=$(printf '%02d00' $((major % 24))) ;;
+esac
+DEMO_TEXT="${DEMO_HHMM:0:2}:${DEMO_HHMM:2:2}"
+echo "demo clock: release=$release hhmm=$DEMO_HHMM (expects '$DEMO_TEXT')" >> "$LOGS/status.txt"
+prev_24h=$(adb_ shell settings get system time_12_24 | tr -d '[:space:]')
+# 24-hour display, so the status bar says 14:00 and not 2:00.
+adb_ shell settings put system time_12_24 24
+
 demo_on() {
   adb_ shell settings put global sysui_demo_allowed 1
   demo enter
-  demo clock -e hhmm 1200
+  demo clock -e hhmm "$DEMO_HHMM"
   demo battery -e level 100 -e plugged false
   demo network -e wifi show -e level 4 -e fully true
   demo network -e mobile show -e datatype none -e level 4 -e fully true
@@ -85,7 +100,7 @@ for attempt in $(seq 1 10); do
   clock_node=$(status_bar_clock)
   echo "demo attempt $attempt: ${clock_node:-no clock node found}" >> "$LOGS/demo_check.txt"
   case "$clock_node" in
-    *'text="12:00"'*) demo_ok=1; break ;;
+    *"text=\"$DEMO_TEXT\""*) demo_ok=1; break ;;
   esac
 done
 echo "demo_clock_verified=$demo_ok" >> "$LOGS/status.txt"
@@ -120,7 +135,7 @@ capture_loop() {
     # Re-send the clock every few seconds: cheap, and it puts it back if SystemUI
     # ever dropped it.
     tick=$((tick + 1))
-    if [ $((tick % 25)) -eq 0 ]; then demo clock -e hhmm 1200; fi
+    if [ $((tick % 25)) -eq 0 ]; then demo clock -e hhmm "$DEMO_HHMM"; fi
     total=$(grep -c 'E2E_METRIC store_shot=' "$LOGS/flutter_log.txt" 2>/dev/null)
     while [ "${total:-0}" -gt "$done_count" ]; do
       done_count=$((done_count + 1))
@@ -163,6 +178,11 @@ rm -f "$OUT/.stop"
 
 # Put the system back.
 demo exit
+if [ "$prev_24h" = "null" ] || [ -z "$prev_24h" ]; then
+  adb_ shell settings delete system time_12_24 >> "$LOGS/demo.txt" 2>&1
+else
+  adb_ shell settings put system time_12_24 "$prev_24h" >> "$LOGS/demo.txt" 2>&1
+fi
 if [ "$prev_demo" = "null" ] || [ -z "$prev_demo" ]; then
   adb_ shell settings delete global sysui_demo_allowed >> "$LOGS/demo.txt" 2>&1
 else
