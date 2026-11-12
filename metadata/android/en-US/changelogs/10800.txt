@@ -1,0 +1,6 @@
+Sounds rebuilt: matched loudness, seamless loops, clearer high end, smaller download
+Saved volumes and mixes keep their slider positions, so some sounds now play quieter or louder than before (binaural beats about 20 dB quieter, white noise about 8 dB quieter, brown noise about 5 dB louder, fire about 4 dB quieter). Adjust once
+Fixed memory growing each time a sound was stopped
+Fixed a 26-second silence in the train sound
+Web: gapless loops, also in background tabs
+New sound: Walk on Gravel
