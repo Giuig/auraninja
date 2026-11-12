@@ -62,13 +62,33 @@ adb_ shell cmd uimode night yes
 prev_demo=$(adb_ shell settings get global sysui_demo_allowed | tr -d '\r')
 echo "sysui_demo_allowed before: $prev_demo" >> "$LOGS/demo.txt"
 
-adb_ shell settings put global sysui_demo_allowed 1
-demo enter
-demo clock -e hhmm 1200
-demo battery -e level 100 -e plugged false
-demo network -e wifi show -e level 4 -e fully true
-demo network -e mobile show -e datatype none -e level 4 -e fully true
-demo notifications -e visible false
+# The commands are re-sent until the status bar's own clock reads 12:00: right
+# after boot SystemUI may not be ready for them, and a first attempt that came
+# too early left the real clock frozen on screen (run 43189625331: "9:20").
+demo_on() {
+  adb_ shell settings put global sysui_demo_allowed 1
+  demo enter
+  demo clock -e hhmm 1200
+  demo battery -e level 100 -e plugged false
+  demo network -e wifi show -e level 4 -e fully true
+  demo network -e mobile show -e datatype none -e level 4 -e fully true
+  demo notifications -e visible false
+}
+status_bar_clock() {
+  adb_ shell uiautomator dump /sdcard/ui_status.xml > /dev/null 2>&1
+  adb_ shell cat /sdcard/ui_status.xml 2> /dev/null | grep -o 'resource-id="com.android.systemui:id/clock"[^>]*' | head -1
+}
+demo_ok=0
+for attempt in $(seq 1 10); do
+  demo_on
+  sleep 2
+  clock_node=$(status_bar_clock)
+  echo "demo attempt $attempt: ${clock_node:-no clock node found}" >> "$LOGS/demo_check.txt"
+  case "$clock_node" in
+    *'text="12:00"'*) demo_ok=1; break ;;
+  esac
+done
+echo "demo_clock_verified=$demo_ok" >> "$LOGS/status.txt"
 
 # Install with every runtime permission granted (POST_NOTIFICATIONS on API 33+);
 # `flutter drive` reinstalls over it and keeps the grants.
@@ -95,8 +115,12 @@ flutter_log_pid=$!
 
 # Capture loop: one picture per new marker, named after the marker.
 capture_loop() {
-  local done_count=0 total name
+  local done_count=0 total name tick=0
   while [ ! -f "$OUT/.stop" ]; do
+    # Re-send the clock every few seconds: cheap, and it puts it back if SystemUI
+    # ever dropped it.
+    tick=$((tick + 1))
+    if [ $((tick % 25)) -eq 0 ]; then demo clock -e hhmm 1200; fi
     total=$(grep -c 'E2E_METRIC store_shot=' "$LOGS/flutter_log.txt" 2>/dev/null)
     while [ "${total:-0}" -gt "$done_count" ]; do
       done_count=$((done_count + 1))
