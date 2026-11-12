@@ -1,0 +1,118 @@
+name: Store screenshots
+
+# Takes the Google Play / F-Droid screenshots from a Pixel 4a-profile emulator
+# (1080x2340, like the existing pictures) in SystemUI demo mode (12:00, full
+# battery and signal, no notifications), over staged content. The pictures are a
+# run artifact only; nothing under metadata/ is touched by this workflow.
+#
+# Never runs on ordinary pull requests: only on manual dispatch and on a PR
+# carrying the `screenshots` label. This app owns the workflow (underscore =
+# this repo's own trigger), next to android_e2e.yml.
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shots:
+    # A pull request runs only with the `screenshots` label.
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'screenshots')
+    name: screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Pinned like build-app.yml: the runner image's default Java moves under us.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.5'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Patch vendored packages
+        run: bash scripts/patch_soloud.sh
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties', 'pubspec.lock') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # A PROFILE build: no debug banner, no layout-overflow stripes, and the
+      # release station list. The integration test is the entry point, so this is
+      # not a user build. Built before the emulator boots so the native x86_64
+      # build does not run against the emulator's clock.
+      - name: Build profile APK
+        env:
+          GRADLE_OPTS: '-Xmx3G'
+        run: flutter build apk --profile --target integration_test/store_screenshots_test.dart --target-platform android-x64
+
+      # The Pixel 4a hardware profile is 1080x2340 at 440 dpi. If this runner's
+      # command-line tools do not list it, fall back to the same size and density
+      # on the default profile; the script fails closed on any other picture size.
+      - name: Device profile
+        id: device
+        run: |
+          avdmanager="${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/avdmanager"
+          if [ -x "$avdmanager" ] && "$avdmanager" list device -c | grep -qx pixel_4a; then
+            echo "profile=pixel_4a" >> "$GITHUB_OUTPUT"
+            echo "options=" >> "$GITHUB_OUTPUT"
+            echo "device profile: pixel_4a"
+          else
+            echo "profile=pixel_5" >> "$GITHUB_OUTPUT"
+            echo "options=-skin 1080x2340 -prop qemu.sf.lcd_density=440" >> "$GITHUB_OUTPUT"
+            echo "device profile: pixel_4a not listed, using an explicit 1080x2340 skin at 440 dpi"
+          fi
+
+      - name: Take the screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: ${{ steps.device.outputs.profile }}
+          ram-size: 4096M
+          # Real animation speed: the pictures should show the app as a phone does.
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim ${{ steps.device.outputs.options }}
+          script: bash scripts/ci/store_screenshots.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Store screenshots"
+            if [ -f store-screenshots/summary.md ]; then cat store-screenshots/summary.md; else echo "no summary (the emulator step did not reach the script)"; fi
+            if [ -f store-screenshots/manifest.json ]; then echo; echo '```json'; cat store-screenshots/manifest.json; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: store-screenshots
+          path: store-screenshots/
+          if-no-files-found: warn
