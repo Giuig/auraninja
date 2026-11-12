@@ -66,8 +66,8 @@ adb_ shell settings put global sysui_demo_allowed 1
 demo enter
 demo clock -e hhmm 1200
 demo battery -e level 100 -e plugged false
-demo network -e wifi show -e level 4
-demo network -e mobile show -e level 4
+demo network -e wifi show -e level 4 -e fully true
+demo network -e mobile show -e datatype none -e level 4 -e fully true
 demo notifications -e visible false
 
 # Install with every runtime permission granted (POST_NOTIFICATIONS on API 33+);
@@ -121,6 +121,13 @@ if [ "$s" -ne 0 ]; then
   failed=1
 elif ! grep -q 'All tests passed' "$LOGS/drive.txt"; then
   echo "flutter drive: exit 0 but no 'All tests passed' line" >> "$LOGS/status.txt"
+  failed=1
+fi
+# The driver prints "All tests passed." and exits 0 even when the on-device test
+# timed out (run 43187239628: "Some tests failed." just above it), so the
+# on-device result is read from the device's own output as well.
+if grep -qE 'Some tests failed|\[E\]' "$LOGS/drive.txt"; then
+  echo "flutter drive: the on-device test reported a failure" >> "$LOGS/status.txt"
   failed=1
 fi
 

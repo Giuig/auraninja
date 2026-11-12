@@ -155,13 +155,15 @@ Future<void> _scrollToSection(WidgetTester tester, String text) async {
   final header = find.text(text);
   await _pumpUntil(tester, () => header.evaluate().isNotEmpty,
       timeout: const Duration(seconds: 10), what: 'the "$text" section header');
-  await Scrollable.ensureVisible(
+  // Not awaited: the scroll animation only advances while frames are pumped,
+  // and an awaited ensureVisible never completed here (run 43187239628).
+  Scrollable.ensureVisible(
     tester.element(header.first),
     alignment: 0,
     duration: const Duration(milliseconds: 400),
     curve: Curves.easeInOut,
-  );
-  await _pumpFor(tester, const Duration(milliseconds: 800));
+  ).ignore();
+  await _pumpFor(tester, const Duration(milliseconds: 1200));
 }
 
 /// Plays [path] at [volume] through the real handler.
@@ -236,7 +238,7 @@ Future<void> _shots(WidgetTester tester) async {
     listen: false,
   );
 
-  // 1. Sounds: favourites and weather, three sounds playing at different levels.
+  // 1. Sounds: favourites at the top, three of them playing at different levels.
   await tester.tap(_tab('Sounds'));
   await _pumpUntil(
       tester,
@@ -247,7 +249,7 @@ Future<void> _shots(WidgetTester tester) async {
       what: 'the Sounds page with its sounds registered');
   await _play(tester, handler, _rain, 0.75);
   await _play(tester, handler, _fire, 0.35);
-  await _play(tester, handler, _thunder, 0.22);
+  await _play(tester, handler, _cafe, 0.55);
   await _shot(tester, '01_sounds');
 
   // 2. Mixes: the saved mixes, one of them running.
@@ -311,7 +313,7 @@ Future<void> _shots(WidgetTester tester) async {
 void main() {
   initE2eBinding();
 
-  testWidgets('store screenshots', timeout: const Timeout(Duration(minutes: 8)),
+  testWidgets('store screenshots', timeout: const Timeout(Duration(minutes: 5)),
       (tester) async {
     await _shots(tester);
   });
